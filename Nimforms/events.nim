@@ -53,3 +53,16 @@ proc newSizeEventArgs(msg: UINT, lp: LPARAM): SizeEventArgs =
     else:
         result.mClientArea.width = cast[int32](LOWORD(lp))
         result.mClientArea.height = cast[int32](HIWORD(lp))
+
+proc newDateTimeEventArgs(dtpStr: LPCWSTR): DateTimeEventArgs =
+    new(result)
+    result.mDateStr = wcharArrayToString(dtpStr)
+
+
+# Event properties
+proc x*(this: MouseEventArgs): int32 = this.mx
+proc y*(this: MouseEventArgs): int32 = this.my
+proc delta*(this: MouseEventArgs): int32 = this.mDelta
+proc shiftPressed*(this: MouseEventArgs): bool = this.mShiftPressed
+proc ctrlPressed*(this: MouseEventArgs): bool = this.mCtrlPressed
+proc mouseButton*(this: MouseEventArgs): MouseButtons = this.mButton
