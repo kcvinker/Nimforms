@@ -1,5 +1,9 @@
 # Controls module. Created on 27-Mar-2023 01:35 AM
 
+const
+    BCM_FIRST = 0x1600
+    BCM_GETIDEALSIZE = BCM_FIRST+0x1
+
 # Package variables==================================================
 var globalCtlID : int32 = 100
 var globalSubClassID : UINT_PTR = 1000
@@ -61,6 +65,7 @@ proc `backColor=`*(this: Control, value: uint) {.inline.} =
     this.mBackColor = newColor(value)
     if this.mIsCreated:
         if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
+        this.mBkBrush = this.mBackColor.makeHBRUSH
         InvalidateRect(this.mHandle, nil, 0)
 
 proc backColor*(this: Control): Color {.inline.} = return this.mBackColor
@@ -116,9 +121,10 @@ proc keyPressHandler(this: Control, wp: WPARAM) =
 
 
 # Package level functions====================================================
-proc createHandleInternal(this: Control) =
-    this.mCtlID = globalCtlID
-    globalCtlID += 1
+proc createHandleInternal(this: Control, specialCtl: bool = false) =
+    if not specialCtl:
+        this.mCtlID = globalCtlID
+        globalCtlID += 1
     this.mHandle = CreateWindowExW( this.mExStyle,
                                     toWcharPtr(this.mClassName),
                                     toWcharPtr(this.mText),
@@ -128,3 +134,11 @@ proc createHandleInternal(this: Control) =
                                     this.mParent.hInstance, nil)
     if this.mHandle != nil:
         this.mIsCreated = true
+
+# Only used CheckBox & RadioButton
+proc setIdealSize(this: Control) =
+    var ss: SIZE
+    this.sendMsg(BCM_GETIDEALSIZE, 0, ss.unsafeAddr)
+    this.mWidth = ss.cx
+    this.mHeight = ss.cy
+    MoveWindow(this.mHandle, this.mXpos, this.mYpos, ss.cx, ss.cy, 1)
