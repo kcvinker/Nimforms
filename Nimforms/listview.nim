@@ -1,6 +1,6 @@
 # listview module Created on 01-Apr-2023 11:22 PM
 
-
+# Note: Improve some properties to respond at runtime
 # Constants
 const
     LVM_FIRST = 0x1000
@@ -478,6 +478,8 @@ proc addSubItemInternal(this: ListView, subItmTxt: string, itemIndex: int32, sub
     this.mItems[itemIndex].mSubItems.add(subItmTxt)
 
 proc headerCustomDraw(this: ListView, nmcd: LPNMCUSTOMDRAW): LRESULT =
+    # When Windows paints the listview header, it sends us a notification.
+    # So we can use that notification and draw our headers.
     let col = this.mColumns[nmcd.dwItemSpec]
     SetBkMode(nmcd.hdc, 1)
     if col.mIndex > 0: nmcd.rc.left = nmcd.rc.left + 1
@@ -493,9 +495,7 @@ proc headerCustomDraw(this: ListView, nmcd: LPNMCUSTOMDRAW): LRESULT =
                 FillRect(nmcd.hdc, nmcd.rc.unsafeAddr, this.mHdrBkBrush)
 
         if (nmcd.uItemState and CDIS_SELECTED) == CDIS_SELECTED:
-            # Here we are mimicing dot net's same technique.
-            # We will change the rect's left and top a little bit when header got clicked.
-            # So user will feel the header is pressed. */
+            # Mimicing dot net's technique. Adjusting rect to get the feel of clicked button.
             nmcd.rc.left = nmcd.rc.left + 2
             nmcd.rc.top = nmcd.rc.top + 2
 
@@ -592,11 +592,62 @@ proc addSubItems*(this: ListViewItem, subitems: varargs[string, `$`]) =
         this.mSubItems.add(sitem)
 
 
+# Properties---------------------------------------------------------------------------
+proc selectedIndex*(this: ListView): int32 = this.mSelIndex
+proc selectedSubIndex*(this: ListView): int32 = this.mSelSubIndex
+proc checked*(this: ListView): bool = this.mChecked
+proc columns*(this: ListView): seq[ListViewColumn] = this.mColumns
+proc items*(this: ListView): seq[ListViewItem] = this.mItems
 
+proc `headerHeight=`*(this: ListView, value : int) = this.mHdrHeight = int32(value)
+proc headerHeight*(this: ListView): int = int(this.mHdrHeight)
 
+proc `editLabel=`*(this: ListView, value: bool) = this.mEditLabel = value
+proc editLabel*(this: ListView): bool = this.mEditLabel
 
+proc `hideSelection=`*(this: ListView, value: bool) = this.mHideSel = value
+proc hideSelection*(this: ListView): bool = this.mHideSel
 
+proc `multiSelection=`*(this: ListView, value: bool) = this.mMultiSel = value
+proc multiSelection*(this: ListView): bool = this.mMultiSel
 
+proc `hasCheckBox=`*(this: ListView, value: bool) = this.mHasCheckBox = value
+proc hasCheckBox*(this: ListView): bool = this.mHasCheckBox
+
+proc `fullRowSelection=`*(this: ListView, value: bool) = this.mFullRowSel = value
+proc fullRowSelection*(this: ListView): bool = this.mFullRowSel
+
+proc `showGrid=`*(this: ListView, value: bool) = this.mShowGrid = value
+proc showGrid*(this: ListView): bool = this.mShowGrid
+
+proc `oneClickActivate=`*(this: ListView, value: bool) = this.mOneClickActivate = value
+proc oneClickActivate*(this: ListView): bool = this.mOneClickActivate
+
+proc `hotTrackSelection=`*(this: ListView, value: bool) = this.mHotTrackSel = value
+proc hotTrackSelection*(this: ListView): bool = this.mHotTrackSel
+
+proc `headerClickable=`*(this: ListView, value: bool) = this.mHdrClickable = value
+proc headerClickable*(this: ListView): bool = this.mHdrClickable
+
+proc `checkBoxLast=`*(this: ListView, value: bool) = this.mCheckBoxLast = value
+proc checkBoxLast*(this: ListView): bool = this.mCheckBoxLast
+
+proc `headerBackColor=`*(this: ListView, value: uint) = this.mHdrBackColor = newColor(value)
+proc `headerBackColor=`*(this: ListView, value: Color) = this.mHdrBackColor = value
+proc headerBackColor*(this: ListView): Color = this.mHdrBackColor
+
+proc `headerForeColor=`*(this: ListView, value: uint) = this.mHdrForeColor = newColor(value)
+proc `headerForeColor=`*(this: ListView, value: Color) = this.mHdrForeColor = value
+proc headerForeColor*(this: ListView): Color = this.mHdrForeColor
+
+proc `headerFont=`*(this: ListView, value: Font) = this.mHdrFont = value
+proc headerFont*(this: ListView): Font = this.mHdrFont
+
+proc `selectedItem=`*(this: ListView, value: ListViewItem) = this.mSelItem = value
+proc selectedItem*(this: ListView): ListViewItem = this.mSelItem
+
+proc `viewStyle=`*(this: ListView, value: ListViewStyle) = this.mViewStyle = value
+proc viewStyle*(this: ListView): ListViewStyle = this.mViewStyle
 
 
 
@@ -612,24 +663,51 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
-    # of MM_ListView_COLOR:
-    #     let hdc = cast[HDC](wpm)
-    #     if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
-    #     SetBkColor(hdc, this.mBackColor.cref)
-    #     return cast[LRESULT](this.mBkBrush)
 
-    of WM_NOTIFY:
+    of WM_NOTIFY: # This is from header.
         let nmh = cast[LPNMHDR](lpm)
         if nmh.code == NM_CUSTOMDRAW_NM:  # Let's draw header back & fore colors
             var nmcd = cast[LPNMCUSTOMDRAW](lpm)
             case nmcd.dwDrawStage # NM_CUSTOMDRAW is always -12 when item painting
             of CDDS_PREPAINT: return CDRF_NOTIFYITEMDRAW
             of CDDS_ITEMPREPAINT:
-                # So we get the notification at the pre paint statge. We can draw the header...
-                # colors, text and tell the system to not to draw anything on this header. So...
-                # system will skip the default drawing jobs.
+                # We are drawing our headers.
                 return this.headerCustomDraw(nmcd)
             else: discard
+
+    of MM_NOTIFY_REFLECT:
+        let nmh = cast[LPNMHDR](lpm)
+        case nmh.code
+        of NM_CUSTOMDRAW_NM:
+            var nmLvcd = cast[LPNMLVCUSTOMDRAW](lpm)
+            case nmLvcd.nmcd.dwDrawStage
+            of CDDS_PREPAINT: return CDRF_NOTIFYITEMDRAW
+            of CDDS_ITEMPREPAINT:
+                nmLvcd.clrTextBk = this.mBackColor.cref
+                return CDRF_NEWFONT or CDRF_DODEFAULT
+            else: discard
+
+        of LVN_ITEMCHANGED:
+            var nmlv = cast[LPNMLISTVIEW](lpm)
+            if nmlv.uNewState == 8192 or nmlv.uNewState == 4096:
+                this.mChecked = (if nmlv.uNewState == 8192: true else: false)
+                if this.onCheckedChanged != nil: this.onCheckedChanged(this, newEventArgs())
+            else:
+                if nmlv.uNewState == 3:
+                    this.mSelIndex = nmlv.iItem
+                    this.mSelSubIndex = nmlv.iSubItem
+                    if this.onSelectionChanged != nil: this.onSelectionChanged(this, newEventArgs())
+
+        of NM_DBLCLK:
+            if this.onItemDoubleClicked != nil: this.onItemDoubleClicked(this, newEventArgs())
+
+        of NM_CLICK:
+            let nmia = cast[LPNMITEMACTIVATE](lpm)
+            if this.onItemClicked != nil: this.onItemClicked(this, newEventArgs())
+
+        of NM_HOVER:
+            if this.onItemHover != nil: this.onItemHover(this, newEventArgs())
+        else: discard
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)
