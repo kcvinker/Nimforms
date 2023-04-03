@@ -149,13 +149,48 @@ proc createHandle*(this: NumberPicker) =
         this.postCreationTasks()
 
 
-
-
-
-
 # Properties---------------------------------------------------------------------------
 
+# proc `value=`*(this: NumberPicker, fValue: float) =
+#     if this.mIsCreated:
+#         discard
+#     else:
+#         this.mValue = fValue
 
+proc `value=`*(this: NumberPicker, fValue: auto) = # Accepts int or float
+    this.mValue = (if fValue is int: float(fValue) else: fValue)
+    if this.mIsCreated: this.displayValue()
+
+template value*(this: NumberPicker): auto = # Return int or float
+    result = (if this.mDeciPrec > 0: this.mValue else: int(this.mValue))
+
+proc `buttonLeft=`*(this: NumberPicker, value: bool) = this.mButtonLeft = value
+proc buttonLeft*(this: NumberPicker): bool = this.mButtonLeft
+
+proc `autoRotate=`*(this: NumberPicker, value: bool) = this.mAutoRotate = value
+proc autoRotate*(this: NumberPicker): bool = this.mAutoRotate
+
+proc `hideCaret=`*(this: NumberPicker, value: bool) = this.mHideCaret = value
+proc hideCaret*(this: NumberPicker): bool = this.mHideCaret
+
+proc `minRange=`*(this: NumberPicker, value: float) = this.mMinRange = value
+proc minRange*(this: NumberPicker): float = this.mMinRange
+
+proc `maxRange=`*(this: NumberPicker, value: float) = this.mMaxRange = value
+proc maxRange*(this: NumberPicker): float = this.mMaxRange
+
+proc `step=`*(this: NumberPicker, value: auto) =
+    if value is int: this.mIntStep = true
+    this.mStep = float(value)
+
+template step*(this: NumberPicker): auto =
+    result = (if this.mIntStep: int(this.mStep) else: this.mStep)
+
+proc `decimalDigits=`*(this: NumberPicker, value: int) = this.mDeciPrec = int32(value)
+proc decimalDigits*(this: NumberPicker): int = int(this.mDeciPrec)
+
+proc `textAlign=`*(this: NumberPicker, value: TextAlignment) = this.mTxtPos = value
+proc textAlign*(this: NumberPicker): TextAlignment = this.mTxtPos
 
 
 
