@@ -123,11 +123,51 @@ const
     CDIS_DROPHILITED = 0x1000
 
     NM_FIRST = cast[UINT](0-0)
+    NM_CLICK = NM_FIRST-2
+    NM_DBLCLK = NM_FIRST-3
     NM_CUSTOMDRAW_NM = NM_FIRST-12
+    NM_HOVER = NM_FIRST-13
 
     SWP_NOZORDER = 0x0004
+    SWP_SHOWWINDOW = 0x0040
+    SWP_NOACTIVATE = 0x0010
+    SWP_FRAMECHANGED = 0x0020
+
+    HWND_TOP = cast[HWND](0)
 
     ICC_DATE_CLASSES = 0x100
+
+    BDR_RAISEDOUTER = 0x0001
+    BDR_SUNKENOUTER = 0x0002
+    BDR_RAISEDINNER = 0x0004
+    BDR_SUNKENINNER = 0x0008
+    BDR_OUTER = BDR_RAISEDOUTER or BDR_SUNKENOUTER
+    BDR_INNER = BDR_RAISEDINNER or BDR_SUNKENINNER
+    BDR_RAISED = BDR_RAISEDOUTER or BDR_RAISEDINNER
+    BDR_SUNKEN = BDR_SUNKENOUTER or BDR_SUNKENINNER
+    EDGE_RAISED = BDR_RAISEDOUTER or BDR_RAISEDINNER
+    EDGE_SUNKEN = BDR_SUNKENOUTER or BDR_SUNKENINNER
+    EDGE_ETCHED = BDR_SUNKENOUTER or BDR_RAISEDINNER
+    EDGE_BUMP = BDR_RAISEDOUTER or BDR_SUNKENINNER
+    BF_LEFT = 0x0001
+    BF_TOP = 0x0002
+    BF_RIGHT = 0x0004
+    BF_BOTTOM = 0x0008
+    BF_TOPLEFT = BF_TOP or BF_LEFT
+    BF_TOPRIGHT = BF_TOP or BF_RIGHT
+    BF_BOTTOMLEFT = BF_BOTTOM or BF_LEFT
+    BF_BOTTOMRIGHT = BF_BOTTOM or BF_RIGHT
+    BF_RECT = BF_LEFT or BF_TOP or BF_RIGHT or BF_BOTTOM
+    BF_DIAGONAL = 0x0010
+    BF_DIAGONAL_ENDTOPRIGHT = BF_DIAGONAL or BF_TOP or BF_RIGHT
+    BF_DIAGONAL_ENDTOPLEFT = BF_DIAGONAL or BF_TOP or BF_LEFT
+    BF_DIAGONAL_ENDBOTTOMLEFT = BF_DIAGONAL or BF_BOTTOM or BF_LEFT
+    BF_DIAGONAL_ENDBOTTOMRIGHT = BF_DIAGONAL or BF_BOTTOM or BF_RIGHT
+    BF_MIDDLE = 0x0800
+    BF_SOFT = 0x1000
+    BF_ADJUST = 0x2000
+    BF_FLAT = 0x4000
+    BF_MONO = 0x8000
 
 # Structs
 type
@@ -318,6 +358,50 @@ type
         iItem: int32
     LPHDHITTESTINFO = ptr HDHITTESTINFO
 
+    NMLVCUSTOMDRAW {.pure.} = object
+        nmcd: NMCUSTOMDRAW
+        clrText: COLORREF
+        clrTextBk: COLORREF
+        iSubItem: int32
+        dwItemType: DWORD
+        clrFace: COLORREF
+        iIconEffect: int32
+        iIconPhase: int32
+        iPartId: int32
+        iStateId: int32
+        rcText: RECT
+        uAlign: UINT
+    LPNMLVCUSTOMDRAW = ptr NMLVCUSTOMDRAW
+
+    NMLISTVIEW {.pure.} = object
+        hdr: NMHDR
+        iItem: int32
+        iSubItem: int32
+        uNewState: UINT
+        uOldState: UINT
+        uChanged: UINT
+        ptAction: POINT
+        lParam: LPARAM
+    LPNMLISTVIEW = ptr NMLISTVIEW
+
+    NMITEMACTIVATE {.pure.} = object
+        hdr: NMHDR
+        iItem: int32
+        iSubItem: int32
+        uNewState: UINT
+        uOldState: UINT
+        uChanged: UINT
+        ptAction: POINT
+        lParam: LPARAM
+        uKeyFlags: UINT
+    LPNMITEMACTIVATE = ptr NMITEMACTIVATE
+
+    NMUPDOWN {.pure.} = object
+        hdr: NMHDR
+        iPos: int32
+        iDelta: int32
+    LPNMUPDOWN = ptr NMUPDOWN
+
 
 # Kernel32 functions
 proc MultiByteToWideChar(CodePage: UINT, dwFlags: DWORD, lpMultiByteStr: LPCCH, cbMultiByte: INT,
@@ -360,7 +444,14 @@ proc MoveWindow(hWnd: HWND, X: int32, Y: int32, nWidth: int32, nHeight: int32, b
 proc GetMessagePos(): DWORD {. stdcall, dynlib: "user32", importc.}
 proc GetWindowRect(hWnd: HWND, lpRect: LPRECT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc PtInRect(lprc: ptr RECT, pt: POINT): BOOL {.stdcall, dynlib: "user32", importc.}
-proc GetClientRect*(hWnd: HWND, lpRect: LPRECT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc GetClientRect(hWnd: HWND, lpRect: LPRECT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc SetWindowTextW(hWnd: HWND, lpString: LPCWSTR): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc GetWindowTextLengthW(hWnd: HWND): int32 {. stdcall, dynlib: "user32", importc.}
+proc GetWindowTextW(hWnd: HWND, lpString: LPWSTR, nMaxCount: int32): int32 {.stdcall, dynlib: "user32", importc, discardable.}
+proc GetCursorPos(lpPoint: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc ScreenToClient(hWnd: HWND, lpPoint: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc DrawEdge(hdc: HDC, qrc: LPRECT, edge: UINT, grfFlags: UINT): BOOL {. stdcall, dynlib: "user32", importc, discardable.}
+proc HideCaret*(hWnd: HWND): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 
 # End of User32
 
@@ -395,6 +486,7 @@ proc RemoveWindowSubclass(hWnd: HWND, pfnSubclass: SUBCLASSPROC, uIdSubclass: UI
 proc DefSubclassProc(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall, dynlib: "comctl32", importc.}
 proc InitCommonControlsFunc(P1: ptr INITCOMMONCONTROLSEX): BOOL {.stdcall, dynlib: "comctl32", importc: "InitCommonControlsEx", discardable.}
 proc wcslen(pstr: LPCWSTR) : csize_t {.cdecl, header: "<wchar.h>",importc.}
+proc sprintf(dest: cstring; format: cstring): cint {.importc, varargs, header: "stdio.h", discardable.}
 
 # Misc functions
 # proc toWcharArray*(srcString: string): seq[WCHAR] =
