@@ -259,6 +259,24 @@ type
         onCheckedChanged*, onSelectionChanged*, onItemDoubleClicked*: EventHandler
         onItemClicked*, onItemHover*: EventHandler
 
+    NumberPicker* = ref object of Control
+        mButtonLeft, mHasSeperator, mAutoRotate, mHideCaret: bool
+        mValue, mMinRange, mMaxRange, mStep: float
+        mTrackMLeave, mKeyPressed, mTrackMouseLeave: bool
+        mBuddyStyle, mBuddyExStyle, mTxtFlag: DWORD
+        mDeciPrec, mBuddyCID, mLineX: int32
+        mBuddyRect, mUpdRect, mMyRect: RECT
+        mTextAlign, mTxtPos: TextAlignment
+        mTopEdgeFlag, mBotEdgeFlag: UINT
+        mBuddyHandle: HWND
+        mPen: HPEN
+        mBuddySCID: UINT_PTR
+        mBuddyStr: string
+        #Event
+        onValueChanged*: EventHandler
+
+
+
 
 
 

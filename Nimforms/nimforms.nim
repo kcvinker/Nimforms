@@ -17,3 +17,4 @@ include groupbox
 include label
 include listbox
 include listview
+include numberpicker
