@@ -263,8 +263,8 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
                 if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
 
     of MM_CTL_COMMAND:
-           let nCode = HIWORD(wpm)
-           if nCode == EN_UPDATE:
+        let nCode = HIWORD(wpm)
+        if nCode == EN_UPDATE:
             if this.mHideCaret: HideCaret(hw)
 
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
