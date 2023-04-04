@@ -262,12 +262,12 @@ type
     NumberPicker* = ref object of Control
         mButtonLeft, mHasSeperator, mAutoRotate, mHideCaret: bool
         mValue, mMinRange, mMaxRange, mStep: float
-        mTrackMLeave, mKeyPressed, mTrackMouseLeave: bool
+        mTrackMLeave, mKeyPressed, mTrackMouseLeave, mIntStep: bool
         mBuddyStyle, mBuddyExStyle, mTxtFlag: DWORD
         mDeciPrec, mBuddyCID, mLineX: int32
         mBuddyRect, mUpdRect, mMyRect: RECT
-        mTextAlign, mTxtPos: TextAlignment
         mTopEdgeFlag, mBotEdgeFlag: UINT
+        mTxtPos: TextAlignment
         mBuddyHandle: HWND
         mPen: HPEN
         mBuddySCID: UINT_PTR
@@ -275,8 +275,24 @@ type
         #Event
         onValueChanged*: EventHandler
 
+    RadioButton* = ref object of Control
+        mAutoSize, mChecked, mCheckOnClick, mRightAlign: bool
+        mTxtFlag: UINT
+        onCheckedChanged*: EventHandler
 
+    TextCase* {.pure.} = enum
+        tcNormal, tcLowerCase, tcUpperCase
 
+    TextType* {.pure.} = enum
+        ttNormal, ttNumberOnly, ttPasswordChar
+
+    TextBox* = ref object of Control
+        mTextAlign: TextAlignment
+        mTextCase: TextCase
+        mTextType: TextType
+        mCueBanner: string
+        mMultiLine, mHideSel, mReadOnly: bool
+        onTextChanged*: EventHandler
 
 
 

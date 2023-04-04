@@ -1,8 +1,16 @@
 # Controls module. Created on 27-Mar-2023 01:35 AM
-
+# import strformat
+# import strbasics
 const
     BCM_FIRST = 0x1600
     BCM_GETIDEALSIZE = BCM_FIRST+0x1
+
+    ES_NUMBER = 0x2000
+    ES_LEFT = 0
+    ES_CENTER = 1
+    ES_RIGHT = 2
+    EN_UPDATE = 0x0400
+    EM_SETSEL = 0x00B1
 
 # Package variables==================================================
 var globalCtlID : int32 = 100
@@ -23,6 +31,12 @@ proc setFontInternal(this: Control) =
 
 proc checkRedraw(this: Control) =
     if this.mIsCreated: InvalidateRect(this.mHandle, nil, 0)
+
+proc getControlText(hw: HWND): string =
+    let count = GetWindowTextLengthW(hw)
+    var buffer: seq[WCHAR] = newSeq[WCHAR](count + 1)
+    GetWindowTextW(hw, buffer[0].unsafeAddr, count + 1)
+    result = toUtf8String(buffer)
 
 # Control class's properties==========================================
 proc `font=`*(this: Control, value: Font) {.inline.} =

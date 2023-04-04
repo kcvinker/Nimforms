@@ -18,3 +18,5 @@ include label
 include listbox
 include listview
 include numberpicker
+include radiobutton
+include textbox

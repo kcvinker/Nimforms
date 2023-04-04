@@ -1,6 +1,7 @@
 # forms module Created on 23-Mar-2023 08:52 PM
 
 # import std/strutils
+
 template MAKEINTRESOURCE*(i: untyped): untyped = cast[LPTSTR](i and 0xffff)
 
 
@@ -37,6 +38,8 @@ type    # A struct to hold essential information.
         screenHeight: int32
         formCount: int32
         mainHwnd: HWND
+        isDateInit: bool
+        iccEx: INITCOMMONCONTROLSEX
 
 var appData : AppData
 
@@ -123,12 +126,12 @@ proc setFormPosition(this: Form) =
     else: discard
 
 
-proc newForm*(title: string = ""): Form =
+proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form =
     new(result)
     if not appData.appStarted: result.registerWinClass()
     appData.formCount += 1
-    result.mWidth = 550
-    result.mHeight = 400
+    result.mWidth = width
+    result.mHeight = height
     result.mXpos = 100
     result.mYpos = 100
     result.mFont = newFont("Tahoma", 11)
