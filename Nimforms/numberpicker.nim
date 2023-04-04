@@ -237,9 +237,9 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
         var hdc : HDC = GetDC(hw)
         DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_SUNKENOUTER, this.mTopEdgeFlag)
         DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_RAISEDINNER, this.mBotEdgeFlag)
-        MoveToEx(hdc, this.mLineX, this.mBuddyRect.unsafeAddr.top + 1, nil)
+        MoveToEx(hdc, this.mLineX, this.mBuddyRect.top + 1, nil)
         SelectObject(hdc, this.mPen)
-        LineTo(hdc, this.mLineX, this.mBuddyRect.unsafeAddr.bottom - 1)
+        LineTo(hdc, this.mLineX, this.mBuddyRect.bottom - 1)
         ReleaseDC(hw, hdc)
         return 1
 
