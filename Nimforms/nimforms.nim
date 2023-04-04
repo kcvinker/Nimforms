@@ -1,5 +1,6 @@
 # Import this module to start using Nimforms library
 
+# Essential includes
 include apimodule
 include winmessages
 include typemodule
@@ -8,6 +9,8 @@ include commons
 include events
 include controls
 include forms
+
+# Optional includes
 include button
 include calendar
 include checkbox
@@ -20,3 +23,4 @@ include listview
 include numberpicker
 include radiobutton
 include textbox
+include trackbar

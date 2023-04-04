@@ -476,6 +476,7 @@ proc GetTextExtentPoint32(hdc: HDC, lpString: LPCWSTR, c: int32, psizl: LPSIZE):
 proc MoveToEx(hdc: HDC, x: int32, y: int32, lppt: LPPOINT): BOOL {.stdcall, dynlib: "gdi32", importc, discardable.}
 proc LineTo(hdc: HDC, x: int32, y: int32): BOOL {.stdcall, dynlib: "gdi32", importc, discardable.}
 proc TextOut(hdc: HDC, x: int32, y: int32, lpString: LPCWSTR, c: int32): BOOL {.stdcall, dynlib: "gdi32", importc: "TextOutW", discardable.}
+proc Rectangle(hdc: HDC, left: int32, top: int32, right: int32, bottom: int32): BOOL {.stdcall, dynlib: "gdi32", importc, discardable.}
 
 # End of Gdi32
 

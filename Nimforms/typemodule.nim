@@ -294,7 +294,38 @@ type
         mMultiLine, mHideSel, mReadOnly: bool
         onTextChanged*: EventHandler
 
+    ChannelStyle* {.pure.} = enum
+        csClassic, csOutline
 
+    TrackChange* {.pure.} = enum
+        tcNone, tcArrowLow, tcArrowHigh, tcPageLow, tcPageHigh, tcMouseClick, tcMouseDrag
+
+    TicPosition* {.pure.} = enum
+        tpDownSide, tpUpSide, tpLeftSide, tpRightSide, tpBothSide
+
+    TicDrawMode {.pure.} = enum
+        tdmVertical, tdmHorizUpper, tdmHorizDown
+
+    TicData = object
+        phyPoint: int32
+        logPoint: int32
+
+    TrackBar* = ref object of Control
+        mVertical, mReversed, mNoTics, mSelRange, mDefTics: bool
+        mToolTip, mCustDraw, mFreeMove, mNoThumb: bool
+        mTicWidth, mMinRange, mMaxRange, mFrequency, mPageSize: int32
+        mLineSize, mTicLen, mValue, mThumbHalf, mP1, mP2, mTcCount: int32
+        mTicColor, mChanColor, mSelColor: Color
+        mChanRect, mThumbRect, mMyRect: RECT
+        mChanPen, mTicPen: HPEN
+        mChanStyle: ChannelStyle
+        mTrackChange: TrackChange
+        mTicPos: TicPosition
+        mSelBrush: HBRUSH
+        mChanFlag: UINT
+        mTicList: seq[TicData]
+        #Events
+        onValueChanged*, onDragging*, onDragged*: EventHandler
 
 
 
