@@ -402,6 +402,75 @@ type
         iDelta: int32
     LPNMUPDOWN = ptr NMUPDOWN
 
+    TVITEMEXW {.pure.} = object
+        mask: UINT
+        hItem: HTREEITEM
+        state: UINT
+        stateMask: UINT
+        pszText: LPWSTR
+        cchTextMax: int32
+        iImage: int32
+        iSelectedImage: int32
+        cChildren: int32
+        lParam: LPARAM
+        iIntegral: int32
+        uStateEx: UINT
+        hwnd: HWND
+        iExpandedImage: int32
+    LPTVITEMEXW = ptr TVITEMEXW
+
+    TVINSERTSTRUCTW {.pure.} = object
+        hParent: HTREEITEM
+        hInsertAfter: HTREEITEM
+        itemex: TVITEMEXW
+    LPTVINSERTSTRUCTW = ptr TVINSERTSTRUCTW
+
+    NMTVCUSTOMDRAW {.pure.} = object
+        nmcd: NMCUSTOMDRAW
+        clrText: COLORREF
+        clrTextBk: COLORREF
+        iLevel: int32
+    LPNMTVCUSTOMDRAW = ptr NMTVCUSTOMDRAW
+
+    NMTVITEMCHANGE {.pure.} = object
+        hdr: NMHDR
+        uChanged: UINT
+        hItem: HTREEITEM
+        uStateNew: UINT
+        uStateOld: UINT
+        lParam: LPARAM
+    LPNMTVITEMCHANGE = ptr NMTVITEMCHANGE
+
+    TVITEMW {.pure.} = object
+        mask: UINT
+        hItem: HTREEITEM
+        state: UINT
+        stateMask: UINT
+        pszText: LPWSTR
+        cchTextMax: int32
+        iImage: int32
+        iSelectedImage: int32
+        cChildren: int32
+        lParam: LPARAM
+    LPTVITEMW* = ptr TVITEMW
+
+    NMTREEVIEWW {.pure.} = object
+        hdr: NMHDR
+        action: UINT
+        itemOld: TVITEMW
+        itemNew: TVITEMW
+        ptDrag: POINT
+    LPNMTREEVIEWW = ptr NMTREEVIEWW
+
+    NMTVSTATEIMAGECHANGING {.pure.} = object
+        hdr: NMHDR
+        hti: HTREEITEM
+        iOldStateImageIndex: int32
+        iNewStateImageIndex: int32
+    LPNMTVSTATEIMAGECHANGING = ptr NMTVSTATEIMAGECHANGING
+
+
+
 
 # Kernel32 functions
 proc MultiByteToWideChar(CodePage: UINT, dwFlags: DWORD, lpMultiByteStr: LPCCH, cbMultiByte: INT,

@@ -69,6 +69,16 @@ type
 
     DateTimeEventHandler* = proc(c: Control, e: DateTimeEventArgs)
 
+    TreeViewAction* {.pure.} = enum
+        tvaUnknown, tvaByKeyboard, tvaByMouse, tvaCollapse, tvaExpand
+
+    TreeEventArgs* = ref object of EventArgs
+        mAction: TreeViewAction
+        mNode, mOldNode: TreeNode
+        mNewState, mOldState: UINT
+
+    TreeEventHandler* = proc(c: Control, e: TreeEventArgs)
+
 
     Control* = ref object of RootObj # Base class for all controls
         mKind: ControlType
@@ -326,6 +336,43 @@ type
         mTicList: seq[TicData]
         #Events
         onValueChanged*, onDragging*, onDragged*: EventHandler
+
+    # NodeNotifyHandler = proc(tv: TreeView, parent: TreeNode, child: TreeNode, nop: NodeOps, pos: int32)
+    TreeNode* = ref object
+        mImgIndex, mSelImgIndex, mChildCount, mIndex, mNodeCount, mNodeID: int32
+        mChecked, mIsCreated: bool
+        mForeColor, mBackColor: Color
+        mHandle: HTREEITEM
+        mTreeHandle: HWND
+        mParentNode: TreeNode
+        mText: string
+        # mNotifyHandler: NodeNotifyHandler
+        mNodes: seq[TreeNode]
+
+    NodeOps {.pure.} = enum
+        noAddNode, noInsertNode, noAddChild, noInsertChild
+
+    NodeNotify = ref object # Send data from a node to treeview
+        node: TreeNode
+        parent: TreeNode
+        pos: int32
+        nops: NodeOps
+
+    NodeAction {.pure.} = enum
+        naAddNode, naSetText, naForeColor, naBackColor
+
+    TreeView* = ref object of Control
+        mNoLine, mNoButton, mHasCheckBox, mFullRowSel: bool
+        mEditable, mShowSel, mHotTrack, mNodeChecked: bool
+        mNodeCount, mUniqNodeID: int32
+        mLineColor: Color
+        mSelNode: TreeNode
+        mNodes: seq[TreeNode]
+        # Events
+        onBeginEdit, onEndEdit, onNodeDeleted : EventHandler
+        onBeforeChecked, onAfterChecked, onBeforeSelected: TreeEventHandler
+        onAfterSelected, onBeforeExpanded, onAfterExpanded: TreeEventHandler
+        onBeforeCollapsed, onAfterCollapsed: TreeEventHandler
 
 
 

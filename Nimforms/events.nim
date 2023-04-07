@@ -1,5 +1,14 @@
 
 # Event module - Created on 28-Mar-2023 12:47 AM
+const
+    TVN_FIRST = cast[UINT](0-400)
+    TVN_SELCHANGINGW = TVN_FIRST-50
+    TVN_SELCHANGEDW = TVN_FIRST-51
+    TVN_ITEMEXPANDINGW = TVN_FIRST-54
+    TVN_ITEMEXPANDEDW = TVN_FIRST-55
+    TVN_DELETEITEMW = TVN_FIRST-58
+
+
 
 proc newEventArgs(): EventArgs = new(result)
 
@@ -57,6 +66,32 @@ proc newSizeEventArgs(msg: UINT, lp: LPARAM): SizeEventArgs =
 proc newDateTimeEventArgs(dtpStr: LPCWSTR): DateTimeEventArgs =
     new(result)
     result.mDateStr = wcharArrayToString(dtpStr)
+
+proc newTreeEventArgs(ntv: LPNMTREEVIEWW): TreeEventArgs =
+    new(result)
+    if ntv.hdr.code == TVN_SELCHANGINGW or ntv.hdr.code == TVN_SELCHANGEDW:
+        case ntv.action
+        of 0 : result.mAction = tvaUnknown
+        of 1 : result.mAction = tvaByMouse
+        of 2 : result.mAction = tvaByKeyboard
+        else: discard
+        # echo "mAction in sel change " & $result.mAction
+    elif ntv.hdr.code == TVN_ITEMEXPANDEDW or ntv.hdr.code == TVN_ITEMEXPANDINGW:
+        case ntv.action
+        of 0 : result.mAction = tvaUnknown
+        of 1 : result.mAction = tvaCollapse
+        of 2 : result.mAction = tvaExpand
+        else: discard
+        # echo "mAction in expand " & $result.mAction
+    result.mNode = cast[TreeNode](cast[PVOID](ntv.itemNew.lParam))
+    if ntv.itemOld.lParam > 0:
+        result.mOldNode = cast[TreeNode](cast[PVOID](ntv.itemOld.lParam))
+
+proc newTreeEventArgs(ntv: LPNMTVITEMCHANGE): TreeEventArgs =
+    new(result)
+    result.mNewState = ntv.uStateNew
+    result.mOldState = ntv.uStateOld
+    result.mNode = cast[TreeNode](cast[PVOID](ntv.lParam))
 
 
 # Event properties
