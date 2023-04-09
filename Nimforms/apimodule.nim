@@ -87,7 +87,7 @@ const
     DT_PREFIXONLY* = 0x00200000
     LF_FACESIZE* = 32
 
-# Custom draw consts
+# Custom  consts
 const
     CDRF_DODEFAULT = 0x0
     CDRF_NEWFONT = 0x2
@@ -168,6 +168,8 @@ const
     BF_ADJUST = 0x2000
     BF_FLAT = 0x4000
     BF_MONO = 0x8000
+
+    GWL_STYLE = -16
 
 # Structs
 type
@@ -520,7 +522,8 @@ proc GetWindowTextW(hWnd: HWND, lpString: LPWSTR, nMaxCount: int32): int32 {.std
 proc GetCursorPos(lpPoint: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc ScreenToClient(hWnd: HWND, lpPoint: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc DrawEdge(hdc: HDC, qrc: LPRECT, edge: UINT, grfFlags: UINT): BOOL {. stdcall, dynlib: "user32", importc, discardable.}
-proc HideCaret*(hWnd: HWND): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc HideCaret(hWnd: HWND): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc SetWindowLongPtr(hWnd: HWND, nIndex: int32, dwNewLong: LONG_PTR): LONG_PTR {.stdcall, dynlib: "user32", importc: "SetWindowLongPtrW", discardable.}
 
 # End of User32
 

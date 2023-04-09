@@ -21,6 +21,7 @@ include label
 include listbox
 include listview
 include numberpicker
+include progressbar
 include radiobutton
 include textbox
 include trackbar

@@ -285,6 +285,19 @@ type
         #Event
         onValueChanged*: EventHandler
 
+    ProgressBarState* {.pure.} = enum
+        pbsNone, pbsNormal, pbsError, pbsPaused
+
+    ProgressBarStyle* {.pure.} = enum
+        pbsBlock, pbsMarquee
+
+    ProgressBar* = ref object of Control
+        mBarState: ProgressBarState
+        mBarStyle: ProgressBarStyle
+        mVertical, mShowPerc: bool
+        mMinValue, mMaxValue, mStep, mValue, mMarqueeSpeed: int32
+        onValueChanged: EventHandler
+
     RadioButton* = ref object of Control
         mAutoSize, mChecked, mCheckOnClick, mRightAlign: bool
         mTxtFlag: UINT
