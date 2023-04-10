@@ -1,5 +1,22 @@
 
-# calendar module Created on 29-Mar-2023 05:03 PM
+# calendar module Created on 29-Mar-2023 05:03 PM; Author kcvinker
+
+# Calendar type
+#     Constructor - newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar
+#     Functions - createHandle - Create handle of a Calendar
+#     Properties
+#         Some props are derived from Control
+#         Name        Type
+#         value - DateAndTime
+#         viewMode - ViewMode
+#         oldViewMode - ViewMode
+#         showWeekNumber - bool
+#         noTodayCircle - bool
+#         noToday - bool
+#         noTrailingDates - bool
+#         shortDateNames - bool
+
+
 
 # Constants
 const
@@ -57,6 +74,7 @@ proc makeSystemTime(dt: DateAndTime): SYSTEMTIME =
 # Calendar constructor
 proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar =
     new(result)
+    result.mKind = ctCalendar
     result.mClassName = "SysMonthCal32"
     result.mName = "Calendar_" & $calCount
     result.mParent = parent
@@ -133,6 +151,7 @@ proc calWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     var this = cast[Calendar](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, calWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)

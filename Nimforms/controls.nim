@@ -1,6 +1,29 @@
-# Controls module. Created on 27-Mar-2023 01:35 AM
-# import strformat
-# import strbasics
+# Controls module. Created on 27-Mar-2023 01:35 AM; Author kcvinker
+## Control type - Base type for all other controls and Form.
+#     Constructor - No constructor available. This is an astract type.
+#     Functions - No public function in this type
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+    #     onKeyDown*, onKeyUp*: KeyEventHandler - proc(c: Control, e: KeyEventArgs)
+    #     onKeyPress*: KeyPressEventHandler - proc(c: Control, e: KeyPressEventArgs)
+
+
 const
     BCM_FIRST = 0x1600
     BCM_GETIDEALSIZE = BCM_FIRST+0x1
@@ -20,6 +43,10 @@ var globalSubClassID : UINT_PTR = 1000
 proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
     SetWindowSubclass(this.mHandle, ctlWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
     globalSubClassID += 1
+
+proc destructor(this: Control) =
+    if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
+    # if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
 
 proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
     return SendMessageW(this.mHandle, msg, cast[WPARAM](wpm), cast[LPARAM](lpm))
