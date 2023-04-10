@@ -1,4 +1,36 @@
-# numberpicker module Created on 03-Apr-2023 01:57 PM
+# numberpicker module Created on 03-Apr-2023 01:57 PM; Author kcvinker
+# NumberPicker type
+#   Constructor - newNumberPicker*(parent: Form, x, y: int32 = 10, w: int32 = 100, h: int32 = 27): NumberPicker
+#   Functions
+        # createHandle() - Create the handle of numberPicker
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # value         float/int
+        # buttonLeft    bool
+        # autoRotate    bool
+        # hideCaret     bool
+        # minRange      float
+        # maxRange      float
+        # step          float/int
+        # textAlign     TextAlignment - {taLeft, taCenter, taRight}
+        # decimalDigits int
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+    #     onValueChanged*: EventHandler
 
 # Constants
 const
@@ -198,6 +230,8 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     var this = cast[NumberPicker](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
+        if this.mPen != nil: DeleteObject(this.mPen)
         RemoveWindowSubclass(hw, npWndProc, scID)
 
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
