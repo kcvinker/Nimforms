@@ -4,17 +4,33 @@
 # Calendar type
 #     Constructor - newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar
 #     Functions - createHandle - Create handle of a Calendar
-#     Properties
-#         Some props are derived from Control
-#         Name        Type
-#         value - DateAndTime
-#         viewMode - ViewMode
-#         oldViewMode - ViewMode
-#         showWeekNumber - bool
-#         noTodayCircle - bool
-#         noToday - bool
-#         noTrailingDates - bool
-#         shortDateNames - bool
+        #     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # value         DateAndTime
+        # viewMode      ViewMode
+        # oldViewMode   ViewMode
+        # noToday       bool
+        # shortDateNames    bool
+        # showWeekNumber    bool
+        # noTodayCircle     bool
+        # noTrailingDates   bool
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+    #     onSelectionCommitted*, onValueChanged*, onViewChanged*: EventHandler
 
 
 
