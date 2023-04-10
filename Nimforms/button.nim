@@ -3,9 +3,29 @@
 
 # Button type
 #   constructor - newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34): Button
-#   functions createHandle() - Create the handle of button
-#    Properties
-#        Button's all properties are derived from Control
+#   functions
+        # createHandle() - Create the handle of button
+        # setGradientColor*(clr1, clr2: uint) - Set gradient back color
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+
 
 # Constants
 const
