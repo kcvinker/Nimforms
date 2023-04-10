@@ -1,4 +1,75 @@
-# treeview module Created on 05-Apr-2023 12:51 AM
+# treeview module Created on 05-Apr-2023 12:51 AM; Author kcvinker
+# TreeView type
+#   Constructor - newTreeView*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 150): TreeView
+#   Functions
+        # createHandle() - Create the handle of treeView
+        # addNode*(nodeText: string) : TreeNode {.discardable.}
+        # addNode*(node: TreeNode)
+        # addChildNode*(nodeText: string, parent: TreeNode) : TreeNode {.discardable.}
+        # addChildNode*(node: TreeNode, parent: TreeNode)
+        # insertNode*(nodeText: string, position: int32) : TreeNode {.discardable.}
+        # insertNode*(node: TreeNode, position: int32)
+        # insertChildNode*(nodeText: string, parent: TreeNode, position: int32) : TreeNode {.discardable.}
+        # insertChildNode*(node: TreeNode, parent: TreeNode, position: int32)
+        # deleteSelNode*(index: int32): bool
+        # expandAll*()
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font              Font
+        # text              string
+        # width             int32
+        # height            int32
+        # xpos              int32
+        # ypos              int32
+        # backColor         Color
+        # foreColor         Color
+        # selectedNode      TreeNode
+        # foreColor         Color, For setter, uint is also acceptable
+        # noLine            bool
+        # noButton          bool
+        # hasCheckBox       bool
+        # fullRowSelect     bool
+        # isEditable        bool
+        # showSelection     bool
+        # hotTrack          bool
+        # nodeCount         int32
+        # uniqNodeID        int32
+        # lineColor         Color, For setter, uint is also acceptable
+        # nodes             seq[TreeNode]
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+        # onBeginEdit, onEndEdit, onNodeDeleted : EventHandler
+        # onBeforeChecked, onAfterChecked, onBeforeSelected: TreeEventHandler
+        # onAfterSelected, onBeforeExpanded, onAfterExpanded: TreeEventHandler
+        # onBeforeCollapsed, onAfterCollapsed: TreeEventHandler - proc(c: Control, e: TreeEventArgs)
+#-----------------------------------------------------------------------------------------------------
+
+# TreeNode type
+    # Constructor - newTreeNode*(text: string, img, selImg: int32 = -1): TreeNode
+    # Functions
+        # addChildNode*(nodeText: string) : TreeNode {.discardable.}
+        # addChildNode*(chNode: TreeNode)
+        # insertChildNode*(nodeText: string, position: int32) : TreeNode {.discardable.}
+        # insertChildNode*(node: TreeNode, position: int32)
+
+#     Properties - Getter & Setter available
+#       Name                          Type
+        # nodes                     seq[TreeNode] (Getter only)
+        # index                     int32 (Getter only)
+        # text                      string
+        # imageIndex                int32
+        # selectedImageIndex        int32
+        # childCount                int32
+        # nodeID                    int32
+        # checked                   bool
+        # foreColor                 Color, For setter, uint is also acceptable
 
 # Constants
 const
@@ -51,7 +122,11 @@ const
     TVIS_EX_ALL = 0x0002
     TVIS_EX_TEXTCOLOR = 0x00000004
 
+    TVGN_ROOT = 0x0
     TVGN_CARET = 0x9
+
+    TVE_EXPAND = 0x2
+    TVE_EXPANDPARTIAL = 0x4000
 
     TVI_ROOT = cast[HTREEITEM](-0x10000) #(ULONG_MAX-0x10000)
     TVI_FIRST = cast[HTREEITEM](-0x0FFFF)  #(ULONG_MAX-0x0FFFF)
@@ -61,6 +136,7 @@ const
     TV_FIRST = 0x1100
     TVM_DELETEITEM = (TV_FIRST + 1)
 
+    TVM_EXPAND = TV_FIRST+2
     TVM_SETIMAGELIST = (TV_FIRST + 9)
     TVM_GETNEXTITEM = (TV_FIRST + 10)
     TVM_SETBKCOLOR = (TV_FIRST + 29)
@@ -72,8 +148,6 @@ const
     NM_TVSTATEIMAGECHANGING_NM = (NM_FIRST - 24)
     TVN_ITEMCHANGINGW = TVN_FIRST-17
     TVN_ITEMCHANGEDW = TVN_FIRST-19
-
-
 
 
 var tvCount = 1
@@ -191,6 +265,16 @@ proc addNodeInternal(this: TreeView, node: TreeNode, nop: NodeOps, pnode: TreeNo
 proc setNodeText(this: TreeView, node: TreeNode) = # Implement this
     echo node.mText
 
+proc sendMsg(this: TreeNode, uMsg: UINT, wpm, lpm: auto) : LRESULT {.discardable.} =
+    return SendMessageW(this.mTreeHandle, uMsg, cast[WPARAM](wpm), cast[LPARAM](lpm))
+
+# We need this function to recurseively traverse all the nodes and expand them.
+proc expandNode(this: TreeNode) =
+    this.sendMsg(TVM_EXPAND, TVE_EXPAND, this.mHandle)
+    if this.mNodeCount > 0:
+        for node in this.mNodes: node.expandNode()
+
+
 # Create TreeView's hwnd
 proc createHandle*(this: TreeView) =
     this.setTVStyle()
@@ -234,6 +318,11 @@ proc deleteSelNode*(this: TreeView, index: int32): bool =
     if selItem != nil:
         result = bool(this.sendMsg(TVM_DELETEITEM, 0, selItem))
 
+# Expand all nodes in this tree view
+proc expandAll*(this: TreeView) =
+    if this.mIsCreated:
+        for node in this.mNodes: node.expandNode()
+
 
 
 
@@ -252,21 +341,24 @@ proc nodeToLparm(node: TreeNode): LPARAM = cast[LPARAM](cast[PVOID](node))
 proc addChildNode*(this: TreeNode, nodeText: string) : TreeNode {.discardable.} =
     result = newTreeNode(nodeText)
     let nnData = newNodeNotify(result, this, noAddChild)
-    SendMessageW(this.mTreeHandle, MM_NODE_NOTIFY, cast[WPARAM](naAddNode), nnDataToLparm(nnData))
+    this.sendMsg(MM_NODE_NOTIFY, naAddNode, cast[PVOID](nnData))
 
 
 proc addChildNode*(this: TreeNode, chNode: TreeNode) =
     let nnData = newNodeNotify(chNode, this, noAddChild)
-    SendMessageW(this.mTreeHandle, MM_NODE_NOTIFY, cast[WPARAM](naAddNode), nnDataToLparm(nnData))
+    this.sendMsg(MM_NODE_NOTIFY, naAddNode, cast[PVOID](nnData))
 
 proc insertChildNode*(this: TreeNode, nodeText: string, position: int32) : TreeNode {.discardable.} =
     result = newTreeNode(nodeText)
     let nnData = newNodeNotify(result, this, noInsertChild, position)
-    SendMessageW(this.mTreeHandle, MM_NODE_NOTIFY, cast[WPARAM](naAddNode), nnDataToLparm(nnData))
+    this.sendMsg(MM_NODE_NOTIFY, naAddNode, cast[PVOID](nnData))
 
 proc insertChildNode*(this: TreeNode, node: TreeNode, position: int32) =
     let nnData = newNodeNotify(node, this, noInsertChild, position)
-    SendMessageW(this.mTreeHandle, MM_NODE_NOTIFY, cast[WPARAM](naAddNode), nnDataToLparm(nnData))
+    this.sendMsg(MM_NODE_NOTIFY, naAddNode, cast[PVOID](nnData))
+
+
+
 
 
 #TreeView Properties------------------------------------------------------------------------
@@ -279,6 +371,39 @@ proc `foreColor=`*(this: TreeView, value: uint) =
     this.sendMsg(TVM_SETTEXTCOLOR, 0, this.mForeColor.cref)
     this.checkRedraw()
 
+proc noLine*(this: TreeView): bool = this.mNoLine
+proc `noLine=`*(this: TreeView, value: bool) = this.mNoLine = value
+
+proc noButton*(this: TreeView): bool = this.mNoButton
+proc `noButton=`*(this: TreeView, value: bool) = this.mNoButton = value
+
+proc hasCheckBox*(this: TreeView): bool = this.mHasCheckBox
+proc `hasCheckBox=`*(this: TreeView, value: bool) = this.mHasCheckBox = value
+
+proc fullRowSelect*(this: TreeView): bool = this.mFullRowSel
+proc `fullRowSelect=`*(this: TreeView, value: bool) = this.mFullRowSel = value
+
+proc isEditable*(this: TreeView): bool = this.mEditable
+proc `isEditable=`*(this: TreeView, value: bool) = this.mEditable = value
+
+proc showSelection*(this: TreeView): bool = this.mShowSel
+proc `showSelection=`*(this: TreeView, value: bool)= this.mShowSel = value
+
+proc hotTrack*(this: TreeView): bool = this.mHotTrack
+proc `hotTrack=`*(this: TreeView, value: bool) = this.mHotTrack = value
+
+proc nodeCount*(this: TreeView): int32 = this.mNodeCount
+proc `nodeCount=`*(this: TreeView, value: int32) = this.mNodeCount = value
+
+proc uniqNodeID*(this: TreeView): int32 = this.mUniqNodeID
+proc `uniqNodeID=`*(this: TreeView, value: int32) = this.mUniqNodeID = value
+
+proc lineColor*(this: TreeView): Color = this.mLineColor
+proc `lineColor=`*(this: TreeView, value: uint) = this.mLineColor =  newColor(value)
+
+
+
+
 # TreeNode properties-------------------------------------------------------
 proc nodes*(this: TreeNode) : seq[TreeNode] = this.mNodes
 proc index*(this: TreeNode): int32 = this.mIndex
@@ -286,7 +411,7 @@ proc text*(this: TreeNode): string = this.mText
 proc `text=`*(this: TreeNode, value: string) =
     this.mText = value
     if this.mIsCreated:
-        SendMessageW(this.mTreeHandle, MM_NODE_NOTIFY, cast[WPARAM](naSetText), nodeToLparm(this))
+        this.sendMsg(MM_NODE_NOTIFY, naSetText, cast[PVOID](this))
 
 proc imageIndex*(this: TreeNode): int32 = this.mImgIndex
 proc selectedImageIndex*(this: TreeNode): int32 = this.mSelImgIndex
@@ -329,7 +454,9 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     var this = cast[TreeView](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, tvWndProc, scID)
+
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
     of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
@@ -343,23 +470,7 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             var nnd = cast[NodeNotify](cast[PVOID](lpm))
             this.addNodeInternal(nnd.node, nnd.nops, nnd.parent)
         of naSetText: this.setNodeText(cast[TreeNode]([cast[PVOID](lpm)]))
-        # of naForeColor:
-        #     var node = cast[TreeNode]([cast[PVOID](lpm)])
-        #     var tvItem: TVITEMEXW = TVITEMEXW(hItem: node.mHandle,
-        #                                     mask: TVIF_STATE,
-        #                                     stateMask: TVIS_SELECTED)
-        #     this.sendMsg(TVM_GETITEMW, 0, tvItem.unsafeAddr)
-        #     tvItem.mask = tvItem.mask xor TVIS_USERMASK
-        #     tvItem.mask = tvItem.mask or 0x10
-        #     tvItem.mask = TVIF_STATEEX
-        #     tvItem.uStateEx = 0
-        #     tvItem.uStateEx = TVIS_EX_TEXTCOLOR
-        #     tvItem.clrText = node.mForeColor.cref
-        #     this.sendMsg(TVM_SETITEM, 0, tvItem.unsafeAddr)
-
-
         else: discard
-
 
     of MM_NOTIFY_REFLECT:
         let nmh = cast[LPNMHDR](lpm)
@@ -432,8 +543,6 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
                 var tea = newTreeEventArgs(tvic)
                 tea.mNode.mChecked = this.mNodeChecked
                 this.onAfterChecked(this, tea)
-
-
 
         else: discard
         return 0
