@@ -1,5 +1,11 @@
 
-# forms module Created on 27-Mar-2023 01:56 PM
+# button module Created on 27-Mar-2023 01:56 PM
+
+# Button type
+#   constructor - newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34): Button
+#   functions createHandle() - Create the handle of button
+#    Properties
+#        Button's all properties are derived from Control
 
 # Constants
 const
@@ -63,7 +69,9 @@ proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
 # Button constructor
 proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34): Button =
     new(result)
+    result.mKind = ctButton
     result.mClassName = "Button"
+    result.mName = "Button_" & $btnCount
     result.mParent = parent
     result.mXpos = x
     result.mYpos = y
@@ -72,6 +80,7 @@ proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w:
     result.mFont = parent.mFont
     result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
     result.mText = (if txt == "": "Button_" & $btnCount else: txt)
+    btnCount += 1
 
 # Create button's hwnd
 proc createHandle*(this: Button) =
@@ -81,7 +90,7 @@ proc createHandle*(this: Button) =
         this.setFontInternal()
 
 # Set necessery data for a flat colored button
-proc flatDrawSetData(this: FlatDraw, clr: Color) =
+proc flatDrawSetData(this: var FlatDraw, clr: Color) =
     let adj : float = (if clr.isDark: 1.5 else: 1.15)
     this.defBrush = CreateSolidBrush(clr.cref)
     this.hotBrush = CreateSolidBrush(clr.getChangedColorRef(adj))
@@ -92,13 +101,12 @@ proc flatDrawSetData(this: FlatDraw, clr: Color) =
 # Overriding Control's property because, button class needs a different treatment
 proc `backColor=`*(this: Button, clr: uint) =
     this.mBackColor = newColor(clr)
-    this.mFDraw = new FlatDraw
     this.mFDraw.flatDrawSetData(this.mBackColor)
     if (this.mDrawMode and 2) != 2: this.mDrawMode += 2
     this.checkRedraw()
 
 # Set necessery data for a gradient colored button.
-proc gradDrawSetData(this: GradDraw, c1, c2: uint) =
+proc gradDrawSetData(this: var GradDraw, c1, c2: uint) =
     this.gcDef.c1 = newColor(c1)
     this.gcDef.c2 = newColor(c2)
     let hotAdj1 = (if this.gcDef.c1.isDark(): 1.5 else : 1.2)
@@ -110,9 +118,6 @@ proc gradDrawSetData(this: GradDraw, c1, c2: uint) =
 
 # Set gradient colors for this button.
 proc setGradientColor*(this: Button, clr1, clr2: uint) =
-    this.mGDraw = new GradDraw
-    this.mGDraw.gcDef = new GradColor
-    this.mGDraw.gcHot = new GradColor
     this.mGDraw.gradDrawSetData(clr1, clr2)
     if (this.mDrawMode and 4) != 4: this.mDrawMode += 4
     this.checkRedraw()
@@ -184,11 +189,16 @@ proc btnDtor(this: Button) =
     else: discard
 
 
+
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     var this = cast[Button](refData)
+
     case msg
     of WM_DESTROY:
+        this.btnDtor()
+        this.destructor()
         RemoveWindowSubclass(hw, btnWndProc, scID)
+
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
     of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
