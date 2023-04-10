@@ -1,4 +1,43 @@
-# combobox module Created on 30-Mar-2023 03:23 AM
+# combobox module Created on 30-Mar-2023 03:23 AM; Author kcvinker
+# ComboBox type
+#     Constructor - newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10): ComboBox
+#     Functions
+        # createHandle() - Create handle of a ComboBox
+        # addItem*(item: auto) - Add an item to ComboBox
+        # addItems*(args: varargs[string, `$`]) - Add multiple items
+        # removeItem*(item: auto) - Remove the given item
+        # removeItem*(index: int32) - Remove the item with given index
+        # removeAll*() - Remove all items
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # hasInput      bool
+        # selectedIndex int32
+        # selctedItem   string
+        # items         seq[string]
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+    #     onKeyDown*, onKeyUp*: KeyEventHandler - proc(c: Control, e: KeyEventArgs)
+    #     onKeyPress*: KeyPressEventHandler - proc(c: Control, e: KeyPressEventArgs)
+
+    #     onSelectionChanged*, onTextChanged*, onTextUpdated*: EventHandler
+    #     onListOpened*, onListClosed*, onSelectionCommitted*, onSelectionCancelled*: EventHandler
+
+
 
 # Constants
 const
@@ -139,7 +178,6 @@ proc addItems*(this: ComboBox, args: varargs[string, `$`]) =
         if this.mIsCreated: this.sendMsg(CB_ADDSTRING, 0, item.toWcharPtr)
         this.mItems.add(item)
 
-
 proc removeItem*(this: ComboBox, item: auto) =
     if this.mIsCreated:
         let sitem : string = (if item is string: item else: $item)
@@ -226,6 +264,7 @@ proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     var this = cast[ComboBox](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, cmbWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
