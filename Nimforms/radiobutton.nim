@@ -1,7 +1,29 @@
-# radiobutton module Created on 04-Apr-2023 02:34 AM
+# radiobutton module Created on 04-Apr-2023 02:34 AM; Author kcvinker
+# RadioButton type
+#   Constructor - newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w, h: int32 = 0): RadioButton
+#   Functions
+        # createHandle() - Create the handle of radioButton
 
-# Constants
-# const
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # checked       bool
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+    #     onCheckedChanged*: EventHandler
+
 
 var rbCount = 1
 
@@ -60,6 +82,7 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     var this = cast[RadioButton](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, rbWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
