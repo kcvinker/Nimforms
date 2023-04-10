@@ -2,7 +2,6 @@
 # This module implements all functions related to colors
 
 proc newColor(clr: uint): Color =
-    new(result)
     result.value = clr
     result.red = clr shr 16
     result.green = (clr and 0x00ff00) shr 8
@@ -24,13 +23,18 @@ proc getChangedColorRef(this: Color, adj: float): COLORREF =
     result = cast[COLORREF]((blue shl 16) or (green shl 8) or red)
 
 proc getChangedColor(this: Color, adj: float): Color =
-    new(result)
     result.red = clip(uint(float(this.red) * adj))
     result.green = clip(uint(float(this.green) * adj))
     result.blue = clip(uint(float(this.blue) * adj))
     result.cref = cast[COLORREF]((result.blue shl 16) or (result.green shl 8) or result.red)
 
+proc makeHBRUSH(this: Color): HBRUSH = CreateSolidBrush(this.cref)
+
 proc clrRefFromRGB(red, green, blue: uint): COLORREF = cast[COLORREF]((blue shl 16) or (green shl 8) or red)
+
+proc getHotBrush(this: Color, adj: float): HBRUSH =
+    let clrRef = this.getChangedColorRef(adj)
+    result = CreateSolidBrush(clrRef)
 
 type
     FlotColor = object
