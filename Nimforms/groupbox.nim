@@ -1,4 +1,27 @@
-# groupbox module Created on 31-Mar-2023 11:14 PM
+# groupbox module Created on 31-Mar-2023 11:14 PM; Author kcvinker
+
+# GroupBox type
+#   constructor - newGroupBox*(parent: Form, text: string, x, y: int32 = 10, w, h: int32 = 150): GroupBox
+#   functions
+        # createHandle() - Create the handle of GroupBox
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
 
 # Constants
 # const
@@ -54,6 +77,8 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     var this = cast[GroupBox](refData)
     case msg
     of WM_DESTROY:
+        if this.mPen != nil: DeleteObject(this.mPen)
+        this.destructor()
         RemoveWindowSubclass(hw, gbWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
