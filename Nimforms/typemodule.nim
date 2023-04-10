@@ -175,11 +175,13 @@ type
         mValue: DateAndTime
         mShowWeekNum, mNoTodayCircle, mNoToday, mNoTrailDates, mShortDateNames: bool
         mViewMode, mOldView: ViewMode
+        #Events
         onSelectionCommitted*, onValueChanged*, onViewChanged*: EventHandler
 
     CheckBox* = ref object of Control
         mAutoSize, mChecked, mRightAlign: bool
         mTextStyle: UINT
+        #Events
         onCheckedChanged*: EventHandler
 
     ComboBox* = ref object of Control
@@ -296,7 +298,8 @@ type
         mBarStyle: ProgressBarStyle
         mVertical, mShowPerc: bool
         mMinValue, mMaxValue, mStep, mValue, mMarqueeSpeed: int32
-        onValueChanged: EventHandler
+        # Events
+        onProgressChanged*: EventHandler
 
     RadioButton* = ref object of Control
         mAutoSize, mChecked, mCheckOnClick, mRightAlign: bool
@@ -315,6 +318,7 @@ type
         mTextType: TextType
         mCueBanner: string
         mMultiLine, mHideSel, mReadOnly: bool
+        #Events
         onTextChanged*: EventHandler
 
     ChannelStyle* {.pure.} = enum
