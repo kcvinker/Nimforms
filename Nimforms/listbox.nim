@@ -1,4 +1,47 @@
-# listbox module Created on 01-Apr-2023 03:55 AM
+# listbox module Created on 01-Apr-2023 03:55 AM; Author kcvinker
+# ListBox type
+#   constructor - newListBox*(parent: Form, x, y: int32 = 10, w, h: int32 = 140): ListBox
+#   functions
+        # createHandle() - Create the handle of listBox
+        # selectAll*()
+        # clearSelection*()
+        # addItem*( item: auto)
+        # addItems*(args: varargs[string, `$`])
+        # insertItem*(item: auto, index: int32)
+        # removeItem*(item: auto)
+        # removeItem*(index: int32)
+        # removeAll*()
+        # indexOf*(item: auto): int32
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # items         seq[string]
+        # hotIndex      int32
+        # hotItem       string
+        # horizontalScroll  bool
+        # verticalScroll    bool
+        # selectedIndex     int32
+        # selectedIndices   seq[int32]
+        # multiSelection    bool
+        # selectedItem      string
+        # selctedItems      seq[string]
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+    #     onSelectionChanged*, onSelectionCancelled*: EventHandler
 
 # Constants
 const
@@ -261,6 +304,7 @@ proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     var this = cast[ListBox](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, lbxWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
