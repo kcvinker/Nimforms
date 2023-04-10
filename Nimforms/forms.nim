@@ -1,6 +1,40 @@
 # forms module Created on 23-Mar-2023 08:52 PM
 
-# import std/strutils
+# Form type
+#   constructor - newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
+#   functions
+        # createHandle() - Create the handle of form
+        # display() - Show the form on screen
+        # close() - Closes the form
+        # setGradientColor*(clr1, clr2: uint) - Set gradient back color
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # startPos      FormPos
+        # formStyle     FormStyle
+        # formState     WindowState
+        # maximizeBox   bool
+        # minimizeBox   bool
+        # topMost       bool
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - proc(c: Control, e: MouseEventArgs)
+
+    #     onLoad*, onActivate*, onDeActivate*, onMinimized*, onMoving*,
+    #     onMoved*, onClosing*, onMaximized*, onRestored*: EventHandler
+    #     onSizing*, onSized*: SizeEventHandler - proc(c: Control, e: SizeEventArgs)
 
 template MAKEINTRESOURCE*(i: untyped): untyped = cast[LPTSTR](i and 0xffff)
 
@@ -224,9 +258,10 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
     case msg
     of WM_DESTROY:
+        this.destructor()
+        if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
         if hw == appData.mainHwnd:
             PostQuitMessage(0)
-            quit(0)
 
     of WM_CLOSE:
         if this.onClosing != nil: this.onClosing(this, newEventArgs())
@@ -256,7 +291,8 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         of SC_RESTORE:
             if this.onRestored != nil: this.onRestored(this, newEventArgs())
         else: discard
-
+    of WM_HSCROLL: return SendMessageW(cast[HWND](lpm), MM_HSCROLL, wpm, lpm)
+    of WM_VSCROLL: return SendMessageW(cast[HWND](lpm), MM_VSCROLL, wpm, lpm)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
     of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
@@ -323,7 +359,6 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     of WM_NOTIFY:
         var nmh = cast[LPNMHDR](lpm)
         return SendMessageW(nmh.hwndFrom, MM_NOTIFY_REFLECT, wpm, lpm)
-
 
     else: return DefWindowProcW(hw, msg, wpm, lpm)
     return DefWindowProcW(hw, msg, wpm, lpm)
