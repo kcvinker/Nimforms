@@ -1,6 +1,42 @@
 # datetimepicker module Created on 30-Mar-2023 12:22 PM
 
-# import strformat
+## DateTimePicker type
+#     Constructor - newDateTimePicker*(parent: Form, x, y: int32 = 10, w, h: int32 = 10): DateTimePicker
+#     Functions - createHandle - Create handle of the DateTimePicker control.
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # value         DateAndTime
+        # formatString  string
+        # format        DTPFormat - Values {dfLongDate = 1, dfShortDate, dfTimeOnly = 4, dfCustom = 8}
+        # rightAlign    bool
+        # noToday       bool
+        # showUpdown    bool
+        # showWeekNumber    bool
+        # noTodayCircle     bool
+        # noTrailingDates   bool
+        # shortDateNames    bool
+        # fourDigitYear     bool
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: DateTimePicker, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: DateTimePicker, e: MouseEventArgs)
+
+    #     onKeyDown*, onKeyUp*: KeyEventHandler - proc(c: DateTimePicker, e: KeyEventArgs)
+    #     onKeyPress*: KeyPressEventHandler - proc(c: DateTimePicker, e: KeyPressEventArgs)
+
+    #     onValueChanged*, onCalendarOpened*, onCalendarClosed*: EventHandler
+    #     onTextChanged*: DateTimeEventHandler - proc(c: Control, e: DateTimeEventArgs)
+
 # Constants
 const
     DTM_FIRST = 0x1000
@@ -168,6 +204,7 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     var this = cast[DateTimePicker](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, dtpWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
