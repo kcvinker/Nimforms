@@ -519,5 +519,8 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
             this.mTrackChange = tcMouseClick
         else: discard
 
+    of MM_LABEL_COLOR:
+        return cast[LRESULT](this.mBkBrush)
+
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)
