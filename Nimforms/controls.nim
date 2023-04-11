@@ -104,8 +104,8 @@ proc ypos*(this: Control): int32 {.inline.} = return this.mYpos
 
 proc `backColor=`*(this: Control, value: uint) {.inline.} =
     this.mBackColor = newColor(value)
+    if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
     if this.mIsCreated:
-        if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
         this.mBkBrush = this.mBackColor.makeHBRUSH
         InvalidateRect(this.mHandle, nil, 0)
 
@@ -113,9 +113,8 @@ proc backColor*(this: Control): Color {.inline.} = return this.mBackColor
 
 proc `foreColor=`*(this: Control, value: uint) {.inline.} =
     this.mForeColor = newColor(value)
-    if this.mIsCreated:
-        if (this.mDrawMode and 1) != 1 : this.mDrawMode += 1
-        InvalidateRect(this.mHandle, nil, 0)
+    if (this.mDrawMode and 1) != 1 : this.mDrawMode += 1
+    if this.mIsCreated: InvalidateRect(this.mHandle, nil, 0)
 
 proc foreColor*(this: Control): Color {.inline.} = return this.mForeColor
 
