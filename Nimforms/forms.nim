@@ -357,8 +357,12 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         if this.onKeyPress != nil: this.onKeyPress(this, newKeyPressEventArgs(wpm))
 
     of WM_NOTIFY:
-        var nmh = cast[LPNMHDR](lpm)
+        let nmh = cast[LPNMHDR](lpm)
         return SendMessageW(nmh.hwndFrom, MM_NOTIFY_REFLECT, wpm, lpm)
+
+    of WM_CTLCOLOREDIT:
+        let ctHwnd = cast[HWND](lpm)
+        return SendMessageW(ctHwnd, MM_EDIT_COLOR, wpm, lpm)
 
     else: return DefWindowProcW(hw, msg, wpm, lpm)
     return DefWindowProcW(hw, msg, wpm, lpm)
