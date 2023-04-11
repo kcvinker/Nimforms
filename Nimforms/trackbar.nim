@@ -1,4 +1,49 @@
-# trackbar module Created on 04-Apr-2023 01:48 PM
+# trackbar module Created on 04-Apr-2023 01:48 PM; Author kcvinker
+# TrackBar type
+#   Constructor - newTrackBar*(parent: Form, x, y: int32 = 10, w: int32 = 180, h: int32 = 45): TrackBar
+#   Functions
+        # createHandle() - Create the handle of trackBar
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font              Font
+        # text              string
+        # width             int32
+        # height            int32
+        # xpos              int32
+        # ypos              int32
+        # backColor         Color
+        # foreColor         Color
+        # channelStyle      Color, For setter, uint is also acceptable
+        # ticPosition       int32
+        # ticColor          Color, For setter, uint is also acceptable
+        # channelColor      Color, For setter, uint is also acceptable
+        # selectionColor    Color, For setter, uint is also acceptable
+        # vertical          bool
+        # reversed          bool
+        # noTics            bool
+        # showSelRange      bool
+        # toolTip           bool
+        # customDraw        bool
+        # freeMove          bool
+        # noThumb           bool
+        # ticWidth          int32
+        # minRange          int32
+        # maxRange          int32
+        # frequency         int32
+        # pageSize          int32
+        # lineSize          int32
+        # ticLength         int32
+        # value             int32
+        # trackChange       TrackChange (Getter only) - {tcNone, tcArrowLow, tcArrowHigh, tcPageLow, tcPageHigh, tcMouseClick, tcMouseDrag}
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+    #     onValueChanged*, onDragging*, onDragged*: EventHandler
 
 # Constants
 const
@@ -276,6 +321,12 @@ proc setupValueInternal(this: TrackBar, iValue: int32) =
     else:
         this.mValue = iValue
 
+proc destroyResources(this: TrackBar) =
+    if this.mChanPen != nil: DeleteObject(this.mChanPen)
+    if this.mTicPen != nil: DeleteObject(this.mTicPen)
+    if this.mSelBrush != nil: DeleteObject(this.mSelBrush)
+    this.destructor()
+
 
 
 
@@ -297,79 +348,79 @@ proc createHandle*(this: TrackBar) =
 
 # Properties--------------------------------------------------------------------------
 
-proc trackChange*(this: TrackBar): TrackChange = this.mTrackChange
+proc trackChange*(this: TrackBar): TrackChange {.inline.} = this.mTrackChange
 
-proc `channelStyle=`*(this: TrackBar, value: ChannelStyle) = this.mChanStyle = value
-proc channelStyle*(this: TrackBar): ChannelStyle = this.mChanStyle
+proc `channelStyle=`*(this: TrackBar, value: ChannelStyle) {.inline.} = this.mChanStyle = value
+proc channelStyle*(this: TrackBar): ChannelStyle {.inline.} = this.mChanStyle
 
-proc `ticPosition=`*(this: TrackBar, value: TicPosition) = this.mTicPos = value
-proc ticPosition*(this: TrackBar): TicPosition = this.mTicPos
+proc `ticPosition=`*(this: TrackBar, value: TicPosition) {.inline.} = this.mTicPos = value
+proc ticPosition*(this: TrackBar): TicPosition {.inline.} = this.mTicPos
 
-proc `ticColor=`*(this: TrackBar, value: Color) = this.mTicColor = value
-proc `ticColor=`*(this: TrackBar, value: uint) = this.mTicColor = newColor(value)
-proc ticColor*(this: TrackBar): Color = this.mTicColor
+proc `ticColor=`*(this: TrackBar, value: Color) {.inline.} = this.mTicColor = value
+proc `ticColor=`*(this: TrackBar, value: uint) {.inline.} = this.mTicColor = newColor(value)
+proc ticColor*(this: TrackBar): Color {.inline.} = this.mTicColor
 
-proc `channelColor=`*(this: TrackBar, value: Color) = this.mChanColor = value
-proc `channelColor=`*(this: TrackBar, value: uint) = this.mChanColor = newColor(value)
-proc channelColor*(this: TrackBar): Color = this.mChanColor
+proc `channelColor=`*(this: TrackBar, value: Color) {.inline.} = this.mChanColor = value
+proc `channelColor=`*(this: TrackBar, value: uint) {.inline.} = this.mChanColor = newColor(value)
+proc channelColor*(this: TrackBar): Color {.inline.} = this.mChanColor
 
-proc `selectionColor=`*(this: TrackBar, value: Color) = this.mSelColor = value
-proc `selectionColor=`*(this: TrackBar, value: uint) = this.mSelColor = newColor(value)
-proc selectionColor*(this: TrackBar): Color = this.mSelColor
+proc `selectionColor=`*(this: TrackBar, value: Color) {.inline.} = this.mSelColor = value
+proc `selectionColor=`*(this: TrackBar, value: uint) {.inline.} = this.mSelColor = newColor(value)
+proc selectionColor*(this: TrackBar): Color {.inline.} = this.mSelColor
 
-proc `vertical=`*(this: TrackBar, value: bool) =
+proc `vertical=`*(this: TrackBar, value: bool) {.inline.} =
     this.mVertical = value
     if this.mTicPos == tpDownSide or this.mTicPos == tpUpSide: this.mTicPos = tpRightSide
 
-proc vertical*(this: TrackBar): bool = this.mVertical
+proc vertical*(this: TrackBar): bool {.inline.} = this.mVertical
 
-proc `reversed=`*(this: TrackBar, value: bool) = this.mReversed = value
-proc reversed*(this: TrackBar): bool = this.mReversed
+proc `reversed=`*(this: TrackBar, value: bool) {.inline.} = this.mReversed = value
+proc reversed*(this: TrackBar): bool {.inline.} = this.mReversed
 
-proc `noTics=`*(this: TrackBar, value: bool) = this.mNoTics = value
-proc noTics*(this: TrackBar): bool = this.mNoTics
+proc `noTics=`*(this: TrackBar, value: bool) {.inline.} = this.mNoTics = value
+proc noTics*(this: TrackBar): bool {.inline.} = this.mNoTics
 
-proc `showSelRange=`*(this: TrackBar, value: bool) = this.mSelRange = value
-proc showSelRange*(this: TrackBar): bool = this.mSelRange
+proc `showSelRange=`*(this: TrackBar, value: bool) {.inline.} = this.mSelRange = value
+proc showSelRange*(this: TrackBar): bool {.inline.} = this.mSelRange
 
-proc `toolTip=`*(this: TrackBar, value: bool) = this.mToolTip = value
-proc toolTip*(this: TrackBar): bool = this.mToolTip
+proc `toolTip=`*(this: TrackBar, value: bool) {.inline.} = this.mToolTip = value
+proc toolTip*(this: TrackBar): bool {.inline.} = this.mToolTip
 
-proc `customDraw=`*(this: TrackBar, value: bool) = this.mCustDraw = value
-proc customDraw*(this: TrackBar): bool = this.mCustDraw
+proc `customDraw=`*(this: TrackBar, value: bool) {.inline.} = this.mCustDraw = value
+proc customDraw*(this: TrackBar): bool {.inline.} = this.mCustDraw
 
-proc `freeMove=`*(this: TrackBar, value: bool) = this.mFreeMove = value
-proc freeMove*(this: TrackBar): bool = this.mFreeMove
+proc `freeMove=`*(this: TrackBar, value: bool) {.inline.} = this.mFreeMove = value
+proc freeMove*(this: TrackBar): bool {.inline.} = this.mFreeMove
 
-proc `noThumb=`*(this: TrackBar, value: bool) = this.mNoThumb = value
-proc noThumb*(this: TrackBar): bool = this.mNoThumb
+proc `noThumb=`*(this: TrackBar, value: bool) {.inline.} = this.mNoThumb = value
+proc noThumb*(this: TrackBar): bool {.inline.} = this.mNoThumb
 
-proc `ticWidth=`*(this: TrackBar, value: int32) = this.mTicWidth = value
-proc ticWidth*(this: TrackBar): int32 = this.mTicWidth
+proc `ticWidth=`*(this: TrackBar, value: int32) {.inline.} = this.mTicWidth = value
+proc ticWidth*(this: TrackBar): int32 {.inline.} = this.mTicWidth
 
-proc `minRange=`*(this: TrackBar, value: int32) = this.mMinRange = value
-proc minRange*(this: TrackBar): int32 = this.mMinRange
+proc `minRange=`*(this: TrackBar, value: int32) {.inline.} = this.mMinRange = value
+proc minRange*(this: TrackBar): int32 {.inline.} = this.mMinRange
 
-proc `maxRange=`*(this: TrackBar, value: int32) = this.mMaxRange = value
-proc maxRange*(this: TrackBar): int32 = this.mMaxRange
+proc `maxRange=`*(this: TrackBar, value: int32) {.inline.} = this.mMaxRange = value
+proc maxRange*(this: TrackBar): int32 {.inline.} = this.mMaxRange
 
-proc `frequency=`*(this: TrackBar, value: int32) = this.mFrequency = value
-proc frequency*(this: TrackBar): int32 = this.mFrequency
+proc `frequency=`*(this: TrackBar, value: int32) {.inline.} = this.mFrequency = value
+proc frequency*(this: TrackBar): int32 {.inline.} = this.mFrequency
 
-proc `pageSize=`*(this: TrackBar, value: int32) = this.mPageSize = value
-proc pageSize*(this: TrackBar): int32 = this.mPageSize
+proc `pageSize=`*(this: TrackBar, value: int32) {.inline.} = this.mPageSize = value
+proc pageSize*(this: TrackBar): int32 {.inline.} = this.mPageSize
 
-proc `lineSize=`*(this: TrackBar, value: int32) = this.mLineSize = value
-proc lineSize*(this: TrackBar): int32 = this.mLineSize
+proc `lineSize=`*(this: TrackBar, value: int32) {.inline.} = this.mLineSize = value
+proc lineSize*(this: TrackBar): int32 {.inline.} = this.mLineSize
 
-proc `ticLength=`*(this: TrackBar, value: int32) = this.mTicLen = value
-proc ticLength*(this: TrackBar): int32 = this.mTicLen
+proc `ticLength=`*(this: TrackBar, value: int32) {.inline.} = this.mTicLen = value
+proc ticLength*(this: TrackBar): int32 {.inline.} = this.mTicLen
 
-proc `value=`*(this: TrackBar, value: int32) =
+proc `value=`*(this: TrackBar, value: int32) {.inline.} =
     this.mValue = value
     if this.mIsCreated: this.sendMsg(TBM_SETPOS, 1, value)
 
-proc value*(this: TrackBar): int32 = this.mValue
+proc value*(this: TrackBar): int32 {.inline.} = this.mValue
 
 
 
@@ -378,6 +429,7 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     var this = cast[TrackBar](refData)
     case msg
     of WM_DESTROY:
+        this.destroyResources()
         RemoveWindowSubclass(hw, tkbWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
@@ -402,7 +454,7 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
                 this.sendMsg(TBM_SETPOS, 1, lpmVal)
                 this.mValue = pos
 
-            # We need to refresh Trackbar in order to display our new drawings.
+            # We need to refresh then Trackbar in order to display our new drawings.
             InvalidateRect(hw, this.mChanRect.unsafeAddr, 0)
             this.mTrackChange = tcMouseDrag
             if this.onDragged != nil: this.onDragged(this, newEventArgs())
@@ -447,10 +499,10 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
                             return CDRF_SKIPDEFAULT
 
                     if nmcd.dwItemSpec == TBCD_CHANNEL:
-                        # Python proect is using EDGE_SUNKEN style without BF_FLAT.
+                        # In Python we are using EDGE_SUNKEN style without BF_FLAT.
                         # But D gives a strange outline in those flags. So I decided to use...
                         # these flags. But in this case, we don't need to reduce 1 point from...
-                        # the coloring rect. It looks perfect without changing rect.
+                        # the coloring rect. It looks perfect without changing rect boundaries.
                         if this.mChanStyle == csClassic:
                             DrawEdge(nmcd.hdc, nmcd.rc.unsafeAddr, BDR_SUNKENOUTER, this.mChanFlag)
                         else:
@@ -466,8 +518,6 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         of UNKNOWN_MSG: # con.TRBN_THUMBPOSCHANGING:
             this.mTrackChange = tcMouseClick
         else: discard
-
-
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)
