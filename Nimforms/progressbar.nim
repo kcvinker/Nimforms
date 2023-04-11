@@ -22,6 +22,7 @@
         # style         ProgressBarStyle - {pbsBlock, pbsMarquee}
         # state         ProgressBarState - {pbsNone, pbsNormal, pbsError, pbsPaused}
         # marqueeSpeed  int32
+        # showPercentage bool
 
     # Events
     #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
@@ -111,6 +112,8 @@ proc stopMarquee*(this: ProgressBar) =
         this.sendMsg(PBM_SETMARQUEE, 0, this.mMarqueeSpeed)
 
 
+#----ProgressBar properties--------------------------------------------------------------
+
 proc `value=`*(this: ProgressBar, value: int32) {.inline.} =
     if value >= this.mMinValue and value <= this.mMaxValue:
         this.mValue = value
@@ -153,6 +156,8 @@ proc `state=`*(this: ProgressBar, value: ProgressBarState) {.inline.} =
 
 proc state*(this: ProgressBar): ProgressBarState {.inline.} = this.mBarState
 
+proc `showPercentage=`*(this: ProgressBar, value: bool) {.inline.} = this.mShowPerc = value
+proc showPercentage*(this: ProgressBar): bool {.inline.} = this.mShowPerc
 
 
 
@@ -170,10 +175,10 @@ proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
     of WM_PAINT:
-        if this.mShowPerc and this.mBarStyle == pbsMarquee:
+        if this.mShowPerc and this.mBarStyle == pbsBlock:
             discard DefSubclassProc(hw, msg, wpm, lpm)
             var ss: SIZE
-            let vtext = $this.mValue
+            let vtext = $this.mValue & "%"
             let wtext = vtext.toWcharPtr()
             var hdc: HDC = GetDC(hw)
             SelectObject(hdc, this.mFont.handle)
