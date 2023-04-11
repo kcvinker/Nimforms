@@ -1,4 +1,36 @@
-# progressbar module Created on 09-Apr-2023 01:42 AM
+# progressbar module Created on 09-Apr-2023 01:42 AM; Author kcvinker
+# ProgressBar type
+#   Constructor - newProgressBar*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 25): ProgressBar
+#   Functions
+        # createHandle() - Create the handle of progressBar
+        # increment*()
+        # startMarquee*()
+        # stopMarquee*()
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # value         int32
+        # step          int32
+        # style         ProgressBarStyle - {pbsBlock, pbsMarquee}
+        # state         ProgressBarState - {pbsNone, pbsNormal, pbsError, pbsPaused}
+        # marqueeSpeed  int32
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+    #     onProgressChanged*: EventHandler
 
 # Constants
 const
@@ -49,7 +81,7 @@ proc newProgressBar*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 
 proc setPbStyle(this: ProgressBar) =
     if this.mBarStyle == pbsMarquee: this.mStyle = this.mStyle or PBS_MARQUEE
     if this.mVertical: this.mStyle = this.mStyle or PBS_VERTICAL
-    this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
+    # this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
 
 
 # Create ProgressBar's hwnd
@@ -62,18 +94,21 @@ proc createHandle*(this: ProgressBar) =
         this.sendMsg(PBM_SETRANGE32, this.mMinValue, this.mMaxValue)
         this.sendMsg(PBM_SETSTEP, this.mStep, 0)
 
+# Increment progress bar value by step value
 proc increment*(this: ProgressBar) =
     if this.mIsCreated:
         this.mValue = (if this.mValue == this.mMaxValue: this.mStep else: this.mValue + this.mStep)
         this.sendMsg(PBM_STEPIT, 0, 0)
 
+# Start the marquee animation
 proc startMarquee*(this: ProgressBar) =
     if this.mIsCreated and this.mBarStyle == pbsMarquee:
-		this.sendMsg(PBM_SETMARQUEE, 1, this.mMarqueeSpeed)
+        this.sendMsg(PBM_SETMARQUEE, 1, this.mMarqueeSpeed)
 
+# Stop the marquee animation
 proc stopMarquee*(this: ProgressBar) =
     if this.mIsCreated and this.mBarStyle == pbsMarquee:
-		this.sendMsg(PBM_SETMARQUEE, 0, this.mMarqueeSpeed)
+        this.sendMsg(PBM_SETMARQUEE, 0, this.mMarqueeSpeed)
 
 
 proc `value=`*(this: ProgressBar, value: int32) {.inline.} =
@@ -126,6 +161,7 @@ proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     var this = cast[ProgressBar](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, pbWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
