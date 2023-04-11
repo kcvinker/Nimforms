@@ -1,4 +1,95 @@
-# listview module Created on 01-Apr-2023 11:22 PM
+# listview module Created on 01-Apr-2023 11:22 PM; Author kcvinker
+# ListView type
+#   constructor - newListView*(parent: Form, x, y: int32 = 10, w: int32 = 250, h: int32 = 200): ListView
+#   functions
+        # createHandle() - Create the handle of listView
+        # addColumn*(text: string, width: int32, imgIndex: int32 = -1): ListViewColumn {.discardable.}
+        # addColumns*(colNames: seq[string], colWidths: seq[auto]): seq[ListViewColumn] {.discardable.}
+        # addColumns*(colCount: int, nameAndWidth: varargs[string, `$`]): seq[ListViewColumn] {.discardable.}
+        # addItem*(itemTxt: auto, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1) : ListViewItem {.discardable.}
+        # addItem*(item: ListViewItem)
+        # addItems*(items: varargs[ListViewItem])
+        # addItems*(itemTextList: varargs[string, `$`]) : seq[ListViewItem] {.discardable.}
+        # addRow*(items: varargs[string, `$`]) : ListViewItem {.discardable.}
+        # addSubItem*(subitem: auto, subIndx: int32, imgIndex: int32 = -1)
+        # addSubItems*(subitems: varargs[string, `$`])
+
+#     Properties - Getter & Setter available
+#       Name                Type
+        # font              Font
+        # text              string
+        # width             int32
+        # height            int32
+        # xpos              int32
+        # ypos              int32
+        # backColor         Color
+        # foreColor         Color
+        # headerHeight      int32
+        # editLabel         bool
+        # hideSelection     bool
+        # multiSelection    bool
+        # hasCheckBox       bool
+        # fullRowSelection  bool
+        # showGrid          bool
+        # oneClickActivate  bool
+        # hotTrackSelection bool
+        # headerClickable   bool
+        # checkBoxLast      bool
+        # headerBackColor   Getter - Color, Setter - [Color, uint]
+        # headerForeColor   Getter - Color, Setter - [Color, uint]
+        # headerFont        Font
+        # selectedItem      ListViewItem
+        # viewStyle         ListViewStyle {lvsLargeIcon, lvsReport, lvsSmallIcon, lvsList, lvsTile}
+
+        # Getter only------------
+        # selectedIndex         int32
+        # selectedSubIndex      int32
+        # checked               bool
+        # columns               seq[ListViewColumn]
+        # items                 seq[ListViewItem]
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+
+    #     onCheckedChanged*, onSelectionChanged*, onItemDoubleClicked*,
+    #     onItemClicked*, onItemHover*: EventHandler
+#---------------------------------------------------------------------------------------
+
+# ListViewColumn type
+    # constructor - newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : ListViewColumn
+
+    # Properties
+    # Name                  Type
+    # index                 int32
+    # text                  string
+    # width                 int32
+    # imageIndex            int32
+    # imageOnRight          bool
+    # hasImage              bool
+    # textAlign             TextAlignment - {taLeft, taCenter, taRight}
+    # headerTextAlign       TextAlignment
+    # backColor             Color (Use uint also for setter)
+    # foreColor             Color (Use uint also for setter)
+
+#-------------------------------------------------------------------------------------------
+
+# ListViewItem type
+    # Constructor - newListViewItem*(text: string, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1): ListViewItem
+
+    # Properties
+    # Name              Type
+    # index             int32 (Getter only)
+    # subItems          seq[string (Getter only)
+    # text              string
+    # imageIndex        int32
+    # backColor         Color (Use uint also for setter)
+    # foreColor         Color (Use uint also for setter)
+    # font              Font
+
 
 # Note: Improve some properties to respond at runtime
 # Constants
@@ -150,7 +241,6 @@ proc postCreationTasks(this: ListView) =
         iSeq.add(0)
         this.sendMsg(LVM_SETCOLUMNORDERARRAY, int32(iSeq.len), iSeq[0].unsafeAddr)
 
-
 proc addColumnInternal(this: ListView, lvCol: ListViewColumn) =
     lvCol.mIndex = this.mColIndex
     var lvc: LVCOLUMNW
@@ -233,6 +323,12 @@ proc headerCustomDraw(this: ListView, nmcd: LPNMCUSTOMDRAW): LRESULT =
     DrawTextW(nmcd.hdc, col.mText.toWcharPtr, int32(-1), nmcd.rc.unsafeAddr, col.mHdrTextFlag)
     result = CDRF_SKIPDEFAULT
 
+proc destroyResources(this: ListView) =
+    if this.mHdrHotBrush != nil: DeleteObject(this.mHdrHotBrush)
+    if this.mHdrBkBrush != nil: DeleteObject(this.mHdrBkBrush)
+    if this.mHdrFont.handle != nil: DeleteObject(this.mHdrFont.handle)
+    if this.mHdrPen != nil: DeleteObject(this.mHdrPen)
+    this.destructor()
 
 # Create ListView's hwnd
 proc createHandle*(this: ListView) =
@@ -315,61 +411,117 @@ proc addSubItems*(this: ListViewItem, subitems: varargs[string, `$`]) =
 
 
 # Properties---------------------------------------------------------------------------
-proc selectedIndex*(this: ListView): int32 = this.mSelIndex
-proc selectedSubIndex*(this: ListView): int32 = this.mSelSubIndex
-proc checked*(this: ListView): bool = this.mChecked
-proc columns*(this: ListView): seq[ListViewColumn] = this.mColumns
-proc items*(this: ListView): seq[ListViewItem] = this.mItems
+proc selectedIndex*(this: ListView): int32 {.inline.} = this.mSelIndex
+proc selectedSubIndex*(this: ListView): int32 {.inline.} = this.mSelSubIndex
+proc checked*(this: ListView): bool {.inline.} = this.mChecked
+proc columns*(this: ListView): seq[ListViewColumn] {.inline.} = this.mColumns
+proc items*(this: ListView): seq[ListViewItem] {.inline.} = this.mItems
 
-proc `headerHeight=`*(this: ListView, value : int) = this.mHdrHeight = int32(value)
-proc headerHeight*(this: ListView): int = int(this.mHdrHeight)
+proc `headerHeight=`*(this: ListView, value : int) {.inline.} = this.mHdrHeight = int32(value)
+proc headerHeight*(this: ListView): int {.inline.} = int(this.mHdrHeight)
 
-proc `editLabel=`*(this: ListView, value: bool) = this.mEditLabel = value
-proc editLabel*(this: ListView): bool = this.mEditLabel
+proc `editLabel=`*(this: ListView, value: bool) {.inline.} = this.mEditLabel = value
+proc editLabel*(this: ListView): bool {.inline.} = this.mEditLabel
 
-proc `hideSelection=`*(this: ListView, value: bool) = this.mHideSel = value
-proc hideSelection*(this: ListView): bool = this.mHideSel
+proc `hideSelection=`*(this: ListView, value: bool) {.inline.} = this.mHideSel = value
+proc hideSelection*(this: ListView): bool {.inline.} = this.mHideSel
 
-proc `multiSelection=`*(this: ListView, value: bool) = this.mMultiSel = value
-proc multiSelection*(this: ListView): bool = this.mMultiSel
+proc `multiSelection=`*(this: ListView, value: bool) {.inline.} = this.mMultiSel = value
+proc multiSelection*(this: ListView): bool {.inline.} = this.mMultiSel
 
-proc `hasCheckBox=`*(this: ListView, value: bool) = this.mHasCheckBox = value
-proc hasCheckBox*(this: ListView): bool = this.mHasCheckBox
+proc `hasCheckBox=`*(this: ListView, value: bool) {.inline.} = this.mHasCheckBox = value
+proc hasCheckBox*(this: ListView): bool {.inline.} = this.mHasCheckBox
 
-proc `fullRowSelection=`*(this: ListView, value: bool) = this.mFullRowSel = value
-proc fullRowSelection*(this: ListView): bool = this.mFullRowSel
+proc `fullRowSelection=`*(this: ListView, value: bool) {.inline.} = this.mFullRowSel = value
+proc fullRowSelection*(this: ListView): bool {.inline.} = this.mFullRowSel
 
-proc `showGrid=`*(this: ListView, value: bool) = this.mShowGrid = value
-proc showGrid*(this: ListView): bool = this.mShowGrid
+proc `showGrid=`*(this: ListView, value: bool) {.inline.} = this.mShowGrid = value
+proc showGrid*(this: ListView): bool {.inline.} = this.mShowGrid
 
-proc `oneClickActivate=`*(this: ListView, value: bool) = this.mOneClickActivate = value
-proc oneClickActivate*(this: ListView): bool = this.mOneClickActivate
+proc `oneClickActivate=`*(this: ListView, value: bool) {.inline.} = this.mOneClickActivate = value
+proc oneClickActivate*(this: ListView): bool {.inline.} = this.mOneClickActivate
 
-proc `hotTrackSelection=`*(this: ListView, value: bool) = this.mHotTrackSel = value
-proc hotTrackSelection*(this: ListView): bool = this.mHotTrackSel
+proc `hotTrackSelection=`*(this: ListView, value: bool) {.inline.} = this.mHotTrackSel = value
+proc hotTrackSelection*(this: ListView): bool {.inline.} = this.mHotTrackSel
 
-proc `headerClickable=`*(this: ListView, value: bool) = this.mHdrClickable = value
-proc headerClickable*(this: ListView): bool = this.mHdrClickable
+proc `headerClickable=`*(this: ListView, value: bool) {.inline.} = this.mHdrClickable = value
+proc headerClickable*(this: ListView): bool {.inline.} = this.mHdrClickable
 
-proc `checkBoxLast=`*(this: ListView, value: bool) = this.mCheckBoxLast = value
-proc checkBoxLast*(this: ListView): bool = this.mCheckBoxLast
+proc `checkBoxLast=`*(this: ListView, value: bool) {.inline.} = this.mCheckBoxLast = value
+proc checkBoxLast*(this: ListView): bool {.inline.} = this.mCheckBoxLast
 
-proc `headerBackColor=`*(this: ListView, value: uint) = this.mHdrBackColor = newColor(value)
-proc `headerBackColor=`*(this: ListView, value: Color) = this.mHdrBackColor = value
-proc headerBackColor*(this: ListView): Color = this.mHdrBackColor
+proc `headerBackColor=`*(this: ListView, value: uint) {.inline.} = this.mHdrBackColor = newColor(value)
+proc `headerBackColor=`*(this: ListView, value: Color) {.inline.} = this.mHdrBackColor = value
+proc headerBackColor*(this: ListView): Color {.inline.} = this.mHdrBackColor
 
-proc `headerForeColor=`*(this: ListView, value: uint) = this.mHdrForeColor = newColor(value)
-proc `headerForeColor=`*(this: ListView, value: Color) = this.mHdrForeColor = value
-proc headerForeColor*(this: ListView): Color = this.mHdrForeColor
+proc `headerForeColor=`*(this: ListView, value: uint) {.inline.} = this.mHdrForeColor = newColor(value)
+proc `headerForeColor=`*(this: ListView, value: Color) {.inline.} = this.mHdrForeColor = value
+proc headerForeColor*(this: ListView): Color {.inline.} = this.mHdrForeColor
 
-proc `headerFont=`*(this: ListView, value: Font) = this.mHdrFont = value
-proc headerFont*(this: ListView): Font = this.mHdrFont
+proc `headerFont=`*(this: ListView, value: Font) {.inline.} = this.mHdrFont = value
+proc headerFont*(this: ListView): Font {.inline.} = this.mHdrFont
 
-proc `selectedItem=`*(this: ListView, value: ListViewItem) = this.mSelItem = value
-proc selectedItem*(this: ListView): ListViewItem = this.mSelItem
+proc `selectedItem=`*(this: ListView, value: ListViewItem) {.inline.} = this.mSelItem = value
+proc selectedItem*(this: ListView): ListViewItem {.inline.} = this.mSelItem
 
-proc `viewStyle=`*(this: ListView, value: ListViewStyle) = this.mViewStyle = value
-proc viewStyle*(this: ListView): ListViewStyle = this.mViewStyle
+proc `viewStyle=`*(this: ListView, value: ListViewStyle) {.inline.} = this.mViewStyle = value
+proc viewStyle*(this: ListView): ListViewStyle {.inline.} = this.mViewStyle
+
+#-----------ListViewColumn properties------------------------------------
+
+proc index*(this: ListViewColumn): int32 {.inline.} = this.mIndex
+
+proc `text=`*(this: ListViewColumn, value: string) {.inline.} = this.mText = value
+proc text*(this: ListViewColumn): string {.inline.} = this.mText
+
+proc `width=`*(this: ListViewColumn, value: int32) {.inline.} = this.mWidth = value
+proc width*(this: ListViewColumn): int32 {.inline.} = this.mWidth
+
+proc `imageIndex=`*(this: ListViewColumn, value: int32) {.inline.} = this.mImgIndex = value
+proc imageIndex*(this: ListViewColumn): int32 {.inline.} = this.mImgIndex
+
+proc `imageOnRight=`*(this: ListViewColumn, value: bool) {.inline.} = this.mImgOnRight = value
+proc imageOnRight*(this: ListViewColumn): bool {.inline.} = this.mImgOnRight
+
+proc `hasImage=`*(this: ListViewColumn, value: bool) {.inline.} = this.mHasImage = value
+proc hasImage*(this: ListViewColumn): bool {.inline.} = this.mHasImage
+
+proc `textAlign=`*(this: ListViewColumn, value: TextAlignment) {.inline.} = this.mTextAlign = value
+proc textAlign*(this: ListViewColumn): TextAlignment {.inline.} = this.mTextAlign
+
+proc `headerTextAlign=`*(this: ListViewColumn, value: TextAlignment) {.inline.} = this.mHdrTextAlign = value
+proc headerTextAlign*(this: ListViewColumn): TextAlignment {.inline.} = this.mHdrTextAlign
+
+proc `backColor=`*(this: ListViewColumn, value: uint) {.inline.} = this.mBackColor = newColor(value)
+proc `backColor=`*(this: ListViewColumn, value: Color) {.inline.} = this.mBackColor = value
+proc backColor*(this: ListViewColumn): Color {.inline.} = this.mBackColor
+
+proc `foreColor=`*(this: ListViewColumn, value: uint) {.inline.} = this.mForeColor = newColor(value)
+proc `foreColor=`*(this: ListViewColumn, value: Color) {.inline.} = this.mForeColor = value
+proc foreColor*(this: ListViewColumn): Color {.inline.} = this.mForeColor
+
+#------ListViewItem properties------------------------------------------------------------
+
+proc index*(this: ListViewItem): int32 {.inline.} = this.mIndex
+proc subItems*(this: ListViewItem): seq[string] {.inline.} = this.mSubItems
+
+proc `text=`*(this: ListViewItem, value: string) {.inline.} = this.mText = value
+proc text*(this: ListViewItem): string {.inline.} = this.mText
+
+proc `imageIndex=`*(this: ListViewItem, value: int32) {.inline.} = this.mImgIndex = value
+proc imageIndex*(this: ListViewItem): int32 {.inline.} = this.mImgIndex
+
+proc `backColor=`*(this: ListViewItem, value: uint) {.inline.} = this.mBackColor = newColor(value)
+proc `backColor=`*(this: ListViewItem, value: Color) {.inline.} = this.mBackColor = value
+proc backColor*(this: ListViewItem): Color {.inline.} = this.mBackColor
+
+proc `foreColor=`*(this: ListViewItem, value: uint) {.inline.} = this.mForeColor = newColor(value)
+proc `foreColor=`*(this: ListViewItem, value: Color) {.inline.} = this.mForeColor = value
+proc foreColor*(this: ListViewItem): Color {.inline.} = this.mForeColor
+
+proc `font=`*(this: ListViewItem, value: Font) {.inline.} = this.mFont = value
+proc font*(this: ListViewItem): Font {.inline.} = this.mFont
+
 
 
 
@@ -378,6 +530,7 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     var this = cast[ListView](refData)
     case msg
     of WM_DESTROY:
+        this.destroyResources()
         RemoveWindowSubclass(hw, lvWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
