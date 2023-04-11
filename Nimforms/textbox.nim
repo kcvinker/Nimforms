@@ -42,6 +42,7 @@ const
     ES_UPPERCASE = 8
     ES_PASSWORD = 32
     EM_SETCUEBANNER = ECM_FIRST + 1
+    EN_CHANGE = 0x0300
 
 var tbCount = 1
 let TBSTYLE : DWORD = WS_CHILD or WS_VISIBLE or ES_LEFT or WS_TABSTOP or ES_AUTOHSCROLL or WS_MAXIMIZEBOX or WS_OVERLAPPED
@@ -150,8 +151,7 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
     of WM_COMMAND:
         let ncode = HIWORD(wpm)
-        case ncode
-        of EN_CHANGE:
+        if ncode == EN_CHANGE:
             if this.onTextChanged != nil: this.onTextChanged(this, newEventArgs())
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
