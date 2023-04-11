@@ -44,9 +44,9 @@ proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w
     result.mText = text
     result.mFont = parent.mFont
     result.mBackColor = parent.mBackColor
+    result.mForeColor = CLR_BLACK
     result.mAutoSize = true
     result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
-    result.mForeColor = CLR_BLACK
     result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTORADIOBUTTON
     result.mExStyle = WS_EX_LTRREADING or WS_EX_LEFT
     # result.mTextStyle = DT_SINGLELINE or DT_VCENTER
@@ -92,7 +92,8 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
     of MM_LABEL_COLOR:
         let hdc = cast[HDC](wpm)
-        SetBkColor(hdc, this.mBackColor.cref)
+        SetBkMode(hdc, 1)
+        if (this.mDrawMode and 2) == 2: SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
     of MM_CTL_COMMAND:
@@ -100,6 +101,7 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         if this.onCheckedChanged != nil: this.onCheckedChanged(this, newEventArgs())
 
     of MM_NOTIFY_REFLECT:
+        # We use this message only to change the fore color.
         let nmcd = cast[LPNMCUSTOMDRAW](lpm)
         case nmcd.dwDrawStage
         of CDDS_PREERASE: return CDRF_NOTIFYPOSTERASE
@@ -108,7 +110,9 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
                 nmcd.rc.left += 18
             else:
                 nmcd.rc.right -= 18
+
             if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
+            # SetBkMode(nmcd.hdc, 1)
             DrawTextW(nmcd.hdc, this.mText.toWcharPtr, -1, nmcd.rc.unsafeAddr, this.mTxtFlag)
             return CDRF_SKIPDEFAULT
         else: discard
