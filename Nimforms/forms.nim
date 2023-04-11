@@ -364,5 +364,9 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         let ctHwnd = cast[HWND](lpm)
         return SendMessageW(ctHwnd, MM_EDIT_COLOR, wpm, lpm)
 
+    of WM_CTLCOLORSTATIC:
+        let ctHwnd = cast[HWND](lpm)
+        return SendMessageW(ctHwnd, MM_LABEL_COLOR, wpm, lpm)
+
     else: return DefWindowProcW(hw, msg, wpm, lpm)
     return DefWindowProcW(hw, msg, wpm, lpm)
