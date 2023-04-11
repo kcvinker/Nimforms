@@ -8,4 +8,4 @@ All controls
 ## How to use:
 1. Clone or download the repo.
 2. Place the **Nimforms** folder in your project folder.
-3. Import **nimforms.nim** module in your source file. And start coding. 
+3. Import **Nimforms/nimforms** module in your source file. And start coding. 
