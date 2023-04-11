@@ -1,4 +1,34 @@
-# textbox module Created on 04-Apr-2023 03:44 AM
+# textbox module Created on 04-Apr-2023 03:44 AM; Author kcvinker
+# TextBox type
+#   Constructor - newTextBox*(parent: Form, text: string, x, y: int32 = 10, w: int32 = 120, h: int32 = 27): TextBox
+#   Functions
+        # createHandle() - Create the handle of textBox
+
+#     Properties - Getter & Setter available
+#       Name            Type
+        # font          Font
+        # text          string
+        # width         int32
+        # height        int32
+        # xpos          int32
+        # ypos          int32
+        # backColor     Color
+        # foreColor     Color
+        # textAlign     TextAlignment - {taLeft, taCenter, taRight}
+        # textCase      TextCase - {tcNormal, tcLowerCase, tcUpperCase}
+        # textType      TextType - {ttNormal, ttNumberOnly, ttPasswordChar}
+        # cueBanner     string
+        # multiLine     bool
+        # hideSelection bool
+        # readOnly      bool
+
+    # Events
+    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
+    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+
+    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
+    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+    #     onTextChanged*: EventHandler
 
 # Constants
 const
@@ -100,6 +130,7 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     var this = cast[TextBox](refData)
     case msg
     of WM_DESTROY:
+        this.destructor()
         RemoveWindowSubclass(hw, tbWndProc, scID)
     of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
     of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
@@ -116,6 +147,12 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
             if (this.mDrawMode and 2) == 2: SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
+
+    of WM_COMMAND:
+        let ncode = HIWORD(wpm)
+        case ncode
+        of EN_CHANGE:
+            if this.onTextChanged != nil: this.onTextChanged(this, newEventArgs())
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)
