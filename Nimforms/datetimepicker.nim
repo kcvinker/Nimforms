@@ -98,7 +98,7 @@ proc newDateTimePicker*(parent: Form, x, y: int32 = 10, w, h: int32 = 10): DateT
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK
     result.mFormat = dfCustom
-    result.mFmtStr = "dd-mm-yyyy"
+    result.mFmtStr = "dd-MM-yyyy"
     result.mAutoSize = true
     result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP
     result.mExStyle = 0
