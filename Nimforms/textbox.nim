@@ -64,7 +64,7 @@ proc newTextBox*(parent: Form, text: string, x, y: int32 = 10, w: int32 = 120, h
     result.mHeight = h
     result.mText = text
     result.mFont = parent.mFont
-    result.mBackColor = parent.mBackColor
+    result.mBackColor = CLR_WHITE
     # result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
     result.mForeColor = CLR_BLACK
     result.mStyle = TBSTYLE
