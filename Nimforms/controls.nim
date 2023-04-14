@@ -109,6 +109,13 @@ proc `backColor=`*(this: Control, value: uint) {.inline.} =
         this.mBkBrush = this.mBackColor.makeHBRUSH
         InvalidateRect(this.mHandle, nil, 0)
 
+proc `backColor=`*(this: Control, value: Color) {.inline.} =
+    this.mBackColor = value
+    if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
+    if this.mIsCreated:
+        this.mBkBrush = this.mBackColor.makeHBRUSH
+        InvalidateRect(this.mHandle, nil, 0)
+
 proc backColor*(this: Control): Color {.inline.} = return this.mBackColor
 
 proc `foreColor=`*(this: Control, value: uint) {.inline.} =
