@@ -422,6 +422,22 @@ proc `value=`*(this: TrackBar, value: int32) {.inline.} =
 
 proc value*(this: TrackBar): int32 {.inline.} = this.mValue
 
+proc `backColor=`*(this: TrackBar, value: uint) {.inline.} =
+    this.mBackColor = newColor(value)
+    if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
+    if this.mIsCreated:
+        this.mBkBrush = this.mBackColor.makeHBRUSH
+        this.sendMsg(TBM_SETRANGEMAX, 1, this.mMaxRange)
+        InvalidateRect(this.mHandle, nil, 0)
+
+proc `backColor=`*(this: TrackBar, value: Color) {.inline.} =
+    this.mBackColor = value
+    if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
+    if this.mIsCreated:
+        this.mBkBrush = this.mBackColor.makeHBRUSH
+        this.sendMsg(TBM_SETRANGEMAX, 1, this.mMaxRange)
+        InvalidateRect(this.mHandle, nil, 0)
+
 
 
 
