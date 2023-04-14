@@ -236,9 +236,9 @@ proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
                 discard this.drawBackColor(nmcd) # Back & Fore colors
                 ret = this.drawTextColor(nmcd)
             of 4: ret = this.drawGradientBackColor(nmcd) # Gradient only
-            # of 5: #------------------------------------------------Gradient & fore colors
-            #     this.drawGradientBackColor(nmcd)
-            #     ret = this.drawTextColor(nmcd)
+            of 5: #------------------------------------------------Gradient & fore colors
+                discard this.drawGradientBackColor(nmcd)
+                ret = this.drawTextColor(nmcd)
             else: discard
         return ret
 
