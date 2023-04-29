@@ -23,10 +23,6 @@ const # These 4 constants are used by ListView
 
 
 
-
-
-
-
 # Font related functions
 const
     LOGPIXELSY = 90
@@ -39,7 +35,7 @@ let CLR_WHITE = newColor(0xFFFFFF)
 let CLR_BLACK = newColor(0x000000)
 
 
-proc newFont(fname: string, fsize: int32, fweight: FontWeight = FontWeight.fwNormal,
+proc newFont*(fname: string, fsize: int32, fweight: FontWeight = FontWeight.fwNormal,
                 italic: bool = false, underline: bool = false, strikeout: bool = false) : Font =
     new(result)
     if fname.len > 32 : raise newException(OSError, "Length of font name exceeds 32 characters")
@@ -76,3 +72,128 @@ proc createHandle(this: Font, hw: HWND) =
 proc getMousePos(lpm: LPARAM): POINT = POINT(x: int32(LOWORD(lpm)), y: int32(HIWORD(lpm)))
 
 
+
+#===========================================MENU SECTION==============================================
+var staticMenuID : int32 = 100
+
+proc newMenuBar*(parent: Form, menuFont: Font = nil ) : MenuBar =
+    new(result)
+    result.mHmenubar = CreateMenu()
+    result.mParent = parent
+    result.mFont = if menuFont == nil: parent.mFont else: menuFont
+    result.mType = mtBaseMenu
+    result.mMenuCount = 0
+    parent.mMenuGrayBrush = newColor(0xced4da).makeHBRUSH()
+    parent.mMenuGrayCref = newColor(0x979dac).cref
+
+
+proc newMenuItem*(txt: string, typ: MenuType, parentHmenu : HMENU, indexNum: int32): MenuItem =
+    new(result)
+    result.mPopup = if typ == mtBaseMenu or typ == mtPopup: true else: false
+    result.mHmenu = if result.mPopup : CreatePopupMenu() else: CreateMenu()
+    result.mIndex = indexNum
+    result.mId = staticMenuID
+    result.mText = txt
+    result.mWideText = toWcharPtr(result.mText)
+    result.mType = typ
+    result.mParentHmenu = parentHmenu
+    result.mBgColor = newColor(0xe9ecef)
+    result.mFgColor = newColor(0x000000)
+    result.mIsEnabled = true
+    staticMenuID += 1
+
+proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU) =
+    var mii : MENUITEMINFOW
+    mii.cbSize = cast[UINT](mii.sizeof)
+    mii.fMask = MIIM_ID or MIIM_TYPE or MIIM_DATA or MIIM_SUBMENU or MIIM_STATE
+    mii.fType = MF_OWNERDRAW
+    mii.dwTypeData = this.mText.toLPWSTR()
+    mii.cch = cast[UINT](len(this.mText))
+    mii.dwItemData = cast[ULONG_PTR](cast[PVOID](this))
+    mii.wID = cast[UINT](this.mId)
+    mii.hSubMenu = if this.mPopup : this.mHmenu else: nil
+    InsertMenuItemW(parentHmenu, UINT(this.mIndex), 1, mii.unsafeAddr)
+    this.mIsCreated = true
+
+proc create(this: MenuItem) =
+    case this.mType
+    of mtBaseMenu, mtPopup:
+        if len(this.mMenus) > 0:
+            for key, menu in this.mMenus: menu.create()
+
+        this.insertMenuInternal(this.mParentHmenu)
+
+    of mtMenuItem:
+        this.insertMenuInternal(this.mParentHmenu)
+    of mtSeparator:
+        AppendMenuW(this.mParentHmenu, MF_SEPARATOR, 0, nil)
+    else: discard
+
+
+proc addMenu*(this: MenuBar, txt: string, txtColor: uint = 0x000000): MenuItem {.discardable.} =
+    result = newMenuItem(txt, mtBaseMenu, this.mHmenubar, this.mMenuCount)
+    result.mFormHwnd = this.mParent.mHandle
+    result.mFgColor = newColor(txtColor)
+    result.mFormMenu = true
+    this.mMenuCount += 1
+    this.mMenus[txt] = result
+    this.mParent.mMenuItemDict[result.mId] = result
+
+proc addMenu*(this: MenuItem, txt: string, txtColor: uint = 0x000000) : MenuItem {.discardable.} =
+    if this.mType == mtMenuItem:
+        this.mHmenu = CreatePopupMenu()
+        this.mPopup = true
+    result = newMenuItem(txt, mtMenuItem, this.mHmenu, this.mChildCount)
+    result.mFgColor = newColor(txtColor)
+    result.mFormHwnd = this.mFormHwnd
+    result.mFormMenu = this.mFormMenu
+    if this.mType != mtBaseMenu: this.mType = mtPopup
+    this.mChildCount += 1
+    this.mMenus[txt] = result
+    var lpm = cast[LPARAM](cast[PVOID](result))
+    if result.mFormMenu: SendMessageW(result.mFormHwnd, MM_MENU_ADDED, WPARAM(result.mId), lpm)
+
+
+proc addSeparator*(this: MenuItem) =
+    var mi = newMenuItem("", mtSeparator, this.mHmenu, this.mChildCount)
+    this.mChildCount += 1
+    this.mMenus[mi.mText] = mi
+
+proc createHandle*(this: MenuBar) =
+    this.mParent.mMenuDefBgBrush = newColor(0xe9ecef).makeHBRUSH()
+    this.mParent.mMenuHotBgBrush = newColor(0x90e0ef).makeHBRUSH()
+    this.mParent.mMenuFrameBrush = newColor(0x0077b6).makeHBRUSH()
+    this.mParent.mMenuFont = this.mFont
+    if len(this.mMenus) > 0:
+        for key, menu in this.mMenus: menu.create()
+
+    SetMenu(this.mParent.mHandle, this.mHmenubar)
+
+proc getChildFromIndex(this: MenuItem, index: int32): MenuItem =
+    for key, menu in this.mMenus:
+        if menu.mIndex == index:
+            return menu
+    return nil
+
+proc foreColor*(this : MenuItem): Color = this.mFgColor
+
+proc `foreColor=`*(this: MenuItem, value: uint) =
+    this.mFgColor = newColor(value)
+    if this.mType == mtBaseMenu: InvalidateRect(this.mHmenu, nil, 0)
+
+proc `foreColor=`*(this: MenuItem, value: Color) =
+    this.mFgColor = value
+    if this.mType == mtBaseMenu: InvalidateRect(this.mHmenu, nil, 0)
+
+
+proc enabled*(this: MenuItem): bool = this.mIsEnabled
+
+proc `enabled=`*(this: MenuItem, value: bool) =
+    this.mIsEnabled = value
+    if this.mType == mtBaseMenu: InvalidateRect(this.mHmenu, nil, 0)
+
+proc font*(this: MenuItem): Font = this.mFont
+
+proc `font=`*(this: MenuItem, value: Font) =
+    this.mFont = value
+    if this.mType == mtBaseMenu: InvalidateRect(this.mHmenu, nil, 0)

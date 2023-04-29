@@ -30,6 +30,8 @@ type
 
     EventHandler* = proc(c: Control, e: EventArgs)
 
+    MenuEventHandler* = proc(m: MenuItem, e: EventArgs)
+
     MouseButtons* {.pure.} = enum
         mbNone, mbLeft = 10_48_576, mbRight = 20_97_152, mbMiddle = 41_94_304,
         mbXButton1 = 83_88_608, mbXButton2 = 167_77_216
@@ -124,6 +126,10 @@ type
         drawMode: FormDrawMode
         mMaximizeBox, mMinimizeBox, mTopMost, mIsLoaded: bool
         mIsMouseTracking: bool
+        mMenuGrayBrush, mMenuDefBgBrush, mMenuHotBgBrush, mMenuFrameBrush : HBRUSH
+        mMenuFont : Font
+        mMenuGrayCref : COLORREF
+        mMenuItemDict : Table[int32, MenuItem]
         mComboData: Table[HWND, HWND]
 
         #Events
@@ -270,6 +276,43 @@ type
         #Events
         onCheckedChanged*, onSelectionChanged*, onItemDoubleClicked*: EventHandler
         onItemClicked*, onItemHover*: EventHandler
+
+    MenuType* {.pure.} = enum
+        mtBaseMenu, mtMenuItem, mtPopup, mtSeparator, mtMenubar, mtContextMenu, mtContextSep
+
+    MenuBar* = ref object
+        mHmenubar : HMENU
+        mFont : Font
+        mParent : Form
+        mType : MenuType
+        mMenuCount: int32
+        mMenus : Table[string, MenuItem]
+
+    MenuItem* = ref object
+        mIsCreated, mIsEnabled, mPopup, mFormMenu : bool
+        mId, mChildCount, mIndex : int32
+        mFont : Font
+        mWideText: LPCWSTR # For drawing make fast
+        mBgColor, mFgColor: Color
+        mHmenu, mParentHmenu: HMENU
+        mText : string
+        mType : MenuType
+        mFormHwnd : HWND
+        mMenus : Table[string, MenuItem]
+        # Events
+        onClick*, onPopup*, onCloseup*, onFocus* : MenuEventHandler
+
+    ContextMenu* = ref object
+        mHMenu : HMENU
+        mFont : Font
+        mWidth, mHeight, mMenuCount : int32
+        mGrayCref : COLORREF
+        mDummyHwnd : HWND
+        mDefBgBrush, mHotBgBrush, mBorderBrush, mGrayBrush : HBRUSH
+        mMenus : Table[string, MenuItem]
+        # Events
+        onMenuShown*, onMenuClose* : EventHandler
+
 
     NumberPicker* = ref object of Control
         mButtonLeft, mHasSeperator, mAutoRotate, mHideCaret: bool

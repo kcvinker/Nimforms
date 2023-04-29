@@ -61,31 +61,31 @@ type
 const
     CP_UTF8 = 65001
     PS_SOLID: cint = 0
-    DT_TOP* = 0x00000000
-    DT_LEFT* = 0x00000000
-    DT_CENTER* = 0x00000001
-    DT_RIGHT* = 0x00000002
-    DT_VCENTER* = 0x00000004
-    DT_BOTTOM* = 0x00000008
-    DT_WORDBREAK* = 0x00000010
-    DT_SINGLELINE* = 0x00000020
-    DT_EXPANDTABS* = 0x00000040
-    DT_TABSTOP* = 0x00000080
-    DT_NOCLIP* = 0x00000100
-    DT_EXTERNALLEADING* = 0x00000200
-    DT_CALCRECT* = 0x00000400
-    DT_NOPREFIX* = 0x00000800
-    DT_INTERNAL* = 0x00001000
-    DT_EDITCONTROL* = 0x00002000
-    DT_PATH_ELLIPSIS* = 0x00004000
-    DT_END_ELLIPSIS* = 0x00008000
-    DT_MODIFYSTRING* = 0x00010000
-    DT_RTLREADING* = 0x00020000
-    DT_WORD_ELLIPSIS* = 0x00040000
-    DT_NOFULLWIDTHCHARBREAK* = 0x00080000
-    DT_HIDEPREFIX* = 0x00100000
-    DT_PREFIXONLY* = 0x00200000
-    LF_FACESIZE* = 32
+    DT_TOP = 0x00000000
+    DT_LEFT = 0x00000000
+    DT_CENTER = 0x00000001
+    DT_RIGHT = 0x00000002
+    DT_VCENTER = 0x00000004
+    DT_BOTTOM = 0x00000008
+    DT_WORDBREAK = 0x00000010
+    DT_SINGLELINE = 0x00000020
+    DT_EXPANDTABS = 0x00000040
+    DT_TABSTOP = 0x00000080
+    DT_NOCLIP = 0x00000100
+    DT_EXTERNALLEADING = 0x00000200
+    DT_CALCRECT = 0x00000400
+    DT_NOPREFIX = 0x00000800
+    DT_INTERNAL = 0x00001000
+    DT_EDITCONTROL = 0x00002000
+    DT_PATH_ELLIPSIS = 0x00004000
+    DT_END_ELLIPSIS = 0x00008000
+    DT_MODIFYSTRING = 0x00010000
+    DT_RTLREADING = 0x00020000
+    DT_WORD_ELLIPSIS = 0x00040000
+    DT_NOFULLWIDTHCHARBREAK = 0x00080000
+    DT_HIDEPREFIX = 0x00100000
+    DT_PREFIXONLY = 0x00200000
+    LF_FACESIZE = 32
 
 # Custom  consts
 const
@@ -170,6 +170,54 @@ const
     BF_MONO = 0x8000
 
     GWL_STYLE = -16
+
+    # Menu Constants
+    MF_POPUP = 0x00000010
+    MF_STRING = 0x00000000
+    MF_SEPARATOR = 0x00000800
+    MF_CHECKED = 0x00000008
+    MNS_NOTIFYBYPOS = 0x08000000
+    MIM_STYLE = 0x00000010
+    TPM_RIGHTBUTTON = 0x0002
+    MF_OWNERDRAW = 0x00000100
+
+    MIIM_STATE = 0x00000001
+    MIIM_ID = 0x00000002
+    MIIM_SUBMENU = 0x00000004
+    MIIM_CHECKMARKS = 0x00000008
+    MIIM_TYPE = 0x00000010
+    MIIM_DATA = 0x00000020
+    MIIM_STRING = 0x00000040
+    MIIM_BITMAP = 0x00000080
+    MIIM_FTYPE = 0x00000100
+    MIM_MENUDATA = 0x00000008
+
+    MF_INSERT = 0x00000000
+    MF_CHANGE = 0x00000080
+    MF_APPEND = 0x00000100
+    MF_DELETE = 0x00000200
+    MF_REMOVE = 0x00001000
+    MF_BYCOMMAND = 0x00000000
+    MF_BYPOSITION = 0x00000400
+    MF_ENABLED = 0x00000000
+    MF_GRAYED = 0x00000001
+    MF_DISABLED = 0x00000002
+    MF_UNCHECKED = 0x00000000
+
+    MF_USECHECKBITMAPS = 0x00000200
+
+    MF_BITMAP = 0x00000004
+
+    MF_MENUBARBREAK = 0x00000020
+    MF_MENUBREAK = 0x00000040
+    MF_UNHILITE = 0x00000000
+    MF_HILITE = 0x00000080
+    MF_DEFAULT = 0x00001000
+    MF_SYSMENU = 0x00002000
+    MF_HELP = 0x00004000
+    MF_RIGHTJUSTIFY = 0x00004000
+    MF_MOUSESELECT = 0x00008000
+    MF_END = 0x00000080
 
 # Structs
 type
@@ -471,6 +519,42 @@ type
         iNewStateImageIndex: int32
     LPNMTVSTATEIMAGECHANGING = ptr NMTVSTATEIMAGECHANGING
 
+    MENUITEMINFOW {.pure.} = object
+        cbSize: UINT
+        fMask: UINT
+        fType: UINT
+        fState: UINT
+        wID: UINT
+        hSubMenu: HMENU
+        hbmpChecked: HBITMAP
+        hbmpUnchecked: HBITMAP
+        dwItemData: ULONG_PTR
+        dwTypeData: LPWSTR
+        cch: UINT
+        hbmpItem: HBITMAP
+    LPMENUITEMINFOW = ptr MENUITEMINFOW
+
+    MEASUREITEMSTRUCT {.pure.} = object
+        CtlType: UINT
+        CtlID: UINT
+        itemID: UINT
+        itemWidth: UINT
+        itemHeight: UINT
+        itemData: ULONG_PTR
+    LPMEASUREITEMSTRUCT = ptr MEASUREITEMSTRUCT
+
+    DRAWITEMSTRUCT {.pure.} = object
+        CtlType: UINT
+        CtlID: UINT
+        itemID: UINT
+        itemAction: UINT
+        itemState: UINT
+        hwndItem: HWND
+        hDC: HDC
+        rcItem: RECT
+        itemData: ULONG_PTR
+    LPDRAWITEMSTRUCT = ptr DRAWITEMSTRUCT
+
 
 
 
@@ -524,6 +608,16 @@ proc ScreenToClient(hWnd: HWND, lpPoint: LPPOINT): BOOL {.stdcall, dynlib: "user
 proc DrawEdge(hdc: HDC, qrc: LPRECT, edge: UINT, grfFlags: UINT): BOOL {. stdcall, dynlib: "user32", importc, discardable.}
 proc HideCaret(hWnd: HWND): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc SetWindowLongPtr(hWnd: HWND, nIndex: int32, dwNewLong: LONG_PTR): LONG_PTR {.stdcall, dynlib: "user32", importc: "SetWindowLongPtrW", discardable.}
+proc CreateMenu(): HMENU {.stdcall, dynlib: "user32", importc.}
+proc DestroyMenu(): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc CreatePopupMenu(): HMENU {.stdcall, dynlib: "user32", importc.}
+proc TrackPopupMenu(hMenu: HMENU, uFlags: UINT, x, y, nReserved: int32, hwnd: HWND, prcRect: LPRECT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc SetMenuItemInfoW(hMenu: HMENU, item: UINT, fByPos: BOOL, lpmii: LPMENUITEMINFOW): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc AppendMenuW(hMenu: HMENU, uFlags: UINT, uIdNewItem: UINT_PTR, lpNewItem: LPCWSTR): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc SetMenu(hwnd: HWND, hMenu: HMENU): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc InsertMenuItemW(hMenu: HMENU, item: UINT, fByPos: BOOL, lpmii: LPMENUITEMINFOW): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc ClientToScreen(hwnd: HWND, lpp: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc FrameRect(hDc: HDC, lprc: LPRECT, hBr: HBRUSH): INT {.stdcall, dynlib: "user32", importc, discardable.}
 
 # End of User32
 

@@ -361,6 +361,7 @@ const
     MM_VSCROLL: UINT = MM_NUMBER + 10
     MM_MENU_EVENT: UINT = MM_NUMBER + 11
     MM_NODE_NOTIFY: UINT = MM_NUMBER + 12
+    MM_MENU_ADDED: UINT = MM_NUMBER + 13
 
 
 type # Key enum to represent all the keyboard keys
