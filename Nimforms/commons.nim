@@ -71,6 +71,10 @@ proc createHandle(this: Font, hw: HWND) =
 # Some control needs to extract mouse position from lparam value.
 proc getMousePos(lpm: LPARAM): POINT = POINT(x: int32(LOWORD(lpm)), y: int32(HIWORD(lpm)))
 
+proc getMousePosOnMsg(): POINT =
+    let dw_value = GetMessagePos()
+    result.x = LONG(LOWORD(dw_value))
+    result.y = LONG(HIWORD(dw_value))
 
 
 #===========================================MENU SECTION==============================================
@@ -197,3 +201,9 @@ proc font*(this: MenuItem): Font = this.mFont
 proc `font=`*(this: MenuItem, value: Font) =
     this.mFont = value
     if this.mType == mtBaseMenu: InvalidateRect(this.mHmenu, nil, 0)
+
+
+
+
+
+

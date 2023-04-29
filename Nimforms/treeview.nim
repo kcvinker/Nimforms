@@ -463,6 +463,9 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of MM_NODE_NOTIFY: # Received when a node wants to add a child node
         var action = cast[NodeAction](wpm)
         case action

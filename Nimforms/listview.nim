@@ -539,6 +539,9 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
 
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of WM_NOTIFY: # This is from header.
         let nmh = cast[LPNMHDR](lpm)
         if nmh.code == NM_CUSTOMDRAW_NM:  # Let's draw header back & fore colors

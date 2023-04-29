@@ -455,6 +455,9 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of MM_HSCROLL, MM_VSCROLL:
         let lwp = LOWORD(wpm)
         case lwp

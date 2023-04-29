@@ -142,6 +142,9 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_KEYDOWN: this.keyDownHandler(wpm)
     of WM_KEYUP: this.keyUpHandler(wpm)
     of WM_CHAR: this.keyPressHandler(wpm)
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of MM_EDIT_COLOR:
         if this.mDrawMode > 0:
             let hdc = cast[HDC](wpm)

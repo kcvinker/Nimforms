@@ -46,6 +46,7 @@ proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
 
 proc destructor(this: Control) =
     if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
+    if this.mContextMenu != nil: DestroyWindow(this.mContextMenu.mDummyHwnd)
     # if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
 
 proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
@@ -127,6 +128,9 @@ proc foreColor*(this: Control): Color {.inline.} = return this.mForeColor
 
 
 
+
+
+
 # Event handlers for Control======================================================
 proc leftButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
     if this.onMouseDown != nil: this.onMouseDown(this, newMouseEventArgs(msg, wp, lp))
@@ -189,3 +193,16 @@ proc setIdealSize(this: Control) =
     this.mWidth = ss.cx
     this.mHeight = ss.cy
     MoveWindow(this.mHandle, this.mXpos, this.mYpos, ss.cx, ss.cy, 1)
+
+
+# Here we are including contextmenu module. Because, contextmenu should be available for all controls.
+include contextmenu
+
+# proc setContextMenuInternal(this: Control)
+
+proc `contextMenu=`*(this: Control, value: ContextMenu) =
+    this.mContextMenu = value
+
+proc setContextMenu*(parent: Control, menuNames: varargs[string, `$`]) : ContextMenu {.discardable.} =
+    result = newContextMenu(parent, menuNames)
+    parent.mContextMenu = result

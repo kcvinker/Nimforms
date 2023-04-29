@@ -168,6 +168,7 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     new(result)
     if not appData.appStarted: result.registerWinClass()
     appData.formCount += 1
+    result.mKind = ctForm
     result.mWidth = width
     result.mHeight = height
     result.mXpos = 100
@@ -452,6 +453,9 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             if menu != nil and menu.onClick != nil: menu.onClick(menu, newEventArgs())
             return 0
         else: discard
+
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     else: return DefWindowProcW(hw, msg, wpm, lpm)
     return DefWindowProcW(hw, msg, wpm, lpm)

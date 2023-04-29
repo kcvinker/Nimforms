@@ -90,6 +90,9 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of MM_LABEL_COLOR:
         let hdc = cast[HDC](wpm)
         SetBkMode(hdc, 1)

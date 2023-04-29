@@ -87,6 +87,9 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE: this.mouseLeaveHandler()
     of WM_GETTEXTLENGTH: return 0
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of WM_ERASEBKGND:
         if this.mDrawMode > 0:
             var rc: RECT

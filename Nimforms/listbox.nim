@@ -315,6 +315,9 @@ proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     of WM_KEYDOWN: this.keyDownHandler(wpm)
     of WM_KEYUP: this.keyUpHandler(wpm)
     of WM_CHAR: this.keyPressHandler(wpm)
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of MM_LIST_COLOR:
         let hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)

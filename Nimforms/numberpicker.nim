@@ -239,6 +239,9 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
     of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
     of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
     of WM_MOUSELEAVE:
         if this.mTrackMouseLeave:
             if not this.isMouseUponMe():

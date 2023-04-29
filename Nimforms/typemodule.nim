@@ -3,7 +3,7 @@ import tables
 
 type
     ControlType* {.pure.} = enum
-        ctNone, ctButton, ctCalendar, ctCheckBox, ctComboBox, ctDateTimePicker, ctGroupBox, ctLabel,
+        ctNone, ctButton, ctCalendar, ctCheckBox, ctComboBox, ctDateTimePicker, ctForm, ctGroupBox, ctLabel,
         ctListBox, ctListView, ctNumberPicker, ctProgressBar, ctRadioButton, ctTextBox, ctTrackBar, ctTreeView
 
     Color* = object
@@ -29,6 +29,8 @@ type
         cancelled*: bool
 
     EventHandler* = proc(c: Control, e: EventArgs)
+
+    ContextMenuEventHandler* = proc(c: ContextMenu, e: EventArgs)
 
     MenuEventHandler* = proc(m: MenuItem, e: EventArgs)
 
@@ -88,6 +90,7 @@ type
         mHandle: HWND
         mBackColor: Color
         mForeColor: Color
+        mContextMenu : ContextMenu
         mWidth, mHeight, mXpos, mYpos, mCtlID: int32
         mStyle, mExStyle: DWORD
         mDrawMode: uint32
@@ -303,13 +306,15 @@ type
         onClick*, onPopup*, onCloseup*, onFocus* : MenuEventHandler
 
     ContextMenu* = ref object
-        mHMenu : HMENU
+        mHmenu : HMENU
         mFont : Font
         mWidth, mHeight, mMenuCount : int32
+        mRightClick: bool
         mGrayCref : COLORREF
         mDummyHwnd : HWND
+        mParent: Control
         mDefBgBrush, mHotBgBrush, mBorderBrush, mGrayBrush : HBRUSH
-        mMenus : Table[string, MenuItem]
+        mMenus : seq[MenuItem]
         # Events
         onMenuShown*, onMenuClose* : EventHandler
 

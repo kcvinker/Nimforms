@@ -609,7 +609,7 @@ proc DrawEdge(hdc: HDC, qrc: LPRECT, edge: UINT, grfFlags: UINT): BOOL {. stdcal
 proc HideCaret(hWnd: HWND): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc SetWindowLongPtr(hWnd: HWND, nIndex: int32, dwNewLong: LONG_PTR): LONG_PTR {.stdcall, dynlib: "user32", importc: "SetWindowLongPtrW", discardable.}
 proc CreateMenu(): HMENU {.stdcall, dynlib: "user32", importc.}
-proc DestroyMenu(): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc DestroyMenu(hMenu: HMENU): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc CreatePopupMenu(): HMENU {.stdcall, dynlib: "user32", importc.}
 proc TrackPopupMenu(hMenu: HMENU, uFlags: UINT, x, y, nReserved: int32, hwnd: HWND, prcRect: LPRECT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc SetMenuItemInfoW(hMenu: HMENU, item: UINT, fByPos: BOOL, lpmii: LPMENUITEMINFOW): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
