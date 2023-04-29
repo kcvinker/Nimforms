@@ -427,6 +427,8 @@ proc `backColor=`*(this: TrackBar, value: uint) {.inline.} =
     if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
     if this.mIsCreated:
         this.mBkBrush = this.mBackColor.makeHBRUSH
+
+        # We need this to immediate redraw. This is the only reason we are overriding this prop
         this.sendMsg(TBM_SETRANGEMAX, 1, this.mMaxRange)
         InvalidateRect(this.mHandle, nil, 0)
 
