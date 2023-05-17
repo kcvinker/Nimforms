@@ -52,6 +52,7 @@ type
     PUINT* = ptr cuint
     BYTE* = uint8
     SHORT* = int16
+    USHORT* = uint16
 
     WNDPROC* = proc(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall.}
     SUBCLASSPROC* = proc (hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM,
@@ -178,6 +179,7 @@ const
     MF_CHECKED = 0x00000008
     MNS_NOTIFYBYPOS = 0x08000000
     MIM_STYLE = 0x00000010
+    TPM_LEFTBUTTON = 0x0000
     TPM_RIGHTBUTTON = 0x0002
     MF_OWNERDRAW = 0x00000100
 
