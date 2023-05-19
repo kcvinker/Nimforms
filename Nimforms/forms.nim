@@ -164,6 +164,24 @@ proc getMenuFromHmenu(this: Form, menuHandle: HMENU): MenuItem =
         if menu.mHmenu == menuHandle: return menu
     return nil
 
+proc setBkClrInternal(this: Form, hdc: HDC) : int32 =
+    var rct : RECT
+    GetClientRect(this.mHandle, rct.unsafeAddr)
+    if this.mFdMode == FormDrawMode.fdmFlat:
+        this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
+    elif this.mFdMode == FormDrawMode.fdmGradient:
+        this.mBkBrush = createGradientBrush(hdc, rct, this.mGrad.c1, this.mGrad.c2, this.mGrad.rtl)
+
+
+    let ret = FillRect(hdc, rct.unsafeAddr, this.mBkBrush)
+    return 1
+
+proc setGradientInfo(this: Form, c1, c2: uint, rtl: bool) =
+    this.mGrad.c1 = newColor(c1)
+    this.mGrad.c2 = newColor(c2)
+    this.mGrad.rtl = rtl
+
+
 proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form =
     new(result)
     if not appData.appStarted: result.registerWinClass()
@@ -175,6 +193,7 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mYpos = 100
     result.mFont = newFont("Tahoma", 11)
     result.mFormStyle = fsNormalWindow
+    result.mFdMode = fdmNormal
     result.mFormPos = fpCenter
     result.mMaximizeBox = true
     result.mMinimizeBox = true
@@ -212,7 +231,17 @@ proc display*(this: Form) =
 
 proc close*(this: Form) = DestroyWindow(this.mHandle)
 
+proc setGradientBackColor*(this: Form, clr1, clr2 : uint, rtl: bool = false) =
+    this.mFdMode = fdmGradient
+    this.setGradientInfo(clr1, clr2, rtl )
+    if this.mIsCreated: InvalidateRect(this.mHandle, nil, 1)
+
 # Properties
+proc `backColor=`*(this: Form, value: uint) =
+    this.mFdMode = fdmFlat
+    this.mBackColor = newColor(value)
+    if this.mIsCreated: InvalidateRect(this.mHandle, nil, 1)
+
 proc `startPos=`*(this: Form, value: FormPos) {.inline.} =
     this.mFormPos = value
     if this.mIsCreated: discard
@@ -373,6 +402,10 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         let ctHwnd = cast[HWND](lpm)
         return SendMessageW(ctHwnd, MM_LABEL_COLOR, wpm, lpm)
 
+    of WM_ERASEBKGND:
+        if this.mFdMode != fdmNormal: return this.setBkClrInternal(cast[HDC](wpm))
+
+
     of WM_MEASUREITEM:
         var pmi = cast[LPMEASUREITEMSTRUCT](lpm)
         var mi = cast[MenuItem](cast[PVOID](pmi.itemData))
@@ -449,9 +482,10 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     of WM_COMMAND:
         case HIWORD(wpm)
         of 0:
-            var menu = this.mMenuItemDict[int32(LOWORD(wpm))]
-            if menu != nil and menu.onClick != nil: menu.onClick(menu, newEventArgs())
-            return 0
+            if len(this.mMenuItemDict) > 0:
+                var menu = this.mMenuItemDict[int32(LOWORD(wpm))]
+                if menu != nil and menu.onClick != nil: menu.onClick(menu, newEventArgs())
+                return 0
         else: discard
 
     of WM_CONTEXTMENU:

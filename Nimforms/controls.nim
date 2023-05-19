@@ -67,6 +67,8 @@ proc getControlText(hw: HWND): string =
     result = toUtf8String(buffer)
 
 # Control class's properties==========================================
+proc handle*(this: Control): HWND = this.mHandle
+
 proc `font=`*(this: Control, value: Font) {.inline.} =
     this.mFont = value
     if this.mIsCreated: this.setFontInternal()

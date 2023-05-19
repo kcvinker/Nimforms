@@ -121,17 +121,22 @@ type
     FormDrawMode {.pure.} = enum
         fdmNormal, fdmFlat, fdmGradient
 
+    FormGrad = object
+        c1, c2 : Color
+        rtl : bool
+
     Form* = ref object of Control
         hInstance: HINSTANCE
         mFormPos: FormPos
         mFormStyle: FormStyle
         mFormState: WindowState
-        drawMode: FormDrawMode
+        mFdMode: FormDrawMode
         mMaximizeBox, mMinimizeBox, mTopMost, mIsLoaded: bool
         mIsMouseTracking: bool
         mMenuGrayBrush, mMenuDefBgBrush, mMenuHotBgBrush, mMenuFrameBrush : HBRUSH
         mMenuFont : Font
         mMenuGrayCref : COLORREF
+        mGrad : FormGrad
         mMenuItemDict : Table[int32, MenuItem]
         mComboData: Table[HWND, HWND]
 
@@ -283,7 +288,7 @@ type
     MenuType* {.pure.} = enum
         mtBaseMenu, mtMenuItem, mtPopup, mtSeparator, mtMenubar, mtContextMenu, mtContextSep
 
-    MenuBar* = ref object
+    MenuBar* = ref object # Implemented in commons.nim
         mHmenubar : HMENU
         mFont : Font
         mParent : Form

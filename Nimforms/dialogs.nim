@@ -13,7 +13,6 @@ const
     BIF_NONEWFOLDERBUTTON = 0x00000200
     BIF_BROWSEINCLUDEFILES = 0x00004000
 
-
 type
     DialogBase = ref object of RootObj
         kind : DialogType

@@ -2,8 +2,8 @@
 # contextmenu module - Created on 29-Apr-2023 16:45
 # This module is included at the end of controls.nim
 
-const
-    TPM_LEFTBUTTON = 0x0000
+# const
+    # TPM_LEFTBUTTON = 0x0000
     # TPM_RIGHTBUTTON = 0x0002
 
 # You might ask why did functions are scattered around in this module.
@@ -100,7 +100,6 @@ proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextM
     SetWindowSubclass(result.mDummyHwnd, cmenuWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](result)))
     globalSubClassID += 1
     if len(menuNames) > 0:
-        var indx = 0
         for name in menuNames:
             let mtyp = if name == "_": mtContextSep else: mtContextMenu
             var mi = newMenuItem(name, mtyp, result.mHmenu, result.mMenuCount)
@@ -108,9 +107,9 @@ proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextM
             if mtyp == mtContextMenu:
                 mi.insertMenuInternal(result.mHMenu)
                 result.mMenus.add(mi)
-            elif mtyp == mtContextMenu:
+            elif mtyp == mtSeparator:
                 AppendMenuW(result.mHmenu, MF_SEPARATOR, 0, nil)
-            indx += 1
+
 
 
 proc showMenu(this: ContextMenu, lpm: LPARAM) =
