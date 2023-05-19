@@ -1,5 +1,6 @@
 # dialogs module Created on 17-May-2023 06:32
 
+import std/strformat
 const
     MAX_PATH = 260
     OFN_ALLOWMULTISELECT = 0x200
@@ -12,6 +13,7 @@ const
     BIF_EDITBOX = 0x00000010
     BIF_NONEWFOLDERBUTTON = 0x00000200
     BIF_BROWSEINCLUDEFILES = 0x00004000
+    OFN_EXPLORER = 0x00080000
 
 type
     DialogBase = ref object of RootObj
@@ -21,6 +23,7 @@ type
 
     FileOpenDialog* = ref object of DialogBase
         mMultiSel, mShowHidden : bool
+        mSelFiles : seq[string]
 
     FileSaveDialog* = ref object of DialogBase
         mDefExt : string
@@ -112,7 +115,7 @@ proc newFolderBrowserDialog*(title: string = "Save As", initDir: string = ""): F
     new(result)
     initDialogBase(result, title, initDir)
 
-# Setter functions
+# Getter functions
 proc selectedPath*(this: DialogBase): string = this.mSelPath
 proc nameStartPos*(this: DialogBase): int = this.mFileStart
 proc extStartPos*(this: DialogBase): int = this.mExtStart
@@ -123,8 +126,9 @@ proc multiSelect*(this: FileOpenDialog): bool = this.mMultiSel
 proc showHiddenFiles*(this: FileOpenDialog): bool = this.mShowHidden
 proc newFolderButton*(this: FolderBrowserDialog): bool = this.mNewFolBtn
 proc showFiles*(this: FolderBrowserDialog): bool = this.mShowFiles
+proc fileNames*(this: FileOpenDialog): seq[string] = this.mSelFiles
 
-# Getter functions
+# Setter functions
 proc `title=`*(this: DialogBase, value: string) = this.mTitle = value
 proc `initialFolder=`*(this: DialogBase, value: string) = this.mInitDir = value
 proc `filter=`*(this: DialogBase, value: string) = this.mFilter = value
@@ -132,6 +136,20 @@ proc `multiSelect=`*(this: FileOpenDialog, value: bool) = this.mMultiSel = value
 proc `showHiddenFiles=`*(this: FileOpenDialog, value: bool) = this.mShowHidden = value
 proc `newFolderButton=`*(this: FolderBrowserDialog, value: bool) = this.mNewFolBtn = value
 proc `showFiles=`*(this: FolderBrowserDialog, value: bool) = this.mShowFiles = value
+
+
+
+
+proc extractFileNames(this: FileOpenDialog, buff: seq[WCHAR], startPos: int) =
+    var offset : int = startPos
+    let dirPath = toUtf8String(buff[0..startPos - 2]) # First item in buff is the directory path.
+    for i in startPos .. MAX_PATH:
+        let wc : WCHAR = buff[i]
+        if ord(wc) == 0:
+            var slice : seq[WCHAR] = buff[offset..i - 1]
+            offset = i + 1
+            this.mSelFiles.add(fmt"{dirPath}\{toUtf8String(slice)}")
+            if ord(buff[offset]) == 0: break
 
 
 proc showDialogHelper(obj: DialogBase, hwnd: HWND = nil): bool =
@@ -149,9 +167,10 @@ proc showDialogHelper(obj: DialogBase, hwnd: HWND = nil): bool =
     if obj.kind == DialogType.fileOpen:
         let fod = cast[FileOpenDialog](obj)
         ofn.Flags = OFN_PATHMUSTEXIST or OFN_FILEMUSTEXIST
-        if fod.mMultiSel: ofn.Flags = ofn.Flags or OFN_ALLOWMULTISELECT
+        if fod.mMultiSel: ofn.Flags = ofn.Flags or OFN_ALLOWMULTISELECT or OFN_EXPLORER
         if fod.mShowHidden: ofn.Flags = ofn.Flags or OFN_FORCESHOWHIDDEN
         ret = GetOpenFileNameW(ofn.unsafeAddr)
+        if ret > 0 and fod.mMultiSel: fod.extractFileNames(buffer, cast[int](ofn.nFileOffset))
     else:
         let fsd = cast[FileSaveDialog](obj)
         ofn.Flags = OFN_PATHMUSTEXIST or OFN_OVERWRITEPROMPT
