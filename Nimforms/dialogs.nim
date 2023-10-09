@@ -20,6 +20,7 @@ type
         kind : DialogType
         mTitle, mInitDir, mFilter, mSelPath : string
         mFileStart, mExtStart : int
+        mAllowAllFiles: bool
 
     FileOpenDialog* = ref object of DialogBase
         mMultiSel, mShowHidden : bool
@@ -96,19 +97,19 @@ proc SHBrowseForFolderW(lpbi: LPBROWSEINFOW): PIDLIST_ABSOLUTE {.stdcall, dynlib
 proc SHGetPathFromIDListW(pidl: PCIDLIST_ABSOLUTE, pszPath: LPWSTR): BOOL {.stdcall, dynlib: "shell32", importc.}
 proc CoTaskMemFree(pv: LPVOID): void {.stdcall, dynlib: "ole32", importc.}
 
-proc initDialogBase(this: DialogBase, ttl: string, initDir: string, filter: string = "") =
+proc initDialogBase(this: DialogBase, ttl: string, initDir: string) =
     this.mTitle = ttl
     this.mInitDir = initDir
-    this.mFilter = if filter == "": "All Files" & "\0" & "*.*" & "\0" else: filter
+    # this.mFilter = if filter == "": "All Files" & "\0" & "*.*" & "\0" else: filter
 
-proc newFileOpenDialog*(title: string = "Open file", initDir: string = "", filter: string = ""): FileOpenDialog =
+proc newFileOpenDialog*(title: string = "Open file", initDir: string = ""): FileOpenDialog =
     new(result)
-    initDialogBase(result, title, initDir, filter)
+    initDialogBase(result, title, initDir)
     result.kind = DialogType.fileOpen
 
-proc newFileSaveDialog*(title: string = "Save As", initDir: string = "", filter: string = ""): FileSaveDialog =
+proc newFileSaveDialog*(title: string = "Save As", initDir: string = ""): FileSaveDialog =
     new(result)
-    initDialogBase(result, title, initDir, filter)
+    initDialogBase(result, title, initDir)
     result.kind = DialogType.fileSave
 
 proc newFolderBrowserDialog*(title: string = "Save As", initDir: string = ""): FolderBrowserDialog =
@@ -136,6 +137,7 @@ proc `multiSelect=`*(this: FileOpenDialog, value: bool) = this.mMultiSel = value
 proc `showHiddenFiles=`*(this: FileOpenDialog, value: bool) = this.mShowHidden = value
 proc `newFolderButton=`*(this: FolderBrowserDialog, value: bool) = this.mNewFolBtn = value
 proc `showFiles=`*(this: FolderBrowserDialog, value: bool) = this.mShowFiles = value
+proc `allowAllFiles=`*(this: DialogBase, value: bool) = this.mAllowAllFiles = value
 
 
 
@@ -153,6 +155,11 @@ proc extractFileNames(this: FileOpenDialog, buff: seq[WCHAR], startPos: int) =
 
 
 proc showDialogHelper(obj: DialogBase, hwnd: HWND = nil): bool =
+    if obj.mFilter.len == 0:
+        obj.mFilter = "All files\0*.*\0"
+    else:
+        if obj.mAllowAllFiles:
+            obj.mFilter = fmt("{obj.mFilter}All files\0*.*\0")
     var ofn: OPENFILENAMEW
     var buffer: seq[WCHAR] = newSeq[WCHAR](MAX_PATH)
     ofn.hwndOwner = hwnd
@@ -205,4 +212,18 @@ proc showDialog*(this: FolderBrowserDialog, hwnd: HWND = nil): bool {.discardabl
 
 
 
+proc setFilter*(this: DialogBase, filterName, ext: string) =
+    if this.mFilter.len > 0:
+        this.mFilter = fmt("{this.mFilter}{filterName}\0*{ext}\0");
+    else:
+        this.mFilter = fmt("{filterName}\0*{ext}\0")
 
+proc setMultipleFilters*(this: DialogBase, description: string, extSeq: seq[string]) =
+    # Adding multiple filters with single discription
+    this.mFilter = fmt("{description}\0")
+    let fillCount = extSeq.len - 1
+    for i, ext in extSeq:
+        this.mFilter &= fmt("*{ext}")
+        if i < fillCount:
+            this.mFilter &= ";"
+    this.mFilter &= "\0\0"

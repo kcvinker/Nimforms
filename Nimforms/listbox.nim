@@ -121,9 +121,9 @@ var lbxCount = 1
 
 # Forward declaration
 proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: ListBox)
 # ListBox constructor
-proc newListBox*(parent: Form, x, y: int32 = 10, w, h: int32 = 140): ListBox =
+proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 140, rapid : bool = false ): ListBox =
     new(result)
     result.mKind = ctListBox
     result.mClassName = "Listbox"
@@ -141,7 +141,7 @@ proc newListBox*(parent: Form, x, y: int32 = 10, w, h: int32 = 140): ListBox =
     result.mStyle = WS_VISIBLE or WS_CHILD or WS_BORDER  or LBS_NOTIFY or LBS_HASSTRINGS
     result.mExStyle = 0
     lbxCount += 1
-
+    if rapid: result.createHandle()
 
 proc setLbxStyle(this: ListBox) =
     if this.mHasSort: this.mStyle = this.mStyle or LBS_SORT

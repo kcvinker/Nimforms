@@ -29,9 +29,9 @@ var rbCount = 1
 
 # Forward declaration
 proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: RadioButton)
 # RadioButton constructor
-proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w, h: int32 = 0): RadioButton =
+proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, rapid : bool = false): RadioButton =
     new(result)
     result.mKind = ctRadioButton
     result.mClassName = "Button"
@@ -51,6 +51,7 @@ proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w
     result.mExStyle = WS_EX_LTRREADING or WS_EX_LEFT
     # result.mTextStyle = DT_SINGLELINE or DT_VCENTER
     rbCount += 1
+    if rapid: result.createHandle()
 
 proc setRBStyle(this: RadioButton) =
     if this.mRightAlign:

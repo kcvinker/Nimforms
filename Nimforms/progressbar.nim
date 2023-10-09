@@ -53,9 +53,9 @@ var pbCount = 1
 
 # Forward declaration
 proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: ProgressBar)
 # ProgressBar constructor
-proc newProgressBar*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 25): ProgressBar =
+proc newProgressBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 200, h: int32 = 25, rapid: bool = false): ProgressBar =
     new(result)
     result.mKind = ctProgressBar
     result.mClassName = "msctls_progress32"
@@ -77,6 +77,7 @@ proc newProgressBar*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 
     result.mBarStyle = pbsBlock
     result.mMarqueeSpeed = 30
     pbCount += 1
+    if rapid: result.createHandle()
 
 
 proc setPbStyle(this: ProgressBar) =

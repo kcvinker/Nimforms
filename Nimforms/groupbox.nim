@@ -31,9 +31,9 @@ let gbStyle: DWORD = WS_CHILD or WS_VISIBLE or BS_GROUPBOX or BS_NOTIFY or BS_TO
 
 # Forward declaration
 proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: GroupBox)
 # GroupBox constructor
-proc newGroupBox*(parent: Form, text: string, x, y: int32 = 10, w, h: int32 = 150): GroupBox =
+proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 150, h: int32 = 150, rapid : bool = false ): GroupBox =
     new(result)
     result.mKind = ctGroupBox
     result.mClassName = "Button"
@@ -50,6 +50,7 @@ proc newGroupBox*(parent: Form, text: string, x, y: int32 = 10, w, h: int32 = 15
     result.mStyle = gbStyle
     result.mExStyle = WS_EX_TRANSPARENT or WS_EX_CONTROLPARENT
     gbCount += 1
+    if rapid: result.createHandle()
 
 
 proc getTextSize(this: GroupBox) =

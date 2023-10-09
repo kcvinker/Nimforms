@@ -82,9 +82,9 @@ var dtpCount = 1
 
 # Forward declaration
 proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: DateTimePicker)
 # DateTimePicker constructor
-proc newDateTimePicker*(parent: Form, x, y: int32 = 10, w, h: int32 = 10): DateTimePicker =
+proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 10, rapid : bool = false): DateTimePicker =
     new(result)
     result.mKind = ctDateTimePicker
     result.mClassName = "SysDateTimePick32"
@@ -108,6 +108,7 @@ proc newDateTimePicker*(parent: Form, x, y: int32 = 10, w, h: int32 = 10): DateT
         InitCommonControlsFunc(appData.iccEx.unsafeAddr)
 
     dtpCount += 1
+    if rapid: result.createHandle()
 
 proc setDTPStyles(this: DateTimePicker) =
     case this.mFormat

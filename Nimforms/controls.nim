@@ -77,7 +77,8 @@ proc font*(this: Control): Font {.inline.} = return this.mFont
 
 proc `text=`*(this: Control, value: string) {.inline.} =
     this.mText = value
-    if this.mIsCreated: discard
+    if this.mIsCreated:
+        SetWindowTextW(this.mHandle, this.mText.toWcharPtr);
 
 proc text*(this: Control): string {.inline.} = return this.mText
 
@@ -128,6 +129,11 @@ proc `foreColor=`*(this: Control, value: uint) {.inline.} =
 
 proc foreColor*(this: Control): Color {.inline.} = return this.mForeColor
 
+proc left*(this: Control): int32 = int32(this.mcRect.left)
+proc top*(this: Control): int32 = int32(this.mcRect.top)
+proc right*(this: Control): int32 = int32(this.mcRect.left + this.mWidth)
+proc bottom*(this: Control): int32 = int32(this.mcRect.top + this.mHeight)
+
 
 
 
@@ -174,10 +180,17 @@ proc keyPressHandler(this: Control, wp: WPARAM) =
 
 
 # Package level functions====================================================
+proc setControlRect(this: Control) =
+    var lprct = this.mcRect.unsafeAddr
+    GetClientRect(this.mHandle, lprct);
+    MapWindowPoints(this.mHandle, this.mParent.mHandle, cast[LPPOINT](lprct), 2);
+    # echo this.mKind, " Set rect"
+
 proc createHandleInternal(this: Control, specialCtl: bool = false) =
     if not specialCtl:
         this.mCtlID = globalCtlID
         globalCtlID += 1
+    # echo "creation started ", this.mKind
     this.mHandle = CreateWindowExW( this.mExStyle,
                                     toWcharPtr(this.mClassName),
                                     toWcharPtr(this.mText),
@@ -186,7 +199,9 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
                                     this.mParent.mHandle, cast[HMENU](this.mCtlID),
                                     this.mParent.hInstance, nil)
     if this.mHandle != nil:
+        # echo "creation finished ", this.mKind
         this.mIsCreated = true
+        this.setControlRect()
 
 # Only used CheckBox & RadioButton
 proc setIdealSize(this: Control) =

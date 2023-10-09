@@ -36,9 +36,9 @@ var lbCount = 1
 
 # Forward declaration
 proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: Label)
 # Label constructor
-proc newLabel*(parent: Form, text: string, x, y: int32 = 10, w, h: int32 = 0): Label =
+proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, rapid : bool = false): Label =
     new(result)
     result.mKind = ctLabel
     result.mClassName = "Static"
@@ -57,6 +57,8 @@ proc newLabel*(parent: Form, text: string, x, y: int32 = 10, w, h: int32 = 0): L
     result.mStyle = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or WS_CLIPSIBLINGS or SS_NOTIFY
     result.mExStyle = 0
     lbCount += 1
+    if rapid:
+        createHandle(result)
 
 
 proc setLbStyle(this: Label) =

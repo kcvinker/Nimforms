@@ -65,6 +65,7 @@ var calCount = 1
 
 # Forward declaration
 proc calWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
+proc createHandle*(this: Calendar)
 
 proc newDateAndTime*(st: SYSTEMTIME): DateAndTime =
     result.year = int32(st.wYear)
@@ -87,8 +88,9 @@ proc makeSystemTime(dt: DateAndTime): SYSTEMTIME =
     result.wDayOfWeek = WORD(dt.dayOfWeek)
 
 
+
 # Calendar constructor
-proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar =
+proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10, rapid : bool = false): Calendar =
     new(result)
     result.mKind = ctCalendar
     result.mClassName = "SysMonthCal32"
@@ -102,6 +104,7 @@ proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar =
     result.mStyle = WS_CHILD or WS_TABSTOP or WS_VISIBLE
     result.mViewMode = vmMonthView
     calCount += 1
+    if rapid: result.createHandle()
 
 proc setCalStyle(this: Calendar) =
     if this.mShowWeekNum: this.mStyle = this.mStyle or MCS_WEEKNUMBERS

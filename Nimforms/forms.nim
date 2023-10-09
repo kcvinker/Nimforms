@@ -278,6 +278,10 @@ proc `topMost=`*(this: Form, value: bool) {.inline.} =
 
 proc topMost*(this: Form): bool {.inline.} = return this.mTopMost
 
+proc printPointInternal(ctl: Control, e: MouseEventArgs) =
+    echo "[X]: ", e.x, "  [Y]: ", e.y
+
+proc printPoint*(this: Form) = this.onMouseUp = printPointInternal
 
 proc trackMouseMove(hw: HWND) =
     var tme: TRACKMOUSEEVENT
@@ -289,8 +293,14 @@ proc trackMouseMove(hw: HWND) =
 
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
+    echo msg
     var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    # echo msg
     case msg
+    of 799:
+        echo "799 arrived"
+        return 1
+
     of WM_DESTROY:
         this.destructor()
         if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
@@ -301,6 +311,7 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         if this.onClosing != nil: this.onClosing(this, newEventArgs())
 
     of WM_SHOWWINDOW:
+        echo "wm show window"
         if not this.mIsLoaded:
             this.mIsLoaded = true
             if this.onLoad != nil: this.onLoad(this, newEventArgs())
@@ -392,6 +403,7 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
 
     of WM_NOTIFY:
         let nmh = cast[LPNMHDR](lpm)
+        # echo "nmhdr code ", $nmh.code
         return SendMessageW(nmh.hwndFrom, MM_NOTIFY_REFLECT, wpm, lpm)
 
     of WM_CTLCOLOREDIT:

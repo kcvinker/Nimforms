@@ -30,9 +30,10 @@ var cbCount = 1
 
 # Forward declaration
 proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
+proc createHandle*(this: CheckBox)
 
 # CheckBox constructor
-proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w, h: int32 = 0): CheckBox =
+proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, rapid: bool = false): CheckBox =
     new(result)
     result.mKind = ctCheckBox
     result.mClassName = "Button"
@@ -51,6 +52,7 @@ proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w, h
     result.mExStyle = WS_EX_LTRREADING or WS_EX_LEFT
     result.mTextStyle = DT_SINGLELINE or DT_VCENTER
     cbCount += 1
+    if rapid: result.createHandle()
 
 proc setCbStyle(this: CheckBox) =
     if this.mRightAlign:

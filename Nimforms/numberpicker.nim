@@ -67,9 +67,10 @@ let SWP_FLAG: DWORD = SWP_SHOWWINDOW or SWP_NOACTIVATE or SWP_NOZORDER
 # Forward declaration
 proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
+proc createHandle*(this: NumberPicker)
 
 # NumberPicker constructor
-proc newNumberPicker*(parent: Form, x, y: int32 = 10, w: int32 = 100, h: int32 = 27): NumberPicker =
+proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27, rapid: bool = false): NumberPicker =
     new(result)
     result.mKind = ctNumberPicker
     result.mClassName = "msctls_updown32"
@@ -94,6 +95,7 @@ proc newNumberPicker*(parent: Form, x, y: int32 = 10, w: int32 = 100, h: int32 =
     result.mBuddyExStyle = WS_EX_LTRREADING or WS_EX_LEFT
     result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
     npCount += 1
+    if rapid: result.createHandle()
 
 
 proc setNPStyle(this: NumberPicker) =
@@ -147,6 +149,8 @@ proc postCreationTasks(this: NumberPicker) =
     GetClientRect(this.mBuddyHandle, this.mBuddyRect.unsafeAddr)
     GetClientRect(this.mHandle, this.mUpdRect.unsafeAddr)
     this.resizeBuddy()
+    this.mMyRect.right = this.mMyRect.left + this.mBuddyRect.right + this.mUpdRect.right
+    this.mMyRect.bottom = this.mMyRect.top + this.mBuddyRect.bottom
     this.displayValue()
     if oldBuddy != nil: SendMessageW(oldBuddy, MM_BUDDY_RESIZE, 0, 0) # This is a hack
 
@@ -179,6 +183,27 @@ proc createHandle*(this: NumberPicker) =
         this.setFontInternal()
         this.createBuddy()
         this.postCreationTasks()
+        this.mcRect = this.mMyRect
+        # var pArr : array[4, POINT]
+        # pArr[0] = POINT(x : this.mMyRect.left, y: this.mMyRect.top)
+        # pArr[1] = POINT(x: this.mMyRect.right, y: this.mMyRect.top)
+        # pArr[2] = POINT(x: this.mMyRect.right, y: this.mMyRect.bottom)
+        # pArr[3] = POINT(x: this.mMyRect.left, y: this.mMyRect.bottom)
+        # var pnt : POINT = POINT(x : this.mUpdRect.right, y: this.mUpdRect.bottom)
+        # for i, p in pArr:
+        # MapWindowPoints(this.mBuddyHandle, this.mParent.mHandle, pnt.unsafeAddr, 1)
+        # echo "left ", this.mMyRect.left
+        # echo "top ", this.mMyRect.top
+        # echo "right ", (this.mMyRect.right - this.mMyRect.left) + (this.mUpdRect.right - this.mUpdRect.left)
+        # echo "bottom ", pnt.y
+        # for i, p in pArr:
+        #     echo "point ", i, " x: ", p.x, " y: ", p.y
+
+        # echo " my rect ", this.mMyRect
+        # echo " BuddyRect ", this.mBuddyRect
+        # echo " UpdRect ", this.mUpdRect
+
+
 
 
 # Properties---------------------------------------------------------------------------
@@ -193,8 +218,8 @@ proc `value=`*(this: NumberPicker, fValue: auto) = # Accepts int or float
     this.mValue = (if fValue is int: float(fValue) else: fValue)
     if this.mIsCreated: this.displayValue()
 
-template value*(this: NumberPicker): auto = # Return int or float
-    result = (if this.mDeciPrec > 0: this.mValue else: int(this.mValue))
+proc value*(this: NumberPicker): auto = # Return int or float
+    result = (if this.mDeciPrec > 0: this.mValue else: this.mValue)
 
 proc `buttonLeft=`*(this: NumberPicker, value: bool) = this.mButtonLeft = value
 proc buttonLeft*(this: NumberPicker): bool = this.mButtonLeft
@@ -223,6 +248,10 @@ proc decimalDigits*(this: NumberPicker): int = int(this.mDeciPrec)
 
 proc `textAlign=`*(this: NumberPicker, value: TextAlignment) = this.mTxtPos = value
 proc textAlign*(this: NumberPicker): TextAlignment = this.mTxtPos
+
+# , mUpdRect
+# proc right*(this: NumberPicker): int32 = int32(this.mBuddyRect.left + this.mWidth + this.mUpdRect.right)
+# proc bottom*(this: NumberPicker): int32 = int32(this.mBuddyRect.bottom)
 
 
 

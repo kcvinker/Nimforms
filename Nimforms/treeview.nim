@@ -24,6 +24,7 @@
         # ypos              int32
         # backColor         Color
         # foreColor         Color
+
         # selectedNode      TreeNode
         # foreColor         Color, For setter, uint is also acceptable
         # noLine            bool
@@ -154,9 +155,9 @@ var tvCount = 1
 let TVSTYLE : DWORD = WS_BORDER or WS_CHILD or WS_VISIBLE or TVS_HASLINES or TVS_HASBUTTONS or TVS_LINESATROOT or TVS_DISABLEDRAGDROP
 # Forward declaration
 proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: TreeView)
 # TreeView constructor
-proc newTreeView*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 150): TreeView =
+proc newTreeView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 200, h: int32 = 150, rapid : bool = false): TreeView =
     new(result)
     result.mKind = ctTreeView
     result.mClassName = "SysTreeView32"
@@ -174,8 +175,9 @@ proc newTreeView*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 150
     result.mLineColor = CLR_BLACK
     result.mUniqNodeID = 100
     tvCount += 1
+    if rapid: result.createHandle()
 
-proc newTreeNode*(text: string, img, selImg: int32 = -1): TreeNode =
+proc newTreeNode*(text: string, img: int32 = -1, selImg: int32 = -1): TreeNode =
     new(result)
     result.mImgIndex = img
     result.mSelImgIndex = selImg

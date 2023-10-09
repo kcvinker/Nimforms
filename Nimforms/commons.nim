@@ -203,7 +203,8 @@ proc `font=`*(this: MenuItem, value: Font) =
     if this.mType == mtBaseMenu: InvalidateRect(this.mHmenu, nil, 0)
 
 
-
+proc sendThreadMsg(hwnd: HWND, wpm: WPARAM, lpm: LPARAM) =
+    SendNotifyMessageW(hwnd, MM_THREAD_MSG, wpm, lpm)
 
 
 

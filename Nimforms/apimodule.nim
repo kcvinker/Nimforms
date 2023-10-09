@@ -590,6 +590,7 @@ proc DestroyWindow(hWnd: HWND): BOOL {.stdcall, dynlib: "user32", importc, disca
 proc SetWindowLongPtrW(hWnd: HWND, nIndex: int32, dwNewLong: LONG_PTR): LONG_PTR {.stdcall, dynlib: "user32", importc, discardable.}
 proc GetWindowLongPtrW(hWnd: HWND, nIndex: int32): LONG_PTR {.stdcall, dynlib: "user32", importc.}
 proc SendMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall, dynlib: "user32", importc, discardable.}
+proc SendNotifyMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall, dynlib: "user32", importc, discardable.}
 proc GetDC(hWnd: HWND): HDC {. stdcall, dynlib: "user32", importc.}
 proc ReleaseDC(hWnd: HWND, hDC: HDC): int32 {.stdcall, dynlib: "user32", importc, discardable.}
 proc InvalidateRect(hWnd: HWND, lpRect: ptr RECT, bErase: BOOL): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
@@ -620,6 +621,7 @@ proc SetMenu(hwnd: HWND, hMenu: HMENU): BOOL {.stdcall, dynlib: "user32", import
 proc InsertMenuItemW(hMenu: HMENU, item: UINT, fByPos: BOOL, lpmii: LPMENUITEMINFOW): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc ClientToScreen(hwnd: HWND, lpp: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc FrameRect(hDc: HDC, lprc: LPRECT, hBr: HBRUSH): INT {.stdcall, dynlib: "user32", importc, discardable.}
+proc MapWindowPoints(hwndFrom: HWND, hwndTo: HWND, lpnt: LPPOINT, cpnt: UINT): INT {.stdcall, dynlib: "user32", importc, discardable.}
 
 # End of User32
 

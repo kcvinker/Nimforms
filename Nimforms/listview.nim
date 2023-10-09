@@ -96,12 +96,13 @@
 const
     LVM_FIRST = 0x1000
     LVN_FIRST = cast[UINT](0-100)
+    LVN_BEGINLABELEDIT = LVN_FIRST-75
     LVS_ICON = 0x0000
     LVS_REPORT = 0x0001
     LVS_SMALLICON = 0x0002
     LVS_LIST = 0x0003
     LVS_SHOWSELALWAYS = 0x0008
-    LVS_EDITLABELS = 0x0200
+    LVS_EDITLABELS = 512 #0x0200
     LVS_ALIGNLEFT = 0x0800
     LVS_NOCOLUMNHEADER = 0x4000
     LVS_SINGLESEL = 0x0004
@@ -143,13 +144,15 @@ const
     LVN_ITEMCHANGED = (LVN_FIRST-1)
 
 var lvCount = 1
-let LVSTYLE: DWORD = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or WS_CLIPSIBLINGS or LVS_REPORT or WS_BORDER or LVS_ALIGNLEFT or LVS_SINGLESEL
+let LVSTYLE: DWORD = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or
+                        WS_CLIPSIBLINGS or LVS_REPORT or WS_BORDER or LVS_ALIGNLEFT or LVS_SINGLESEL
 # Forward declaration
 proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
+proc createHandle*(this: ListView)
 
 # ListView constructor
-proc newListView*(parent: Form, x, y: int32 = 10, w: int32 = 250, h: int32 = 200): ListView =
+proc newListView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 250, h: int32 = 200, rapid : bool = false): ListView =
     new(result)
     result.mKind = ctListView
     result.mClassName = "SysListView32"
@@ -168,15 +171,17 @@ proc newListView*(parent: Form, x, y: int32 = 10, w: int32 = 250, h: int32 = 200
     result.mShowGrid = true
     result.mFullRowSel = true
     result.mHideSel = true
-    result.mOneClickActivate = true
+    # result.mOneClickActivate = true
     result.mHdrClickable = true
     result.mHdrHeight = 35
     result.mItemIndex = -1
     result.mHotHdrIndex = cast[DWORD_PTR](-1)
     result.mHdrBackColor = newColor(0xdce1de)
     result.mHdrForeColor = CLR_BLACK
+    result.mEditLabel = true
     result.mHdrFont = result.mFont
     lvCount += 1
+    if rapid: result.createHandle()
 
 proc newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : ListViewColumn =
     new(result)
@@ -528,6 +533,7 @@ proc font*(this: ListViewItem): Font {.inline.} = this.mFont
 
 proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     var this = cast[ListView](refData)
+    # echo "533 ok ", $msg
     case msg
     of WM_DESTROY:
         this.destroyResources()
@@ -555,6 +561,7 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
     of MM_NOTIFY_REFLECT:
         let nmh = cast[LPNMHDR](lpm)
+        # echo "nmhdr code ", $nmh.code
         case nmh.code
         of NM_CUSTOMDRAW_NM:
             var nmLvcd = cast[LPNMLVCUSTOMDRAW](lpm)
@@ -576,15 +583,18 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
                     this.mSelSubIndex = nmlv.iSubItem
                     if this.onSelectionChanged != nil: this.onSelectionChanged(this, newEventArgs())
 
-        of NM_DBLCLK:
-            if this.onItemDoubleClicked != nil: this.onItemDoubleClicked(this, newEventArgs())
+        # of NM_DBLCLK:
+        #     if this.onItemDoubleClicked != nil: this.onItemDoubleClicked(this, newEventArgs())
 
-        of NM_CLICK:
-            let nmia = cast[LPNMITEMACTIVATE](lpm)
-            if this.onItemClicked != nil: this.onItemClicked(this, newEventArgs())
+        # of NM_CLICK:
+        #     let nmia = cast[LPNMITEMACTIVATE](lpm)
+        #     if this.onItemClicked != nil: this.onItemClicked(this, newEventArgs())
 
         of NM_HOVER:
             if this.onItemHover != nil: this.onItemHover(this, newEventArgs())
+
+        of LVN_BEGINLABELEDIT:
+            echo "591 ok"
         else: discard
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)

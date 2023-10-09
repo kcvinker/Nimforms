@@ -85,9 +85,9 @@ var btnCount = 1
 
 # Forward declaration
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: Button)
 # Button constructor
-proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34): Button =
+proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34, rapid: bool = false): Button =
     new(result)
     result.mKind = ctButton
     result.mClassName = "Button"
@@ -101,7 +101,7 @@ proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w:
     result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
     result.mText = (if txt == "": "Button_" & $btnCount else: txt)
     btnCount += 1
-
+    if rapid: result.createHandle()
 # Create button's hwnd
 proc createHandle*(this: Button) =
     this.createHandleInternal()

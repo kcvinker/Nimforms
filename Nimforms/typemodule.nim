@@ -30,6 +30,8 @@ type
 
     EventHandler* = proc(c: Control, e: EventArgs)
 
+    ThreadMsgHandler* = proc(wpm: WPARAM, lpm: LPARAM)
+
     ContextMenuEventHandler* = proc(c: ContextMenu, e: EventArgs)
 
     MenuEventHandler* = proc(m: MenuItem, e: EventArgs)
@@ -83,6 +85,8 @@ type
 
     TreeEventHandler* = proc(c: Control, e: TreeEventArgs)
 
+    # Rectangle* = object
+    #     left, top, right, bottom: int32
 
     Control* = ref object of RootObj # Base class for all controls
         mKind: ControlType
@@ -98,6 +102,7 @@ type
         mBkBrush: HBRUSH
         mFont: Font
         mParent: Form
+        mcRect: RECT
         #Events
         onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*: EventHandler
         onLostFocus*, onGotFocus*: EventHandler
@@ -145,6 +150,7 @@ type
         onMoving*, onMoved*, onClosing*: EventHandler
         onMaximized*, onRestored*: EventHandler
         onSizing*, onSized*: SizeEventHandler
+        onThreadMsg*: ThreadMsgHandler
         # onKeyDown*, onKeyUp*: KeyEventHandler
         # onKeyPress*: KeyPressEventHandler
 
@@ -353,6 +359,12 @@ type
         mMinValue, mMaxValue, mStep, mValue, mMarqueeSpeed: int32
         # Events
         onProgressChanged*: EventHandler
+
+    PropertyGrid = ref object of Control
+        mPropName, mPropValue: string
+        mRegistered: bool
+        mHInst: HINSTANCE
+        mWClsNamePtr: LPCWSTR
 
     RadioButton* = ref object of Control
         mAutoSize, mChecked, mCheckOnClick, mRightAlign: bool

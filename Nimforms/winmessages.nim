@@ -362,6 +362,7 @@ const
     MM_MENU_EVENT: UINT = MM_NUMBER + 11
     MM_NODE_NOTIFY: UINT = MM_NUMBER + 12
     MM_MENU_ADDED: UINT = MM_NUMBER + 13
+    MM_THREAD_MSG: UINT = WM_USER + 5
 
 
 type # Key enum to represent all the keyboard keys

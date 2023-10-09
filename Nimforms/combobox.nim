@@ -110,9 +110,10 @@ var cmbCount = 1
 # Forward declaration
 proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
+proc createHandle*(this: ComboBox)
 
 # ComboBox constructor
-proc newComboBox*(parent: Form, x, y: int32 = 10, w: int32 = 140, h: int32 = 27): ComboBox =
+proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 27, rapid : bool = false): ComboBox =
     new(result)
     result.mKind = ctComboBox
     result.mClassName = "ComboBox"
@@ -129,6 +130,7 @@ proc newComboBox*(parent: Form, x, y: int32 = 10, w: int32 = 140, h: int32 = 27)
     result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP
     result.mExStyle = WS_EX_CLIENTEDGE
     cmbCount += 1
+    if rapid: result.createHandle()
 
 proc setCmbStyle(this: ComboBox) =
     if this.mReEnabled:

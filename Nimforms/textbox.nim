@@ -50,9 +50,9 @@ let TBEXSTYLE: DWORD = WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_CLIENTEDGE or WS_
 
 # Forward declaration
 proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-
+proc createHandle*(this: TextBox)
 # TextBox constructor
-proc newTextBox*(parent: Form, text: string, x, y: int32 = 10, w: int32 = 120, h: int32 = 27): TextBox =
+proc newTextBox*(parent: Form, text: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 120, h: int32 = 27, rapid: bool = false): TextBox =
     new(result)
     result.mKind = ctTextBox
     result.mClassName = "Edit"
@@ -70,6 +70,7 @@ proc newTextBox*(parent: Form, text: string, x, y: int32 = 10, w: int32 = 120, h
     result.mStyle = TBSTYLE
     result.mExStyle = TBEXSTYLE
     tbCount += 1
+    if rapid: result.createHandle()
 
 proc setTBStyle(this: TextBox) =
     if this.mMultiLine: this.mStyle = this.mStyle or ES_MULTILINE or ES_WANTRETURN
