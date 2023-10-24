@@ -33,15 +33,16 @@ const
     SWP_NOMOVE = 0x0002
 
 var lbCount = 1
+let lbClsName = toWcharPtr("Static")
 
 # Forward declaration
 proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: Label)
 # Label constructor
-proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, rapid : bool = false): Label =
+proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc : bool = false): Label =
     new(result)
     result.mKind = ctLabel
-    result.mClassName = "Static"
+    result.mClassName = lbClsName
     result.mName = "Label_" & $lbCount
     result.mParent = parent
     result.mXpos = x
@@ -57,8 +58,8 @@ proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int3
     result.mStyle = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or WS_CLIPSIBLINGS or SS_NOTIFY
     result.mExStyle = 0
     lbCount += 1
-    if rapid:
-        createHandle(result)
+    parent.mControls.add(result)
+    if autoc: createHandle(result)
 
 
 proc setLbStyle(this: Label) =
@@ -87,6 +88,7 @@ proc createHandle*(this: Label) =
         this.setFontInternal()
         if this.mAutoSize: this.setAutoSize(false)
 
+method autoCreate(this: Label) = this.createHandle()
 
 proc `autoSize=`*(this: Label, value: bool) {.inline.} = this.mAutoSize = value
 proc autoSize*(this: Label): bool {.inline.} = this.mAutoSize

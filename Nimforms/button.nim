@@ -82,17 +82,18 @@ const
     ROUND_CURVE = 5
 
 var btnCount = 1
-
+let btnClsName = toWcharPtr("Button")
 # Forward declaration
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: Button)
 # Button constructor
-proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34, rapid: bool = false): Button =
+proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34, autoc: bool = false): Button =
     new(result)
     result.mKind = ctButton
-    result.mClassName = "Button"
+    result.mClassName = btnClsName
     result.mName = "Button_" & $btnCount
     result.mParent = parent
+
     result.mXpos = x
     result.mYpos = y
     result.mWidth = w
@@ -100,14 +101,19 @@ proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w:
     result.mFont = parent.mFont
     result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
     result.mText = (if txt == "": "Button_" & $btnCount else: txt)
+    # result.createFnPtr = cast[CreateFnHandler](createHandle)
+    parent.mControls.add(result)
     btnCount += 1
-    if rapid: result.createHandle()
+    if autoc: result.createHandle()
 # Create button's hwnd
 proc createHandle*(this: Button) =
     this.createHandleInternal()
     if this.mHandle != nil:
         this.setSubclass(btnWndProc)
         this.setFontInternal()
+
+method autoCreate(this: Button) = this.createHandle()
+
 
 # Set necessery data for a flat colored button
 proc flatDrawSetData(this: var FlatDraw, clr: Color) =

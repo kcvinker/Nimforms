@@ -83,7 +83,7 @@ proc registerWinClass(this: Form) =
     appData.screenHeight = GetSystemMetrics(1)
     this.hInstance = GetModuleHandleW(nil)
 
-    this.mClassName = "Nimforms_Window"
+    this.mClassName = toWcharPtr("Nimforms_Window")
     this.mBackColor = newColor(0xF0F0F0)
 
     var wcex : WNDCLASSEXW
@@ -97,7 +97,7 @@ proc registerWinClass(this: Form) =
     wcex.hCursor = LoadCursorW(ZERO_HINST, cast[LPCWSTR](IDC_ARROW))
     wcex.hbrBackground = CreateSolidBrush(this.mBackColor.cref)         #
     wcex.lpszMenuName = nil
-    wcex.lpszClassName = toWcharPtr(this.mClassName)
+    wcex.lpszClassName = this.mClassName
     var ret = RegisterClassEx(wcex.unsafeAddr)
     # echo "Register result ", ret
 
@@ -204,7 +204,7 @@ proc createHandle*(this: Form) =
     this.setFormStyles()
     this.setFormPosition()
     this.mHandle = CreateWindowExW( this.mExStyle,
-                                    toWcharPtr(this.mClassName),
+                                    this.mClassName,
                                     toWcharPtr(this.mText),
                                     this.mStyle, this.mXpos, this.mYpos,
                                     this.mWidth, this.mHeight,
@@ -215,6 +215,10 @@ proc createHandle*(this: Form) =
         this.setFontInternal()
 
 # Private function
+proc createChildHandles(this: Form) =
+    for ctl in this.mControls:
+        if ctl.mHandle == nil: ctl.autoCreate()
+
 proc mainLoop() =
     var uMsg : MSG
     while GetMessageW(uMsg.unsafeAddr, nil, 0, 0) != 0 :
@@ -222,6 +226,7 @@ proc mainLoop() =
         DispatchMessageW(uMsg.unsafeAddr)
 
 proc display*(this: Form) =
+    this.createChildHandles()
     ShowWindow(this.mHandle, 5)
     UpdateWindow(this.mHandle)
     if not appData.loopStarted:
@@ -278,10 +283,10 @@ proc `topMost=`*(this: Form, value: bool) {.inline.} =
 
 proc topMost*(this: Form): bool {.inline.} = return this.mTopMost
 
-proc printPointInternal(ctl: Control, e: MouseEventArgs) =
+proc printPointProc(ctl: Control, e: MouseEventArgs) =
     echo "[X]: ", e.x, "  [Y]: ", e.y
 
-proc printPoint*(this: Form) = this.onMouseUp = printPointInternal
+proc printPoint*(this: Form) = this.onMouseUp = printPointProc
 
 proc trackMouseMove(hw: HWND) =
     var tme: TRACKMOUSEEVENT
@@ -293,13 +298,10 @@ proc trackMouseMove(hw: HWND) =
 
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
-    echo msg
+    # echo msg
     var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
     # echo msg
     case msg
-    of 799:
-        echo "799 arrived"
-        return 1
 
     of WM_DESTROY:
         this.destructor()
@@ -311,7 +313,7 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         if this.onClosing != nil: this.onClosing(this, newEventArgs())
 
     of WM_SHOWWINDOW:
-        echo "wm show window"
+        # echo "wm show window"
         if not this.mIsLoaded:
             this.mIsLoaded = true
             if this.onLoad != nil: this.onLoad(this, newEventArgs())
@@ -407,6 +409,7 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         return SendMessageW(nmh.hwndFrom, MM_NOTIFY_REFLECT, wpm, lpm)
 
     of WM_CTLCOLOREDIT:
+
         let ctHwnd = cast[HWND](lpm)
         return SendMessageW(ctHwnd, MM_EDIT_COLOR, wpm, lpm)
 

@@ -27,16 +27,18 @@
 # const
 
 var gbCount = 1
+let gbClsName = toWcharPtr("Button")
+
 let gbStyle: DWORD = WS_CHILD or WS_VISIBLE or BS_GROUPBOX or BS_NOTIFY or BS_TOP or WS_OVERLAPPED or WS_CLIPCHILDREN or WS_CLIPSIBLINGS
 
 # Forward declaration
 proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: GroupBox)
 # GroupBox constructor
-proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 150, h: int32 = 150, rapid : bool = false ): GroupBox =
+proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 150, h: int32 = 150, autoc : bool = false ): GroupBox =
     new(result)
     result.mKind = ctGroupBox
-    result.mClassName = "Button"
+    result.mClassName = gbClsName
     result.mName = "GroupBox_" & $gbCount
     result.mParent = parent
     result.mXpos = x
@@ -50,7 +52,8 @@ proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
     result.mStyle = gbStyle
     result.mExStyle = WS_EX_TRANSPARENT or WS_EX_CONTROLPARENT
     gbCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 
 proc getTextSize(this: GroupBox) =
@@ -72,7 +75,7 @@ proc createHandle*(this: GroupBox) =
         this.setFontInternal()
         this.getTextSize()
 
-
+method autoCreate(this: GroupBox) = this.createHandle()
 
 proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     var this = cast[GroupBox](refData)

@@ -94,7 +94,7 @@
 # Note: Improve some properties to respond at runtime
 # Constants
 const
-    LVM_FIRST = 0x1000
+
     LVN_FIRST = cast[UINT](0-100)
     LVN_BEGINLABELEDIT = LVN_FIRST-75
     LVS_ICON = 0x0000
@@ -134,7 +134,7 @@ const
     LVIF_IMAGE = 2
     LVIF_PARAM = 4
     LVIF_STATE = 8
-    LVM_SETBKCOLOR = (LVM_FIRST + 1)
+
     LVM_GETHEADER = (LVM_FIRST + 31)
     LVM_SETEXTENDEDLISTVIEWSTYLE = (LVM_FIRST + 54)
     LVM_SETCOLUMNORDERARRAY = (LVM_FIRST + 58)
@@ -144,18 +144,24 @@ const
     LVN_ITEMCHANGED = (LVN_FIRST-1)
 
 var lvCount = 1
+let lvClsName = toWcharPtr("SysListView32")
+
 let LVSTYLE: DWORD = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or
                         WS_CLIPSIBLINGS or LVS_REPORT or WS_BORDER or LVS_ALIGNLEFT or LVS_SINGLESEL
 # Forward declaration
 proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: ListView)
+proc newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : ListViewColumn
+proc addColumns(this: ListView, colnames: varargs[string, `$`]) : seq[ListViewColumn] {.discardable.}
+proc addColumnInternal(this: ListView, lvCol: ListViewColumn)
+
 
 # ListView constructor
-proc newListView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 250, h: int32 = 200, rapid : bool = false): ListView =
+proc listViewCtor(parent: Form, x, y, w, h: int32): ListView =
     new(result)
     result.mKind = ctListView
-    result.mClassName = "SysListView32"
+    result.mClassName = lvClsName
     result.mName = "ListView_" & $lvCount
     result.mParent = parent
     result.mXpos = x
@@ -181,7 +187,42 @@ proc newListView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 250, h:
     result.mEditLabel = true
     result.mHdrFont = result.mFont
     lvCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+
+proc newListView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 250, h: int32 = 200, autoc : bool = false): ListView =
+    result = listViewCtor(parent, x, y, w, h)
+    if autoc: result.createHandle()
+
+proc newListView*(parent: Form, x, y: int32, colnames: varargs[string, `$`] ): ListView =
+    result = listViewCtor(parent, x, y, 100, 150)
+    result.createHandle()
+    if colnames.len > 0: result.addColumns(colnames)
+    result.`width=`result.getAccumulatedColWidth()
+
+proc newListView*(parent: Form, x, y: int32, cols_widths: tuple or object): ListView =
+    result = listViewCtor(parent, x, y, 100, 150)
+    result.createHandle()
+    var colnames : seq[string]
+    var widths : seq[int32]
+    for f in fields(cols_widths):
+        when f is int:
+            widths.add(int32(f))
+        elif f is string:
+            colnames.add(f)
+
+    if colnames.len == widths.len:
+        for i in 0..<colnames.len:
+            var col = newListViewColumn(colnames[i], widths[i])
+            result.addColumnInternal(col)
+
+        result.`width=`result.getAccumulatedColWidth()
+
+
+# proc newListView*(parent: Form, x, y, w, h: int32, colnames: varargs[string, `$`] ): ListView =
+#     result = listViewCtor(parent, x, y, w, h)
+#     result.createHandle()
+#     if colnames.len > 0: result.addColumns(colnames)
+
 
 proc newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : ListViewColumn =
     new(result)
@@ -194,7 +235,6 @@ proc newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : List
     result.mHdrTextAlign = taCenter
     result.mHdrTextFlag = DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_NOPREFIX
 
-
 proc newListViewItem*(text: string, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1): ListViewItem =
     new(result)
     result.mText = text
@@ -202,7 +242,6 @@ proc newListViewItem*(text: string, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x
     result.mForeColor = newColor(fgColor)
     result.mIndex = -1
     result.mImgIndex = imgIndex
-
 
 proc setLVStyle(this: ListView) =
     case this.mViewStyle
@@ -220,7 +259,6 @@ proc setLVStyle(this: ListView) =
     this.mHdrBkBrush = CreateSolidBrush(this.mHdrBackColor.cref)
     this.mHdrHotBrush = this.mHdrBackColor.getHotBrush(0.9)
     this.mHdrPen = CreatePen(PS_SOLID, 1, 0x00FFFFFF) # A white pen
-
 
 proc setLVExStyles(this: ListView) =
     var lvExStyle: DWORD = 0x0000
@@ -346,13 +384,14 @@ proc createHandle*(this: ListView) =
         this.setFontInternal()
         this.postCreationTasks()
 
+method autoCreate(this: ListView) = this.createHandle()
 #---------------------Add Column variants----------------------------------------------------
 
 proc addColumn*(this: ListView, text: string, width: int32, imgIndex: int32 = -1): ListViewColumn {.discardable.} =
     result = newListViewColumn(text, width, imgIndex)
     this.addColumnInternal(result)
 
-proc addColumns*(this: ListView, colNames: seq[string], colWidths: seq[auto]): seq[ListViewColumn] {.discardable.} =
+proc addColumns*(this: ListView, colNames: seq[string], colWidths: seq[int]): seq[ListViewColumn] {.discardable.} =
     if colNames.len != colWidths.len: raise newException(Exception, "Column namse are not equal to widths")
     for (name, width) in zip(colNames, colWidths):
         var col = newListViewColumn(name, int32(width))
@@ -361,11 +400,41 @@ proc addColumns*(this: ListView, colNames: seq[string], colWidths: seq[auto]): s
 
 proc addColumns*(this: ListView, colCount: int, nameAndWidth: varargs[string, `$`]): seq[ListViewColumn] {.discardable.} =
     # Example usage - lv.addColumns(3, "Names", "Jobs", "Salaries", 100, 60, 110)
+    echo "line 386"
     if nameAndWidth.len != (colCount * 2): raise newException(Exception, "Column namse are not equal to widths")
     for i in 0..<colCount:
         var col = newListViewColumn(nameAndWidth[i], int32(parseInt(nameAndWidth[i + colCount])))
         this.addColumnInternal(col)
         result.add(col)
+
+proc addColumns*(this: ListView, colsAndWidths: tuple or object): seq[ListViewColumn] {.discardable.} =
+    echo "line 393"
+    var colnames : seq[string]
+    var widths : seq[int]
+    for f in fields(colsAndWidths):
+        when f is int:
+            widths.add(f)
+        elif f is string:
+            colnames.add(f)
+
+    if colnames.len == widths.len:
+        for i in 0..<colnames.len:
+            var col = newListViewColumn(colnames[i], widths[i])
+            this.addColumnInternal(col)
+            result.add(col)
+
+proc addColumns(this: ListView, colAndWidth: OrderedTable[string, int32]) : seq[ListViewColumn] {.discardable.} =
+    for key, value in colAndWidth:
+        var col = newListViewColumn(key, value)
+        this.addColumnInternal(col)
+        result.add(col)
+
+proc addColumns(this: ListView, colnames: varargs[string, `$`]) : seq[ListViewColumn] {.discardable.} =
+    echo "line 416"
+    let colAndWidth = this.getWidthOfColumnNames(colnames) # This will return a Table[string, int]
+    result = this.addColumns(colAndWidth)
+
+
 
 #-------------Add Item variants------------------------------------------------------
 

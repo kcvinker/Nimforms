@@ -61,6 +61,8 @@ const
     UDN_DELTAPOS = (UDN_FIRST - 1)
 
 var npCount = 1
+let npClsName = toWcharPtr("msctls_updown32")
+
 let NPSTYLE: DWORD = WS_VISIBLE or WS_CHILD or UDS_ALIGNRIGHT or UDS_ARROWKEYS or UDS_AUTOBUDDY or UDS_HOTTRACK
 let SWP_FLAG: DWORD = SWP_SHOWWINDOW or SWP_NOACTIVATE or SWP_NOZORDER
 
@@ -70,10 +72,10 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
 proc createHandle*(this: NumberPicker)
 
 # NumberPicker constructor
-proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27, rapid: bool = false): NumberPicker =
+proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27, autoc: bool = false): NumberPicker =
     new(result)
     result.mKind = ctNumberPicker
-    result.mClassName = "msctls_updown32"
+    result.mClassName = npClsName
     result.mName = "NumberPicker_" & $npCount
     result.mParent = parent
     result.mXpos = x
@@ -95,7 +97,8 @@ proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75,
     result.mBuddyExStyle = WS_EX_LTRREADING or WS_EX_LEFT
     result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
     npCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 
 proc setNPStyle(this: NumberPicker) =
@@ -203,7 +206,7 @@ proc createHandle*(this: NumberPicker) =
         # echo " BuddyRect ", this.mBuddyRect
         # echo " UpdRect ", this.mUpdRect
 
-
+method autoCreate(this: NumberPicker) = this.createHandle()
 
 
 # Properties---------------------------------------------------------------------------

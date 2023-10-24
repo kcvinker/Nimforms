@@ -346,6 +346,9 @@ const
     WS_EX_COMPOSITED = 0x02000000
     WS_EX_NOACTIVATE = 0x08000000
 
+    LVM_FIRST = 0x1000
+    LVM_SETBKCOLOR = (LVM_FIRST + 1)
+
 # My messages
 const
     MM_NUMBER : UINT = 9000

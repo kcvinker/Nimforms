@@ -106,6 +106,7 @@ const
     CB_GETCOMBOBOXINFO = 0x0164
 
 var cmbCount = 1
+let cmbClsName = toWcharPtr("ComboBox")
 
 # Forward declaration
 proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -113,10 +114,10 @@ proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PT
 proc createHandle*(this: ComboBox)
 
 # ComboBox constructor
-proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 27, rapid : bool = false): ComboBox =
+proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 27, autoc : bool = false): ComboBox =
     new(result)
     result.mKind = ctComboBox
-    result.mClassName = "ComboBox"
+    result.mClassName = cmbClsName
     result.mName = "ComboBox_" & $cmbCount
     result.mParent = parent
     result.mXpos = x
@@ -130,7 +131,8 @@ proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h:
     result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP
     result.mExStyle = WS_EX_CLIENTEDGE
     cmbCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 proc setCmbStyle(this: ComboBox) =
     if this.mReEnabled:
@@ -169,6 +171,8 @@ proc createHandle*(this: ComboBox) =
         this.getComboInfo()
         this.insertItemsInternal()
         this.mReEnabled = false
+
+method autoCreate(this: ComboBox) = this.createHandle()
 
 proc addItem*(this: ComboBox, item: auto) =
     let sitem : string = (if item is string: item else: $item)

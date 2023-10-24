@@ -84,13 +84,15 @@ type
         mNewState, mOldState: UINT
 
     TreeEventHandler* = proc(c: Control, e: TreeEventArgs)
+    CreateFnHandler = proc(c: Control) {.nimcall.}
 
     # Rectangle* = object
     #     left, top, right, bottom: int32
 
     Control* = ref object of RootObj # Base class for all controls
         mKind: ControlType
-        mName, mClassName, mText: string
+        mClassName: LPCWSTR
+        mName, mText: string
         mHandle: HWND
         mBackColor: Color
         mForeColor: Color
@@ -110,6 +112,7 @@ type
         onRightMouseDown*, onRightMouseUp*: MouseEventHandler
         onKeyDown*, onKeyUp*: KeyEventHandler
         onKeyPress*: KeyPressEventHandler
+        createFnPtr*: CreateFnHandler
 
 
     FormPos* {.pure.} = enum
@@ -144,6 +147,7 @@ type
         mGrad : FormGrad
         mMenuItemDict : Table[int32, MenuItem]
         mComboData: Table[HWND, HWND]
+        mControls: seq[Control]
 
         #Events
         onLoad*, onActivate*, onDeActivate*, onMinimized*: EventHandler

@@ -27,16 +27,17 @@
 # const
 
 var cbCount = 1
+let cbClsName = toWcharPtr("Button")
 
 # Forward declaration
 proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: CheckBox)
 
 # CheckBox constructor
-proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, rapid: bool = false): CheckBox =
+proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc: bool = false): CheckBox =
     new(result)
     result.mKind = ctCheckBox
-    result.mClassName = "Button"
+    result.mClassName = cbClsName
     result.mName = "CheckBox_" & $cbCount
     result.mParent = parent
     result.mXpos = x
@@ -52,7 +53,8 @@ proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
     result.mExStyle = WS_EX_LTRREADING or WS_EX_LEFT
     result.mTextStyle = DT_SINGLELINE or DT_VCENTER
     cbCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 proc setCbStyle(this: CheckBox) =
     if this.mRightAlign:
@@ -70,6 +72,8 @@ proc createHandle*(this: CheckBox) =
         this.setFontInternal()
         this.setIdealSize()
         if this.mChecked: this.sendMsg(BM_SETCHECK, 1, 0)
+
+method autoCreate(this: CheckBox) = this.createHandle()
 
 # # Set the checked property
 proc `checked=`*(this: CheckBox, value: bool) {.inline.} =

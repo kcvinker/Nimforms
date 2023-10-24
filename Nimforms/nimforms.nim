@@ -6,6 +6,7 @@ include winmessages
 include typemodule
 include colors
 include commons
+# include comtypes
 include events
 include controls
 include forms

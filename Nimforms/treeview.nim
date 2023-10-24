@@ -152,15 +152,21 @@ const
 
 
 var tvCount = 1
+let tvClsName = toWcharPtr("SysTreeView32")
+
 let TVSTYLE : DWORD = WS_BORDER or WS_CHILD or WS_VISIBLE or TVS_HASLINES or TVS_HASBUTTONS or TVS_LINESATROOT or TVS_DISABLEDRAGDROP
 # Forward declaration
 proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: TreeView)
+proc addNode*(this: TreeView, nodeText: string) : TreeNode {.discardable.}
+proc addNode*(this: TreeView, node: TreeNode)
+proc addChildNode*(this: TreeView, nodeText: string, parent: TreeNode) : TreeNode {.discardable.}
+
 # TreeView constructor
-proc newTreeView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 200, h: int32 = 150, rapid : bool = false): TreeView =
+proc treeViewCtor(parent: Form, x, y, w, h: int32): TreeView =
     new(result)
     result.mKind = ctTreeView
-    result.mClassName = "SysTreeView32"
+    result.mClassName = tvClsName
     result.mName = "TreeView_" & $tvCount
     result.mParent = parent
     result.mXpos = x
@@ -175,7 +181,12 @@ proc newTreeView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 200, h:
     result.mLineColor = CLR_BLACK
     result.mUniqNodeID = 100
     tvCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+
+
+proc newTreeView*(parent: Form, x, y: int32, w: int32 = 200, h: int32 = 150, autoc : bool = false): TreeView =
+    result = treeViewCtor(parent, x, y, w, h)
+    if autoc: result.createHandle()
 
 proc newTreeNode*(text: string, img: int32 = -1, selImg: int32 = -1): TreeNode =
     new(result)
@@ -185,6 +196,15 @@ proc newTreeNode*(text: string, img: int32 = -1, selImg: int32 = -1): TreeNode =
     result.mBackColor = CLR_WHITE
     result.mText = text
     result.mIndex = -1
+
+proc addTreeNodeWithChilds*(this: TreeView, nodeTxt: string, args: varargs[string, `$`]) =
+    var node = newTreeNode(nodeTxt)
+    this.addNode(node)
+    for txt in args:
+        this.addChildNode(txt, node)
+
+
+
 
 proc setTVStyle(this: TreeView) =
     if this.mNoLine: this.mStyle = this.mStyle xor TVS_HASLINES
@@ -286,7 +306,7 @@ proc createHandle*(this: TreeView) =
         this.setFontInternal()
         this.sendInitialMessages()
 
-
+method autoCreate(this: TreeView) = this.createHandle()
 
 
 proc addNode*(this: TreeView, nodeText: string) : TreeNode {.discardable.} =

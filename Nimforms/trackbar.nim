@@ -122,6 +122,7 @@ const
     U16_MAX = 1 shl 16
 
 var tkbCount = 1
+let trkClsName = toWcharPtr("msctls_trackbar32")
 const UNKNOWN_MSG = cast[UINT](4294967280)
 
 
@@ -129,10 +130,10 @@ const UNKNOWN_MSG = cast[UINT](4294967280)
 proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: TrackBar)
 # TrackBar constructor
-proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, h: int32 = 45, rapid : bool = false): TrackBar =
+proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
     new(result)
     result.mKind = ctTrackBar
-    result.mClassName = "msctls_trackbar32"
+    result.mClassName = trkClsName
     result.mName = "TrackBar_" & $tkbCount
     result.mParent = parent
     result.mXpos = x
@@ -159,7 +160,14 @@ proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, h:
     result.mChanColor = newColor(0xc2c2a3)
     result.mSelColor = newColor(0x99ff33)
     tkbCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+
+
+
+proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, h: int32 = 45, cdraw: bool = false, autoc : bool = false): TrackBar =
+    result = trackBarCtor(parent, x, y, w, h)
+    result.mCustDraw = cdraw
+    if autoc: result.createHandle()
 
 
 proc setTKBStyle(this: TrackBar) =
@@ -345,7 +353,7 @@ proc createHandle*(this: TrackBar) =
             this.calculateTics()
         if this.mSelRange: this.mSelBrush = CreateSolidBrush(this.mSelColor.cref)
 
-
+method autoCreate(this: TrackBar) = this.createHandle()
 
 # Properties--------------------------------------------------------------------------
 

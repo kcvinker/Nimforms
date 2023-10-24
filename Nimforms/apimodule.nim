@@ -35,6 +35,7 @@ type
     HTREEITEM* = HANDLE
     HRESULT* = clong
     LONG* = clong
+    ULONG* = int32
     INT_PTR* = int64
     LONG_PTR* = int64
     LRESULT* = int64
@@ -53,6 +54,19 @@ type
     BYTE* = uint8
     SHORT* = int16
     USHORT* = uint16
+
+    # These are created for com module
+    LPCVOID* = pointer
+    va_list* = pointer
+
+
+    # wstring* = ref object
+    #     size: uint32
+    #     data: UncheckedArray[WCHAR]
+
+    # pwstring* = ptr object
+    #     size: uint32
+    #     data: UncheckedArray[WCHAR]
 
     WNDPROC* = proc(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall.}
     SUBCLASSPROC* = proc (hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM,
@@ -87,6 +101,10 @@ const
     DT_HIDEPREFIX = 0x00100000
     DT_PREFIXONLY = 0x00200000
     LF_FACESIZE = 32
+    FORMAT_MESSAGE_FROM_SYSTEM* = 0x00001000
+    FORMAT_MESSAGE_IGNORE_INSERTS* = 0x00000200
+    SUBLANG_DEFAULT* = 0x01
+    LANG_NEUTRAL* = 0x00
 
 # Custom  consts
 const
@@ -659,6 +677,10 @@ proc InitCommonControlsFunc(P1: ptr INITCOMMONCONTROLSEX): BOOL {.stdcall, dynli
 proc wcslen(pstr: LPCWSTR) : csize_t {.cdecl, header: "<wchar.h>",importc.}
 proc sprintf(dest: cstring; format: cstring): cint {.importc, varargs, header: "stdio.h", discardable.}
 
+# COM functions
+proc CoInitializeEx*(pvReserved: LPVOID, dwCoInit: DWORD): HRESULT {.stdcall, dynlib: "ole32", importc.}
+
+
 # Misc functions
 # proc toWcharArray*(srcString: string): seq[WCHAR] =
 #     var wLen: INT = MultiByteToWideChar(cast[UINT](65001), 0, srcString[0].unsafeAddr, INT(srcString.len), nil, 0)
@@ -677,7 +699,7 @@ proc toUtf8String(wBuffer: seq[WCHAR]): string =
     # for ch in s: add(result, ch)
     result = s.join()
 
-proc wcharArrayToString(wArrPtr: LPCWSTR): string =
+proc wcharArrayToString(wArrPtr: LPCWSTR|LPWSTR): string =
     let length = wcslen(wArrPtr)
     let iLen = WideCharToMultiByte(CP_UTF8, 0, wArrPtr, int32(length), nil, 0, nil, nil)
     var s: seq[char] = newSeq[char](iLen)
@@ -692,3 +714,4 @@ proc toLPWSTR(txt: string): LPWSTR = newWideCString(txt)[0].unsafeAddr
 template LOWORD(l: untyped): WORD = WORD(l and 0xffff)
 template HIWORD(l: untyped): WORD = WORD((l shr 16) and 0xffff)
 template GET_WHEEL_DELTA_WPARAM*(wParam: untyped): SHORT = cast[SHORT](HIWORD(wParam))
+proc `&`*[T](x: var T): ptr T {.inline.} = result = x.addr ## Use `&` like it in C/C++.

@@ -62,6 +62,7 @@ const
     MCM_SETCURSEL = MCM_FIRST+2
 
 var calCount = 1
+let calClsName = toWcharPtr("SysMonthCal32")
 
 # Forward declaration
 proc calWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -90,10 +91,10 @@ proc makeSystemTime(dt: DateAndTime): SYSTEMTIME =
 
 
 # Calendar constructor
-proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10, rapid : bool = false): Calendar =
+proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10, autoc : bool = false): Calendar =
     new(result)
     result.mKind = ctCalendar
-    result.mClassName = "SysMonthCal32"
+    result.mClassName = calClsName
     result.mName = "Calendar_" & $calCount
     result.mParent = parent
     result.mXpos = x
@@ -104,7 +105,8 @@ proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10, rapid : bool = fal
     result.mStyle = WS_CHILD or WS_TABSTOP or WS_VISIBLE
     result.mViewMode = vmMonthView
     calCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 proc setCalStyle(this: Calendar) =
     if this.mShowWeekNum: this.mStyle = this.mStyle or MCS_WEEKNUMBERS
@@ -129,6 +131,8 @@ proc createHandle*(this: Calendar) =
         var st: SYSTEMTIME
         this.sendMsg(MCM_GETCURSEL, 0, st.unsafeAddr)
         this.setValueInternal(st)
+
+method autoCreate(this: Calendar) = this.createHandle()
 
 # Set the value property
 proc `value=`*(this: Calendar, dateValue: DateAndTime) {.inline.} =

@@ -79,15 +79,17 @@ const
     DTN_CLOSEUP = DTN_FIRST2
 
 var dtpCount = 1
+let dtpClsName = toWcharPtr("SysDateTimePick32")
 
 # Forward declaration
 proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: DateTimePicker)
 # DateTimePicker constructor
-proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 10, rapid : bool = false): DateTimePicker =
+proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10,
+                            w: int32 = 0, h: int32 = 10, autoc : bool = false): DateTimePicker =
     new(result)
     result.mKind = ctDateTimePicker
-    result.mClassName = "SysDateTimePick32"
+    result.mClassName = dtpClsName
     result.mName = "DateTimePicker_" & $dtpCount
     result.mParent = parent
     result.mXpos = x
@@ -108,7 +110,8 @@ proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 0
         InitCommonControlsFunc(appData.iccEx.unsafeAddr)
 
     dtpCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 proc setDTPStyles(this: DateTimePicker) =
     case this.mFormat
@@ -154,6 +157,7 @@ proc createHandle*(this: DateTimePicker) =
         let res = this.sendMsg(DTM_GETSYSTEMTIME, 0, st.unsafeAddr)
         if res == 0: this.mValue = newDateAndTime(st)
 
+method autoCreate(this: DateTimePicker) = this.createHandle()
 
 # Property section
 proc `value=`*(this: DateTimePicker, dateValue: DateAndTime) =
@@ -198,10 +202,17 @@ proc showUpdown*(this: DateTimePicker): bool {.inline.} = this.mShowUpdown
 proc `fourDigitYear=`*(this: DateTimePicker, value: bool) {.inline.} = this.m4DYear = value
 proc fourDigitYear*(this: DateTimePicker): bool {.inline.} = this.m4DYear
 
+# Overriding Control's property to resize ourself.
+proc `font=`*(this: DateTimePicker, value: Font) =
+    this.mFont = value
+    if this.mIsCreated:
+        this.setFontInternal()
+        this.setAutoSize()
 
 
 
 proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
+    # echo msg
     var this = cast[DateTimePicker](refData)
     case msg
     of WM_DESTROY:
@@ -243,6 +254,14 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
             if this.onCalendarClosed != nil: this.onCalendarClosed(this, newEventArgs())
         else: discard
         return 0
+    # of MM_LABEL_COLOR: # Message is arriving but no result
+    #     let hdc = cast[HDC](wpm)
+    #     SetTextColor(hdc, this.mForeColor.cref)
+    #     SetBkColor(hdc, this.mBackColor.cref)
+    #     return cast[LRESULT](this.mBkBrush)
+
+    # of LVM_SETBKCOLOR:
+    #     echo "LVM_SETBKCOLOR ", lpm
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

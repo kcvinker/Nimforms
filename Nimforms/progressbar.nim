@@ -50,15 +50,16 @@ const
     PBM_SETSTATE  = (WM_USER+16)
 
 var pbCount = 1
+let pgbClsName = toWcharPtr("msctls_progress32")
 
 # Forward declaration
 proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: ProgressBar)
 # ProgressBar constructor
-proc newProgressBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 200, h: int32 = 25, rapid: bool = false): ProgressBar =
+proc progressBarCtor(parent: Form, x, y, w, h: int32): ProgressBar =
     new(result)
     result.mKind = ctProgressBar
-    result.mClassName = "msctls_progress32"
+    result.mClassName = pgbClsName
     result.mName = "ProgressBar_" & $pbCount
     result.mParent = parent
     result.mXpos = x
@@ -77,7 +78,14 @@ proc newProgressBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 200,
     result.mBarStyle = pbsBlock
     result.mMarqueeSpeed = 30
     pbCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+
+
+
+proc newProgressBar*(parent: Form, x, y: int32, w: int32 = 200, h: int32 = 25, autoc = false, perc = false): ProgressBar =
+    result = progressBarCtor(parent, x, y, w, h)
+    result.mShowPerc = perc
+    if autoc: result.createHandle()
 
 
 proc setPbStyle(this: ProgressBar) =
@@ -95,6 +103,8 @@ proc createHandle*(this: ProgressBar) =
         this.setFontInternal()
         this.sendMsg(PBM_SETRANGE32, this.mMinValue, this.mMaxValue)
         this.sendMsg(PBM_SETSTEP, this.mStep, 0)
+
+method autoCreate(this: ProgressBar) = this.createHandle()
 
 # Increment progress bar value by step value
 proc increment*(this: ProgressBar) =

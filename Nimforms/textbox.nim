@@ -45,6 +45,8 @@ const
     EN_CHANGE = 0x0300
 
 var tbCount = 1
+let tbClsName = toWcharPtr("Edit")
+
 let TBSTYLE : DWORD = WS_CHILD or WS_VISIBLE or ES_LEFT or WS_TABSTOP or ES_AUTOHSCROLL or WS_MAXIMIZEBOX or WS_OVERLAPPED
 let TBEXSTYLE: DWORD = WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_CLIENTEDGE or WS_EX_NOPARENTNOTIFY
 
@@ -52,10 +54,10 @@ let TBEXSTYLE: DWORD = WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_CLIENTEDGE or WS_
 proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: TextBox)
 # TextBox constructor
-proc newTextBox*(parent: Form, text: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 120, h: int32 = 27, rapid: bool = false): TextBox =
+proc newTextBox*(parent: Form, text: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 120, h: int32 = 27, autoc: bool = false): TextBox =
     new(result)
     result.mKind = ctTextBox
-    result.mClassName = "Edit"
+    result.mClassName = tbClsName
     result.mName = "TextBox_" & $tbCount
     result.mParent = parent
     result.mXpos = x
@@ -70,7 +72,8 @@ proc newTextBox*(parent: Form, text: string = "", x: int32 = 10, y: int32 = 10, 
     result.mStyle = TBSTYLE
     result.mExStyle = TBEXSTYLE
     tbCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 proc setTBStyle(this: TextBox) =
     if this.mMultiLine: this.mStyle = this.mStyle or ES_MULTILINE or ES_WANTRETURN
@@ -102,6 +105,7 @@ proc createHandle*(this: TextBox) =
         this.setFontInternal()
         if this.mCueBanner.len > 0: this.sendMsg(EM_SETCUEBANNER, 1, toWcharPtr(this.mCueBanner))
 
+method autoCreate(this: TextBox) = this.createHandle()
 # Properties--------------------------------------------------------------------------
 
 proc `textAlign=`*(this: TextBox, value: TextAlignment) = this.mTextAlign = value

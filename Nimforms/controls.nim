@@ -66,6 +66,22 @@ proc getControlText(hw: HWND): string =
     GetWindowTextW(hw, buffer[0].unsafeAddr, count + 1)
     result = toUtf8String(buffer)
 
+proc mapParentPoints(this: Control) : RECT =
+    var
+        rc : RECT
+        firstHwnd : HWND
+    if this.mIsCreated:
+        GetClientRect(this.mHandle, rc.unsafeAddr)
+        firstHwnd = this.mHandle
+    else:
+        firstHwnd = this.mParent.mHandle
+        rc = RECT(left: this.mXpos, top: this.mYpos,
+                    right: (this.mXpos + this.mWidth), bottom: (this.mYpos + this.mHeight ))
+
+    MapWindowPoints(firstHwnd, this.mParent.mHandle, cast[LPPOINT](rc.unsafeAddr), 2)
+    # echo rc.repr
+    result = rc
+
 # Control class's properties==========================================
 proc handle*(this: Control): HWND = this.mHandle
 
@@ -84,7 +100,8 @@ proc text*(this: Control): string {.inline.} = return this.mText
 
 proc `width=`*(this: Control, value: int32) {.inline.} =
     this.mWidth = value
-    if this.mIsCreated: discard
+    if this.mIsCreated:
+        SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOZORDER)
 
 proc width*(this: Control): int32 {.inline.} = return this.mWidth
 
@@ -125,14 +142,16 @@ proc backColor*(this: Control): Color {.inline.} = return this.mBackColor
 proc `foreColor=`*(this: Control, value: uint) {.inline.} =
     this.mForeColor = newColor(value)
     if (this.mDrawMode and 1) != 1 : this.mDrawMode += 1
+    # this.mBkBrush = this.mForeColor.makeHBRUSH ------Delete later
     if this.mIsCreated: InvalidateRect(this.mHandle, nil, 0)
 
 proc foreColor*(this: Control): Color {.inline.} = return this.mForeColor
 
-proc left*(this: Control): int32 = int32(this.mcRect.left)
-proc top*(this: Control): int32 = int32(this.mcRect.top)
-proc right*(this: Control): int32 = int32(this.mcRect.left + this.mWidth)
-proc bottom*(this: Control): int32 = int32(this.mcRect.top + this.mHeight)
+# proc left*(this: Control): int32 = int32(this.mcRect.left)
+# proc top*(this: Control): int32 = int32(this.mcRect.top)
+
+proc right*(this: Control): int32 = this.mapParentPoints().right
+proc bottom*(this: Control): int32 = this.mapParentPoints().bottom
 
 
 
@@ -192,7 +211,7 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
         globalCtlID += 1
     # echo "creation started ", this.mKind
     this.mHandle = CreateWindowExW( this.mExStyle,
-                                    toWcharPtr(this.mClassName),
+                                    this.mClassName,
                                     toWcharPtr(this.mText),
                                     this.mStyle, this.mXpos, this.mYpos,
                                     this.mWidth, this.mHeight,
@@ -210,6 +229,10 @@ proc setIdealSize(this: Control) =
     this.mWidth = ss.cx
     this.mHeight = ss.cy
     MoveWindow(this.mHandle, this.mXpos, this.mYpos, ss.cx, ss.cy, 1)
+
+method autoCreate(c: Control) {.base.} =
+    quit "Childs are responsible for this"
+
 
 
 # Here we are including contextmenu module. Because, contextmenu should be available for all controls.

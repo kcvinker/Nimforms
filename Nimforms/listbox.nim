@@ -118,15 +118,17 @@ const
 
 
 var lbxCount = 1
+let lbxClsName = toWcharPtr("Listbox")
 
 # Forward declaration
 proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: ListBox)
+
 # ListBox constructor
-proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 140, rapid : bool = false ): ListBox =
+proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 140, autoc : bool = false ): ListBox =
     new(result)
     result.mKind = ctListBox
-    result.mClassName = "Listbox"
+    result.mClassName = lbxClsName
     result.mName = "ListBox_" & $lbxCount
     result.mParent = parent
     result.mXpos = x
@@ -141,7 +143,8 @@ proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: 
     result.mStyle = WS_VISIBLE or WS_CHILD or WS_BORDER  or LBS_NOTIFY or LBS_HASSTRINGS
     result.mExStyle = 0
     lbxCount += 1
-    if rapid: result.createHandle()
+    parent.mControls.add(result)
+    if autoc: result.createHandle()
 
 proc setLbxStyle(this: ListBox) =
     if this.mHasSort: this.mStyle = this.mStyle or LBS_SORT
@@ -175,6 +178,7 @@ proc createHandle*(this: ListBox) =
         this.setFontInternal()
         if this.mItems.len > 0: this.manageItems()
 
+method autoCreate(this: ListBox) = this.createHandle()
 
 # Public functions-------------------------------------------------------------
 proc indexOf*(this: ListBox, item: auto): int32 {.inline.} =
