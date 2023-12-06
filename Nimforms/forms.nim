@@ -64,23 +64,25 @@ const
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.}
 
-type    # A struct to hold essential information.
-    AppData = object
-        appStarted: bool
-        loopStarted: bool
-        screenWidth: int32
-        screenHeight: int32
-        formCount: int32
-        mainHwnd: HWND
-        isDateInit: bool
-        iccEx: INITCOMMONCONTROLSEX
+# type    # A struct to hold essential information.
+#     AppData = object
+#         appStarted: bool
+#         loopStarted: bool
+#         screenWidth: int32
+#         screenHeight: int32
+#         formCount: int32
+#         mainHwnd: HWND
+#         isDateInit: bool
+#         iccEx: INITCOMMONCONTROLSEX
+#         scaleFactor: cint
 
-var appData : AppData
+# var appData : AppData
 
 proc registerWinClass(this: Form) =
     appData.appStarted = true
     appData.screenWidth = GetSystemMetrics(0)
     appData.screenHeight = GetSystemMetrics(1)
+    appData.scaleFactor = GetScaleFactorForDevice(0)
     this.hInstance = GetModuleHandleW(nil)
 
     this.mClassName = toWcharPtr("Nimforms_Window")
@@ -161,7 +163,7 @@ proc setFormPosition(this: Form) =
 
 proc getMenuFromHmenu(this: Form, menuHandle: HMENU): MenuItem =
     for key, menu in this.mMenuItemDict:
-        if menu.mHmenu == menuHandle: return menu
+        if menu.mHandle == menuHandle: return menu
     return nil
 
 proc setBkClrInternal(this: Form, hdc: HDC) : int32 =
@@ -214,8 +216,17 @@ proc createHandle*(this: Form) =
         SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
         this.setFontInternal()
 
+proc addMenubar*(this: Form, args: varargs[string, `$`]) : MenuBar =
+    this.mMenubar = newMenuBar(this)
+    if len(args) > 0:
+        this.mMenubar.addItems(args)
+
+    result = this.mMenubar
+
+
 # Private function
 proc createChildHandles(this: Form) =
+    if this.mIsMenuUsed: this.mMenubar.createHandle()
     for ctl in this.mControls:
         if ctl.mHandle == nil: ctl.autoCreate()
 
@@ -420,19 +431,18 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     of WM_ERASEBKGND:
         if this.mFdMode != fdmNormal: return this.setBkClrInternal(cast[HDC](wpm))
 
-
     of WM_MEASUREITEM:
         var pmi = cast[LPMEASUREITEMSTRUCT](lpm)
         var mi = cast[MenuItem](cast[PVOID](pmi.itemData))
         if mi.mType == mtBaseMenu:
             var hdc = GetDC(hw)
             var size : SIZE
-            GetTextExtentPoint32(hdc, mi.mText.toLPWSTR(), int32(len(mi.mText)), size.unsafeAddr)
+            GetTextExtentPoint32(hdc, mi.mWideText, int32(len(mi.mText)), size.unsafeAddr)
             ReleaseDC(hw, hdc)
             pmi.itemWidth = UINT(size.cx) #+ 10
             pmi.itemHeight = UINT(size.cy)
         else:
-            pmi.itemWidth = 100 #size.cx #+ 10
+            pmi.itemWidth = 140 #size.cx #+ 10
             pmi.itemHeight = 25
         return 1
 
@@ -442,38 +452,38 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         var txtClrRef : COLORREF = mi.mFgColor.cref
 
         if dis.itemState == 320 or dis.itemState == 257:
-            # var rc : RECT
+            # Mouse is over the menu. Check for enable state.
             if mi.mIsEnabled:
-                let rc = RECT(left: dis.rcItem.left + 4, top: dis.rcItem.top + 2,
-                              right: dis.rcItem.right, bottom: dis.rcItem.bottom - 2)
-                FillRect(dis.hDC, rc.unsafeAddr, this.mMenuHotBgBrush)
-                FrameRect(dis.hDC, rc.unsafeAddr, this.mMenuFrameBrush)
+                let rcbot: int32 = (if mi.mType == mtBaseMenu: dis.rcItem.bottom else: dis.rcItem.bottom - 2)
+                let rctop: int32 = (if mi.mType == mtBaseMenu: dis.rcItem.top + 1 else: dis.rcItem.top + 2)
+                let rc = RECT(  left: dis.rcItem.left + 4,
+                                top: rctop,
+                                right: dis.rcItem.right,
+                                bottom: rcbot )
+                FillRect(dis.hDC, rc.unsafeAddr, this.mMenubar.mMenuHotBgBrush)
+                FrameRect(dis.hDC, rc.unsafeAddr, this.mMenubar.mMenuFrameBrush)
                 txtClrRef = 0x00000000
             else:
-                FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenuGrayBrush)
-                txtClrRef = this.mMenuGrayCref
+                FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenubar.mMenuGrayBrush)
+                txtClrRef = this.mMenubar.mMenuGrayCref
         else:
-            FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenuDefBgBrush)
-            if not mi.mIsEnabled: txtClrRef = this.mMenuGrayCref
+            # Default menu drawing.
+            FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenubar.mMenuDefBgBrush)
+            if not mi.mIsEnabled: txtClrRef = this.mMenubar.mMenuGrayCref
 
         SetBkMode(dis.hDC, 1)
         if mi.mType == mtBaseMenu:
             dis.rcItem.left += 10
         else:
             dis.rcItem.left += 25
-        SelectObject(dis.hDC, this.mMenuFont.handle)
+        SelectObject(dis.hDC, this.mMenubar.mFont.handle)
         SetTextColor(dis.hDC, txtClrRef)
         DrawTextW(dis.hDC, mi.mWideText, -1, dis.rcItem.unsafeAddr, DT_LEFT or DT_SINGLELINE or DT_VCENTER)
         return 0
 
-    of MM_MENU_ADDED:
-        # User added a sub menu to an existing menu. We need to keep this in our table.
-        this.mMenuItemDict[int32(wpm)] = cast[MenuItem](cast[PVOID](lpm))
-        return 0
-
     of WM_MENUSELECT:
         var pmenu = this.getMenuFromHmenu(cast[HMENU](lpm))
-        let mid = int32(LOWORD(wpm)) # Could be an id of a child menu or index of a child menu
+        let mid = uint32(LOWORD(wpm)) # Could be an id of a child menu or index of a child menu
         let hwwpm = HIWORD(wpm)
         if pmenu != nil:
             var menu : MenuItem
@@ -498,10 +508,14 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         case HIWORD(wpm)
         of 0:
             if len(this.mMenuItemDict) > 0:
-                var menu = this.mMenuItemDict[int32(LOWORD(wpm))]
+                var menu = this.mMenuItemDict[uint32(LOWORD(wpm))]
                 if menu != nil and menu.onClick != nil: menu.onClick(menu, newEventArgs())
                 return 0
-        else: discard
+        of 1:
+            discard
+        else:
+            let ctHwnd = cast[HWND](lpm)
+            return SendMessageW(ctHwnd, MM_CTL_COMMAND, wpm, lpm)
 
     of WM_CONTEXTMENU:
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)

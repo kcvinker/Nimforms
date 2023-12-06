@@ -234,6 +234,7 @@ proc newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : List
     result.mIndex = -1
     result.mHdrTextAlign = taCenter
     result.mHdrTextFlag = DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_NOPREFIX
+    result.mWideText = toLPWSTR(text)
 
 proc newListViewItem*(text: string, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1): ListViewItem =
     new(result)
@@ -290,7 +291,7 @@ proc addColumnInternal(this: ListView, lvCol: ListViewColumn) =
     lvc.mask = LVCF_FMT or LVCF_TEXT  or LVCF_WIDTH  or LVCF_SUBITEM #-or LVCF_ORDER
     lvc.fmt = int32(lvCol.mTextAlign)
     lvc.cx = lvCol.mWidth
-    lvc.pszText = lvCol.mText.toLPWSTR()
+    lvc.pszText = lvCol.mWideText
     if lvCol.mHasImage:
         lvc.mask = lvc.mask or LVCF_IMAGE
         lvc.fmt = lvc.fmt or LVCFMT_COL_HAS_IMAGES or LVCFMT_IMAGE
@@ -301,7 +302,7 @@ proc addColumnInternal(this: ListView, lvCol: ListViewColumn) =
     if this.mIsCreated:
         this.sendMsg(LVM_INSERTCOLUMNW, lvCol.mIndex, lvc.unsafeAddr)
         # We need this to do the painting in wm notify.
-       # if (!this.mDrawColumns && lvCol.mDrawNeeded) this.mDrawColumns = true
+        # if (!this.mDrawColumns && lvCol.mDrawNeeded) this.mDrawColumns = true
     this.mColumns.add(lvCol)
     this.mColIndex += 1
 
@@ -361,9 +362,10 @@ proc headerCustomDraw(this: ListView, nmcd: LPNMCUSTOMDRAW): LRESULT =
     SelectObject(nmcd.hdc, this.mHdrPen)
     MoveToEx(nmcd.hdc, nmcd.rc.right, nmcd.rc.top, nil)
     LineTo(nmcd.hdc, nmcd.rc.right, nmcd.rc.bottom)
+
     SelectObject(nmcd.hdc, this.mHdrFont.handle)
     SetTextColor(nmcd.hdc, this.mHdrForeColor.cref)
-    DrawTextW(nmcd.hdc, col.mText.toWcharPtr, int32(-1), nmcd.rc.unsafeAddr, col.mHdrTextFlag)
+    DrawTextW(nmcd.hdc, col.mWideText, int32(-1), nmcd.rc.unsafeAddr, col.mHdrTextFlag)
     result = CDRF_SKIPDEFAULT
 
 proc destroyResources(this: ListView) =

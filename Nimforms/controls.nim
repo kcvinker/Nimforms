@@ -150,8 +150,26 @@ proc foreColor*(this: Control): Color {.inline.} = return this.mForeColor
 # proc left*(this: Control): int32 = int32(this.mcRect.left)
 # proc top*(this: Control): int32 = int32(this.mcRect.top)
 
-proc right*(this: Control): int32 = this.mapParentPoints().right
-proc bottom*(this: Control): int32 = this.mapParentPoints().bottom
+# private function
+proc getMappedRect(this: Control): RECT =
+    var fhwnd : HWND
+    var rct : RECT
+    if this.mIsCreated:
+        GetClientRect(this.mHandle, rct.unsafeAddr)
+        fhwnd = this.mHandle
+    else:
+        rct = RECT(left: this.mXpos, top: this.mYpos, right: (this.mXpos + this.mWidth), bottom: (this.mYpos + this.mHeight))
+        fhwnd = this.mParent.handle
+
+    MapWindowPoints(fhwnd, this.mParent.handle, cast[LPPOINT](rct.unsafeAddr), 2)
+    result = rct
+
+
+proc right*(this: Control, value: int32): int32 = this.getMappedRect().right + value
+proc bottom*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
+
+proc `->`*(this: Control, value: int32) : int32 = this.getMappedRect().right + value
+proc `>>`*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
 
 
 
@@ -220,7 +238,7 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
     if this.mHandle != nil:
         # echo "creation finished ", this.mKind
         this.mIsCreated = true
-        this.setControlRect()
+        # this.setControlRect()
 
 # Only used CheckBox & RadioButton
 proc setIdealSize(this: Control) =
@@ -239,6 +257,8 @@ method autoCreate(c: Control) {.base.} =
 include contextmenu
 
 # proc setContextMenuInternal(this: Control)
+
+proc contextMenu*(this: Control): ContextMenu = this.mContextMenu
 
 proc `contextMenu=`*(this: Control, value: ContextMenu) =
     this.mContextMenu = value

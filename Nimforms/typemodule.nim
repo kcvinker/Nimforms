@@ -145,7 +145,9 @@ type
         mMenuFont : Font
         mMenuGrayCref : COLORREF
         mGrad : FormGrad
-        mMenuItemDict : Table[int32, MenuItem]
+        mMenubar: MenuBar
+        mIsMenuUsed: bool
+        mMenuItemDict : Table[uint32, MenuItem]
         mComboData: Table[HWND, HWND]
         mControls: seq[Control]
 
@@ -204,6 +206,7 @@ type
 
     CheckBox* = ref object of Control
         mAutoSize, mChecked, mRightAlign: bool
+        mWideText: LPWSTR
         mTextStyle: UINT
         #Events
         onCheckedChanged*: EventHandler
@@ -265,6 +268,7 @@ type
 
     ListViewColumn* = ref object
         mText: string
+        mWideText: LPWSTR
         mWidth, mIndex, mImgIndex, mOrder: int32
         mImgOnRight, mHasImage, mDrawNeeded, mIsHotItem: bool
         mTextAlign, mHdrTextAlign: TextAlignment
@@ -298,38 +302,40 @@ type
     MenuType* {.pure.} = enum
         mtBaseMenu, mtMenuItem, mtPopup, mtSeparator, mtMenubar, mtContextMenu, mtContextSep
 
-    MenuBar* = ref object # Implemented in commons.nim
-        mHmenubar : HMENU
-        mFont : Font
-        mParent : Form
-        mType : MenuType
-        mMenuCount: int32
-        mMenus : Table[string, MenuItem]
+    MenuBase = ref object of RootObj
+        mHandle: HMENU
+        mFont: Font
+        mMenuCount: uint32
+        mMenus: Table[string, MenuItem]
 
-    MenuItem* = ref object
+    MenuBar* = ref object of MenuBase # Implemented in commons.nim
+        mFormPtr : Form
+        mMenuGrayCref: COLORREF
+        mMenuDefBgBrush: HBRUSH
+        mMenuHotBgBrush: HBRUSH
+        mMenuFrameBrush: HBRUSH
+        mMenuGrayBrush : HBRUSH
+
+    MenuItem* = ref object of MenuBase
         mIsCreated, mIsEnabled, mPopup, mFormMenu : bool
-        mId, mChildCount, mIndex : int32
-        mFont : Font
+        mId, mIndex : uint32
         mWideText: LPCWSTR # For drawing make fast
         mBgColor, mFgColor: Color
-        mHmenu, mParentHmenu: HMENU
+        mParentHandle: HMENU
         mText : string
         mType : MenuType
         mFormHwnd : HWND
-        mMenus : Table[string, MenuItem]
+        mBar: MenuBar
         # Events
         onClick*, onPopup*, onCloseup*, onFocus* : MenuEventHandler
 
-    ContextMenu* = ref object
-        mHmenu : HMENU
-        mFont : Font
-        mWidth, mHeight, mMenuCount : int32
-        mRightClick: bool
+    ContextMenu* = ref object of MenuBase
+        mWidth, mHeight : int32
+        mRightClick, mMenuInserted: bool
         mGrayCref : COLORREF
         mDummyHwnd : HWND
         mParent: Control
         mDefBgBrush, mHotBgBrush, mBorderBrush, mGrayBrush : HBRUSH
-        mMenus : seq[MenuItem]
         # Events
         onMenuShown*, onMenuClose* : EventHandler
 
@@ -373,6 +379,7 @@ type
     RadioButton* = ref object of Control
         mAutoSize, mChecked, mCheckOnClick, mRightAlign: bool
         mTxtFlag: UINT
+        mWideText: LPWSTR
         onCheckedChanged*: EventHandler
 
     TextCase* {.pure.} = enum
@@ -459,6 +466,20 @@ type
         onBeforeChecked, onAfterChecked, onBeforeSelected: TreeEventHandler
         onAfterSelected, onBeforeExpanded, onAfterExpanded: TreeEventHandler
         onBeforeCollapsed, onAfterCollapsed: TreeEventHandler
+
+
+    AppData = object
+        appStarted: bool
+        loopStarted: bool
+        screenWidth: int32
+        screenHeight: int32
+        formCount: int32
+        mainHwnd: HWND
+        isDateInit: bool
+        iccEx: INITCOMMONCONTROLSEX
+        scaleFactor: cint
+
+var appData : AppData
 
 
 

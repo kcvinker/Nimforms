@@ -157,7 +157,7 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             if (this.mDrawMode and 2) == 2: SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
-    of WM_COMMAND:
+    of MM_CTL_COMMAND:
         let ncode = HIWORD(wpm)
         if ncode == EN_CHANGE:
             if this.onTextChanged != nil: this.onTextChanged(this, newEventArgs())

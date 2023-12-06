@@ -47,6 +47,7 @@ proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
     result.mText = text
     result.mFont = parent.mFont
     result.mBackColor = parent.mBackColor
+    result.mWideText = text.toLPWSTR()
     result.mAutoSize = true
     result.mForeColor = CLR_BLACK
     result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX
@@ -118,7 +119,7 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             else:
                 nmcd.rc.right -= 18
             if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
-            DrawTextW(nmcd.hdc, this.mText.toWcharPtr, -1, nmcd.rc.unsafeAddr, this.mTextStyle)
+            DrawTextW(nmcd.hdc, this.mWideText, -1, nmcd.rc.unsafeAddr, this.mTextStyle)
             return CDRF_SKIPDEFAULT
         else: discard
         return 0

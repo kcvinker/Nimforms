@@ -1,8 +1,9 @@
 # dialogs module Created on 17-May-2023 06:32
 
-import std/strformat
+
 const
     MAX_PATH = 260
+    MAX_PATH_NEW = 32768 + 256 * 100 + 1
     OFN_ALLOWMULTISELECT = 0x200
     OFN_PATHMUSTEXIST = 0x800
     OFN_FILEMUSTEXIST = 0x1000
@@ -17,7 +18,6 @@ const
 
 type
     DialogBase = ref object of RootObj
-        kind : DialogType
         mTitle, mInitDir, mFilter, mSelPath : string
         mFileStart, mExtStart : int
         mAllowAllFiles: bool
@@ -32,64 +32,7 @@ type
     FolderBrowserDialog* = ref object of DialogBase
         mNewFolBtn, mShowFiles : bool
 
-    DialogType = enum
-        fileOpen, fileSave
 
-    OFNHOOKPROC = proc(hwnd: HWND, msg: uint, wpm: WPARAM, lpm: LPARAM): UINT_PTR {.stdcall.}
-    BROWSECBPROC = proc(hwnd: HWND, msg: uint, lpm1: LPARAM, lpm2: LPARAM): INT {.stdcall.}
-
-
-    OPENFILENAMEW {.pure.} = object
-        lStructSize: DWORD
-        hwndOwner: HWND
-        hInstance: HINSTANCE
-        lpstrFilter: LPCWSTR
-        lpstrCustomFilter: LPWSTR
-        nMaxCustFilter: DWORD
-        nFilterIndex: DWORD
-        lpstrFile: LPWSTR
-        nMaxFile: DWORD
-        lpstrFileTitle: LPWSTR
-        nMaxFileTitle: DWORD
-        lpstrInitialDir: LPCWSTR
-        lpstrTitle: LPCWSTR
-        Flags: DWORD
-        nFileOffset: WORD
-        nFileExtension: WORD
-        lpstrDefExt: LPCWSTR
-        lCustData: LPARAM
-        lpfnHook: OFNHOOKPROC
-        lpTemplateName: LPCWSTR
-        pvReserved: pointer
-        dwReserved: DWORD
-        FlagsEx: DWORD
-    LPOPENFILENAMEW = ptr OPENFILENAMEW
-
-    SHITEMID {.pure.} = object
-        cb: USHORT
-        abID: array[1, BYTE]
-    LPSHITEMID* = ptr SHITEMID
-
-    ITEMIDLIST {.pure, packed.} = object
-        mkid: SHITEMID
-    ITEMIDLIST_RELATIVE = ITEMIDLIST
-    ITEMID_CHILD = ITEMIDLIST
-    ITEMIDLIST_ABSOLUTE = ITEMIDLIST
-    LPITEMIDLIST = ptr ITEMIDLIST
-    LPCITEMIDLIST = ptr ITEMIDLIST
-    PIDLIST_ABSOLUTE = ptr ITEMIDLIST_ABSOLUTE
-    PCIDLIST_ABSOLUTE = ptr ITEMIDLIST_ABSOLUTE
-
-    BROWSEINFOW {.pure.} = object
-        hwndOwner: HWND
-        pidlRoot: PCIDLIST_ABSOLUTE
-        pszDisplayName: LPWSTR
-        lpszTitle: LPCWSTR
-        ulFlags: UINT
-        lpfn: BROWSECBPROC
-        lParam: LPARAM
-        iImage: int32
-    LPBROWSEINFOW = ptr BROWSEINFOW
 
 proc GetOpenFileNameW(P1: LPOPENFILENAMEW): BOOL {.stdcall, dynlib: "comdlg32", importc.}
 proc GetSaveFileNameW(P1: LPOPENFILENAMEW): BOOL {.stdcall, dynlib: "comdlg32", importc.}
@@ -102,15 +45,16 @@ proc initDialogBase(this: DialogBase, ttl: string, initDir: string) =
     this.mInitDir = initDir
     # this.mFilter = if filter == "": "All Files" & "\0" & "*.*" & "\0" else: filter
 
-proc newFileOpenDialog*(title: string = "Open file", initDir: string = ""): FileOpenDialog =
+proc newFileOpenDialog*(title: string = "Open file", initDir: string = "", multisel : bool = false): FileOpenDialog =
     new(result)
     initDialogBase(result, title, initDir)
-    result.kind = DialogType.fileOpen
+    # result.kind = DialogType.fileOpen
+    result.mMultiSel = multisel
 
 proc newFileSaveDialog*(title: string = "Save As", initDir: string = ""): FileSaveDialog =
     new(result)
     initDialogBase(result, title, initDir)
-    result.kind = DialogType.fileSave
+    # result.kind = DialogType.fileSave
 
 proc newFolderBrowserDialog*(title: string = "Save As", initDir: string = ""): FolderBrowserDialog =
     new(result)
@@ -132,7 +76,7 @@ proc fileNames*(this: FileOpenDialog): seq[string] = this.mSelFiles
 # Setter functions
 proc `title=`*(this: DialogBase, value: string) = this.mTitle = value
 proc `initialFolder=`*(this: DialogBase, value: string) = this.mInitDir = value
-proc `filter=`*(this: DialogBase, value: string) = this.mFilter = value
+# proc `filter=`*(this: DialogBase, value: string) = this.mFilter = value
 proc `multiSelect=`*(this: FileOpenDialog, value: bool) = this.mMultiSel = value
 proc `showHiddenFiles=`*(this: FileOpenDialog, value: bool) = this.mShowHidden = value
 proc `newFolderButton=`*(this: FolderBrowserDialog, value: bool) = this.mNewFolBtn = value
@@ -152,46 +96,57 @@ proc extractFileNames(this: FileOpenDialog, buff: seq[WCHAR], startPos: int) =
             offset = i + 1
             this.mSelFiles.add(fmt"{dirPath}\{toUtf8String(slice)}")
             if ord(buff[offset]) == 0: break
+    this.mSelPath = fmt("{this.mSelFiles[0]}")
 
 
-proc showDialogHelper(obj: DialogBase, hwnd: HWND = nil): bool =
-    if obj.mFilter.len == 0:
-        obj.mFilter = "All files\0*.*\0"
+proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} =
+    if this.mFilter.len == 0:
+        this.mFilter = "All files\0*.*\0"
     else:
-        if obj.mAllowAllFiles:
-            obj.mFilter = fmt("{obj.mFilter}All files\0*.*\0")
+        if this.mAllowAllFiles:
+            this.mFilter = fmt("{this.mFilter}All files\0*.*\0")
+    var ofn: OPENFILENAMEW
+    var buffer: seq[WCHAR] = newSeq[WCHAR](MAX_PATH_NEW)
+    ofn.hwndOwner = hwnd
+    ofn.lStructSize = cast[DWORD](sizeof(ofn))
+    ofn.lpstrFilter = this.mFilter.toLPWSTR()
+    ofn.lpstrFile = buffer[0].unsafeAddr
+    ofn.lpstrInitialDir = (if len(this.mInitDir) > 0: this.mInitDir.toLPWSTR() else: nil)
+    ofn.lpstrTitle = this.mTitle.toLPWSTR()
+    ofn.nMaxFile = MAX_PATH_NEW
+    ofn.nMaxFileTitle = MAX_PATH
+    ofn.Flags = OFN_PATHMUSTEXIST or OFN_FILEMUSTEXIST
+    if this.mMultiSel: ofn.Flags = ofn.Flags or OFN_ALLOWMULTISELECT or OFN_EXPLORER
+    if this.mShowHidden: ofn.Flags = ofn.Flags or OFN_FORCESHOWHIDDEN
+    let ret = GetOpenFileNameW(ofn.unsafeAddr)
+    if ret > 0:
+        if this.mMultiSel:
+            this.extractFileNames(buffer, cast[int](ofn.nFileOffset))
+            result = true
+        else:
+           this.mSelPath = toUtf8String(buffer)
+           result = true
+
+
+proc showDialog*(this: FileSaveDialog, hwnd: HWND = nil): bool =
     var ofn: OPENFILENAMEW
     var buffer: seq[WCHAR] = newSeq[WCHAR](MAX_PATH)
     ofn.hwndOwner = hwnd
     ofn.lStructSize = cast[DWORD](sizeof(ofn))
-    ofn.lpstrFilter = obj.mFilter.toLPWSTR()
+    ofn.lpstrFilter = this.mFilter.toLPWSTR()
     ofn.lpstrFile = buffer[0].unsafeAddr
-    ofn.lpstrInitialDir = obj.mInitDir.toLPWSTR()
-    ofn.lpstrTitle = obj.mTitle.toLPWSTR()
+    ofn.lpstrInitialDir = (if len(this.mInitDir) > 0: this.mInitDir.toLPWSTR() else: nil)
+    ofn.lpstrTitle = this.mTitle.toLPWSTR()
     ofn.nMaxFile = MAX_PATH
-    var ret : BOOL
-
-    if obj.kind == DialogType.fileOpen:
-        let fod = cast[FileOpenDialog](obj)
-        ofn.Flags = OFN_PATHMUSTEXIST or OFN_FILEMUSTEXIST
-        if fod.mMultiSel: ofn.Flags = ofn.Flags or OFN_ALLOWMULTISELECT or OFN_EXPLORER
-        if fod.mShowHidden: ofn.Flags = ofn.Flags or OFN_FORCESHOWHIDDEN
-        ret = GetOpenFileNameW(ofn.unsafeAddr)
-        if ret > 0 and fod.mMultiSel: fod.extractFileNames(buffer, cast[int](ofn.nFileOffset))
-    else:
-        let fsd = cast[FileSaveDialog](obj)
-        ofn.Flags = OFN_PATHMUSTEXIST or OFN_OVERWRITEPROMPT
-        ret = GetSaveFileNameW(ofn.unsafeAddr)
-
+    ofn.nMaxFileTitle = MAX_PATH
+    ofn.Flags = OFN_PATHMUSTEXIST or OFN_OVERWRITEPROMPT
+    let ret = GetSaveFileNameW(ofn.unsafeAddr)
     if ret != 0:
-        obj.mFileStart = cast[int](ofn.nFileOffset)
-        obj.mExtStart = cast[int](ofn.nFileExtension)
-        obj.mSelPath = toUtf8String(buffer)
+        this.mFileStart = cast[int](ofn.nFileOffset)
+        this.mExtStart = cast[int](ofn.nFileExtension)
+        this.mSelPath = toUtf8String(buffer)
         result = true
 
-
-proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} = showDialogHelper(this, hwnd)
-proc showDialog*(this: FileSaveDialog, hwnd: HWND = nil): bool {.discardable.} = showDialogHelper(this, hwnd)
 
 proc showDialog*(this: FolderBrowserDialog, hwnd: HWND = nil): bool {.discardable.} =
     var buffer: seq[WCHAR] = newSeq[WCHAR](MAX_PATH)
@@ -218,12 +173,16 @@ proc setFilter*(this: DialogBase, filterName, ext: string) =
     else:
         this.mFilter = fmt("{filterName}\0*{ext}\0")
 
-proc setMultipleFilters*(this: DialogBase, description: string, extSeq: seq[string]) =
+
+proc setFilters*(this: DialogBase, description: string, extSeq: seq[string]) =
     # Adding multiple filters with single discription
-    this.mFilter = fmt("{description}\0")
+    var filterSeq : seq[string]
+    filterSeq.add(fmt("{description}\0"))
     let fillCount = extSeq.len - 1
     for i, ext in extSeq:
-        this.mFilter &= fmt("*{ext}")
-        if i < fillCount:
-            this.mFilter &= ";"
-    this.mFilter &= "\0\0"
+        if i == fillCount: # It's tha last extension
+            filterSeq.add(fmt("*{ext}\0\0"))
+        else:
+            filterSeq.add(fmt("*{ext};"))
+
+    this.mFilter = filterSeq.join("")

@@ -2,6 +2,7 @@
 
 # import system/widestrs # for wchar string conversion
 import strutils, sequtils
+import std/strformat
 
 # Windows API Data types
 type
@@ -68,8 +69,8 @@ type
     #     size: uint32
     #     data: UncheckedArray[WCHAR]
 
-    WNDPROC* = proc(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall.}
-    SUBCLASSPROC* = proc (hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM,
+    WNDPROC = proc(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall.}
+    SUBCLASSPROC = proc (hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM,
                             uIdSubclass: UINT_PTR, dwRefData: DWORD_PTR): LRESULT {.stdcall.}
 
 # Windows API constants
@@ -575,6 +576,77 @@ type
         itemData: ULONG_PTR
     LPDRAWITEMSTRUCT = ptr DRAWITEMSTRUCT
 
+    DISPLAY_DEVICE_TYPE {.pure.} = enum
+        DEVICE_PRIMARY = 0, DEVICE_IMMERSIVE = 1
+
+    DEVICE_SCALE_FACTOR {.pure.} = enum
+        SCALE_100_PERCENT = 100,
+        SCALE_120_PERCENT = 120,
+        SCALE_125_PERCENT = 125,
+        SCALE_140_PERCENT = 140,
+        SCALE_150_PERCENT = 150,
+
+    BROWSECBPROC = proc(p1: HWND, p2: UINT, p3: WPARAM, p4: LPARAM): int32 {.stdcall.}
+    OFNHOOKPROC = proc(p1: HWND, p2: UINT, p3: WPARAM, p4: LPARAM): UINT_PTR {.stdcall.}
+
+    OPENFILENAMEW {.pure.} = object
+        lStructSize: DWORD
+        hwndOwner: HWND
+        hInstance: HINSTANCE
+        lpstrFilter: LPCWSTR
+        lpstrCustomFilter: LPWSTR
+        nMaxCustFilter: DWORD
+        nFilterIndex: DWORD
+        lpstrFile: LPWSTR
+        nMaxFile: DWORD
+        lpstrFileTitle: LPWSTR
+        nMaxFileTitle: DWORD
+        lpstrInitialDir: LPCWSTR
+        lpstrTitle: LPCWSTR
+        Flags: DWORD
+        nFileOffset: WORD
+        nFileExtension: WORD
+        lpstrDefExt: LPCWSTR
+        lCustData: LPARAM
+        lpfnHook: OFNHOOKPROC
+        lpTemplateName: LPCWSTR
+        pvReserved: pointer
+        dwReserved: DWORD
+        FlagsEx: DWORD
+
+    LPOPENFILENAMEW = ptr OPENFILENAMEW
+
+    SHITEMID {.pure.} = object
+        cb: USHORT
+        abID: array[1, BYTE]
+
+    LPSHITEMID = ptr SHITEMID
+
+    ITEMIDLIST {.pure, packed.} = object
+        mkid: SHITEMID
+
+    ITEMIDLIST_RELATIVE = ITEMIDLIST
+    ITEMID_CHILD = ITEMIDLIST
+    ITEMIDLIST_ABSOLUTE = ITEMIDLIST
+    LPITEMIDLIST = ptr ITEMIDLIST
+    LPCITEMIDLIST = ptr ITEMIDLIST
+    PIDLIST_ABSOLUTE = ptr ITEMIDLIST_ABSOLUTE
+    PCIDLIST_ABSOLUTE = ptr ITEMIDLIST_ABSOLUTE
+
+
+    BROWSEINFOW {.pure.} = object
+        hwndOwner: HWND
+        pidlRoot: PCIDLIST_ABSOLUTE
+        pszDisplayName: LPWSTR
+        lpszTitle: LPCWSTR
+        ulFlags: UINT
+        lpfn: BROWSECBPROC
+        lParam: LPARAM
+        iImage: cint
+
+    LPBROWSEINFOW = ptr BROWSEINFOW
+
+
 
 
 
@@ -676,6 +748,7 @@ proc DefSubclassProc(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM): LR
 proc InitCommonControlsFunc(P1: ptr INITCOMMONCONTROLSEX): BOOL {.stdcall, dynlib: "comctl32", importc: "InitCommonControlsEx", discardable.}
 proc wcslen(pstr: LPCWSTR) : csize_t {.cdecl, header: "<wchar.h>",importc.}
 proc sprintf(dest: cstring; format: cstring): cint {.importc, varargs, header: "stdio.h", discardable.}
+proc GetScaleFactorForDevice*(disp: cint): cint {.importc, dynlib: "Shcore.dll".}
 
 # COM functions
 proc CoInitializeEx*(pvReserved: LPVOID, dwCoInit: DWORD): HRESULT {.stdcall, dynlib: "ole32", importc.}
@@ -709,8 +782,17 @@ proc wcharArrayToString(wArrPtr: LPCWSTR|LPWSTR): string =
     # for ch in s: add(result, ch)
     result = s.join()
 
-proc toWcharPtr(txt: string): LPCWSTR = newWideCString(txt)[0].unsafeAddr
-proc toLPWSTR(txt: string): LPWSTR = newWideCString(txt)[0].unsafeAddr
+var xc = 1
+proc toWcharPtr(txt: string): LPCWSTR =
+    # echo fmt("[{xc}] toWcharPtr {txt}")
+    # xc += 1
+    newWideCString(txt)[0].unsafeAddr
+
+proc toLPWSTR(txt: string): LPWSTR =
+    # echo fmt("[{xc}] toLPWSTR {txt}")
+    # xc += 1
+    newWideCString(txt)[0].unsafeAddr
+
 template LOWORD(l: untyped): WORD = WORD(l and 0xffff)
 template HIWORD(l: untyped): WORD = WORD((l shr 16) and 0xffff)
 template GET_WHEEL_DELTA_WPARAM*(wParam: untyped): SHORT = cast[SHORT](HIWORD(wParam))

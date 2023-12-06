@@ -45,6 +45,7 @@ proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w
     result.mText = text
     result.mFont = parent.mFont
     result.mBackColor = parent.mBackColor
+    result.mWideText = text.toLPWSTR()
     result.mForeColor = CLR_BLACK
     result.mAutoSize = true
     result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
@@ -121,7 +122,7 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
             if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
             # SetBkMode(nmcd.hdc, 1)
-            DrawTextW(nmcd.hdc, this.mText.toWcharPtr, -1, nmcd.rc.unsafeAddr, this.mTxtFlag)
+            DrawTextW(nmcd.hdc, this.mWideText, -1, nmcd.rc.unsafeAddr, this.mTxtFlag)
             return CDRF_SKIPDEFAULT
         else: discard
         return 0
