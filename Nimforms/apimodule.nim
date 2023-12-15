@@ -242,28 +242,28 @@ const
 
 # Structs
 type
-    WNDCLASSEXW {.pure.} = object
-        cbSize: UINT
-        style: UINT
-        lpfnWndProc: WNDPROC
-        cbClsExtra: INT
-        cbWndExtra: INT
-        hInstance: HINSTANCE
-        hIcon: HICON
-        hCursor: HCURSOR
-        hbrBackground: HBRUSH
-        lpszMenuName: LPCWSTR
-        lpszClassName: LPCWSTR
-        hIconSm: HICON
+    WNDCLASSEXW* {.pure.} = object
+        cbSize*: UINT
+        style*: UINT
+        lpfnWndProc*: WNDPROC
+        cbClsExtra*: INT
+        cbWndExtra*: INT
+        hInstance*: HINSTANCE
+        hIcon*: HICON
+        hCursor*: HCURSOR
+        hbrBackground*: HBRUSH
+        lpszMenuName*: LPCWSTR
+        lpszClassName*: LPCWSTR
+        hIconSm*: HICON
 
-    PWNDCLASSEXW = ptr WNDCLASSEXW
+    PWNDCLASSEXW* = ptr WNDCLASSEXW
 
     POINT {.pure.} = object
         x : LONG
         y : LONG
     LPPOINT = ptr POINT
 
-    MSG {.pure.} = object
+    MSG* {.pure.} = object
         hwnd: HWND
         message: UINT
         wparam: WPARAM
@@ -656,25 +656,25 @@ proc MultiByteToWideChar(CodePage: UINT, dwFlags: DWORD, lpMultiByteStr: LPCCH, 
 proc WideCharToMultiByte(CodePage: UINT, dwFlags: DWORD, lpWideCharStr: LPCWCH, cchWideChar: INT,
                         lpMultiByteStr: LPSTR, cbMultiByte: INT, lpDefaultChar: LPCCH,
                         lpUsedDefaultChar: LPBOOL): INT {.stdcall, dynlib: "kernel32", importc.}
-proc GetModuleHandleW(lpModuleName: LPCWSTR): HMODULE {.stdcall, dynlib: "kernel32", importc.}
-proc GetLastError(): DWORD {. stdcall, dynlib: "kernel32", importc.}
+proc GetModuleHandleW*(lpModuleName: LPCWSTR): HMODULE {.stdcall, dynlib: "kernel32", importc.}
+proc GetLastError*(): DWORD {. stdcall, dynlib: "kernel32", importc.}
 proc MulDiv(nNumber: int32, nNumerator: int32, nDenominator: int32): int32 {. stdcall, dynlib: "kernel32", importc.}
 
 
 
 # User32 functions
 proc MessageBoxW(hWnd: HWND, lpText: LPCWSTR, lpCaption: LPCWSTR, uType: UINT): INT {.stdcall, dynlib: "user32", importc, discardable.}
-proc LoadIconW(hInstance: HINSTANCE, lpIconName: LPCWSTR): HICON {. stdcall, dynlib: "user32", importc.}
-proc LoadCursorW(hInstance: HINSTANCE, lpCursorName: LPCWSTR): HCURSOR {.stdcall, dynlib: "user32", importc.}
-proc RegisterClassEx(P1: ptr WNDCLASSEXW): ATOM {.stdcall, dynlib: "user32", importc: "RegisterClassExW".}
-proc PostQuitMessage(nExitCode: int32): VOID {.stdcall, dynlib: "user32", importc.}
-proc DefWindowProcW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall, dynlib: "user32", importc.}
-proc CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR, lpWindowName: LPCWSTR, dwStyle: DWORD, X: int32, Y: int32, nWidth: int32, nHeight: int32, hWndParent: HWND, hMenu: HMENU, hInstance: HINSTANCE, lpParam: LPVOID): HWND {.stdcall, dynlib: "user32", importc.}
-proc ShowWindow(hWnd: HWND, nCmdShow: int32): BOOL {. stdcall, dynlib: "user32", importc, discardable.}
-proc UpdateWindow(hWnd: HWND): BOOL {. stdcall, dynlib: "user32", importc, discardable.}
-proc GetMessageW(lpMsg: LPMSG, hWnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT): BOOL {.stdcall, dynlib: "user32", importc.}
-proc TranslateMessage(lpMsg: ptr MSG): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
-proc DispatchMessageW(lpMsg: ptr MSG): LRESULT {. stdcall, dynlib: "user32", importc, discardable.}
+proc LoadIconW*(hInstance: HINSTANCE, lpIconName: LPCWSTR): HICON {. stdcall, dynlib: "user32", importc.}
+proc LoadCursorW*(hInstance: HINSTANCE, lpCursorName: LPCWSTR): HCURSOR {.stdcall, dynlib: "user32", importc.}
+proc RegisterClassEx*(P1: ptr WNDCLASSEXW): ATOM {.stdcall, dynlib: "user32", importc: "RegisterClassExW".}
+proc PostQuitMessage*(nExitCode: int32): VOID {.stdcall, dynlib: "user32", importc.}
+proc DefWindowProcW*(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall, dynlib: "user32", importc.}
+proc CreateWindowExW*(dwExStyle: DWORD, lpClassName: LPCWSTR, lpWindowName: LPCWSTR, dwStyle: DWORD, X: int32, Y: int32, nWidth: int32, nHeight: int32, hWndParent: HWND, hMenu: HMENU, hInstance: HINSTANCE, lpParam: LPVOID): HWND {.stdcall, dynlib: "user32", importc.}
+proc ShowWindow*(hWnd: HWND, nCmdShow: int32): BOOL {. stdcall, dynlib: "user32", importc, discardable.}
+proc UpdateWindow*(hWnd: HWND): BOOL {. stdcall, dynlib: "user32", importc, discardable.}
+proc GetMessageW*(lpMsg: LPMSG, hWnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT): BOOL {.stdcall, dynlib: "user32", importc.}
+proc TranslateMessage*(lpMsg: ptr MSG): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc DispatchMessageW*(lpMsg: ptr MSG): LRESULT {. stdcall, dynlib: "user32", importc, discardable.}
 proc GetSystemMetrics(nIndex: int32): int32 {.stdcall, dynlib: "user32", importc.}
 proc DestroyWindow(hWnd: HWND): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc SetWindowLongPtrW(hWnd: HWND, nIndex: int32, dwNewLong: LONG_PTR): LONG_PTR {.stdcall, dynlib: "user32", importc, discardable.}
@@ -693,7 +693,7 @@ proc GetMessagePos(): DWORD {. stdcall, dynlib: "user32", importc.}
 proc GetWindowRect(hWnd: HWND, lpRect: LPRECT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc PtInRect(lprc: ptr RECT, pt: POINT): BOOL {.stdcall, dynlib: "user32", importc.}
 proc GetClientRect(hWnd: HWND, lpRect: LPRECT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
-proc SetWindowTextW(hWnd: HWND, lpString: LPCWSTR): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
+proc SetWindowTextW*(hWnd: HWND, lpString: LPCWSTR): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc GetWindowTextLengthW(hWnd: HWND): int32 {. stdcall, dynlib: "user32", importc.}
 proc GetWindowTextW(hWnd: HWND, lpString: LPWSTR, nMaxCount: int32): int32 {.stdcall, dynlib: "user32", importc, discardable.}
 proc GetCursorPos(lpPoint: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
@@ -717,7 +717,7 @@ proc MapWindowPoints(hwndFrom: HWND, hwndTo: HWND, lpnt: LPPOINT, cpnt: UINT): I
 
 
 # Gdi32 functions
-proc CreateSolidBrush(color: COLORREF): HBRUSH {.stdcall, dynlib: "gdi32", importc.}
+proc CreateSolidBrush*(color: COLORREF): HBRUSH {.stdcall, dynlib: "gdi32", importc.}
 proc GetDeviceCaps(hdc: HDC, index: int32): int32 {.stdcall, dynlib: "gdi32", importc.}
 proc CreateFontIndirectW(lplf: ptr LOGFONTW): HFONT {.stdcall, dynlib: "gdi32", importc.}
 proc SetTextColor(hdc: HDC, color: COLORREF): COLORREF {.stdcall, dynlib: "gdi32", importc, discardable.}
@@ -783,10 +783,13 @@ proc wcharArrayToString(wArrPtr: LPCWSTR|LPWSTR): string =
     result = s.join()
 
 var xc = 1
-proc toWcharPtr(txt: string): LPCWSTR =
-    # echo fmt("[{xc}] toWcharPtr {txt}")
+proc toWcharPtr*(txt: string): LPCWSTR =
+    var nws = newWideCString(txt)
+    result = nws[0].unsafeAddr
+    #echo fmt("[{xc}] toWcharPtr {cast[string](nws[0])}")
+    # echo "Next line will print the first lettr of ", txt
+    # echo nws
     # xc += 1
-    newWideCString(txt)[0].unsafeAddr
 
 proc toLPWSTR(txt: string): LPWSTR =
     # echo fmt("[{xc}] toLPWSTR {txt}")

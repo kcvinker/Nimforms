@@ -215,6 +215,7 @@ proc createHandle*(this: Form) =
         this.mIsCreated = true
         SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
         this.setFontInternal()
+        # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
 
 proc addMenubar*(this: Form, args: varargs[string, `$`]) : MenuBar =
     this.mMenubar = newMenuBar(this)
@@ -319,6 +320,9 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
         if hw == appData.mainHwnd:
             PostQuitMessage(0)
+
+    of MM_THREAD_MSG:
+        if this.onThreadMsg != nil: this.onThreadMsg(wpm, lpm)
 
     of WM_CLOSE:
         if this.onClosing != nil: this.onClosing(this, newEventArgs())
