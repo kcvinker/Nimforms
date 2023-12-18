@@ -22,8 +22,16 @@ var frm = newForm("Nimforms GUI Library", 675, 500)
 frm.onMouseUp = proc(c: Control, e: MouseEventArgs) = echo "X: " & $e.x & " Y: " & $e.y
 frm.createHandle()
 
+var mbar = frm.addMenubar("Windows", "Linux", "ReactOS")
+mbar.menus["Windows"].addItems("Windows 8", "Windows 10", "Windows 11")
+mbar.menus["Windows"].menus["Windows 11"].addItem("My OS")
+
+#Let's add a timer control which ticks in each 800 ms.
+var tmr = frm.addTimer(800, proc(c: Form, e: EventArgs) = echo "Timer ticked...")
+
 var btn = newButton(frm, "Normal", autoc=true)
 var btn2 = newButton(frm, "Flat Color", btn.right + 10, autoc=true)
+btn2.onClick = proc(c: Control, e: EventArgs) = tmr.start() # Button click will start the timer
 btn2.backColor = 0x83c5be
 
 var btn3 = newButton(frm, "Gradient", btn2.right + 10, autoc=true)
