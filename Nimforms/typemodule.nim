@@ -86,8 +86,14 @@ type
     TreeEventHandler* = proc(c: Control, e: TreeEventArgs)
     CreateFnHandler = proc(c: Control) {.nimcall.}
 
-    # Rectangle* = object
-    #     left, top, right, bottom: int32
+    TimerTickHandler = proc(f: Form, e: EventArgs)
+
+    Timer* = ref object
+        interval: uint32
+        onTick: TimerTickHandler
+        mParent: Form
+        mIsEnabled: bool
+        mIdNum: UINT_PTR
 
     Control* = ref object of RootObj # Base class for all controls
         mKind: ControlType
@@ -150,6 +156,9 @@ type
         mMenuItemDict : Table[uint32, MenuItem]
         mComboData: Table[HWND, HWND]
         mControls: seq[Control]
+        mTimerList: seq[Timer]
+        mStaticTimerID: UINT_PTR
+        mFormID: int32
 
         #Events
         onLoad*, onActivate*, onDeActivate*, onMinimized*: EventHandler

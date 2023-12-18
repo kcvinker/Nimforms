@@ -73,6 +73,8 @@ type
     SUBCLASSPROC = proc (hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM,
                             uIdSubclass: UINT_PTR, dwRefData: DWORD_PTR): LRESULT {.stdcall.}
 
+    TIMERPROC = proc (hWnd: HWND, uID: UINT, uIDp: UINT_PTR, dw: DWORD) {.stdcall.}
+
 # Windows API constants
 const
     CP_UTF8 = 65001
@@ -712,6 +714,8 @@ proc InsertMenuItemW(hMenu: HMENU, item: UINT, fByPos: BOOL, lpmii: LPMENUITEMIN
 proc ClientToScreen(hwnd: HWND, lpp: LPPOINT): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 proc FrameRect(hDc: HDC, lprc: LPRECT, hBr: HBRUSH): INT {.stdcall, dynlib: "user32", importc, discardable.}
 proc MapWindowPoints(hwndFrom: HWND, hwndTo: HWND, lpnt: LPPOINT, cpnt: UINT): INT {.stdcall, dynlib: "user32", importc, discardable.}
+proc SetTimer(hwnd: HWND, nID: UINT_PTR, uEla: UINT, lpfn: TIMERPROC): UINT_PTR {.stdcall, dynlib: "user32", importc, discardable.}
+proc KillTimer(hwnd: HWND, nID: UINT_PTR): BOOL {.stdcall, dynlib: "user32", importc, discardable.}
 
 # End of User32
 

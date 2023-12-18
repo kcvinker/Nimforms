@@ -188,6 +188,7 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     new(result)
     if not appData.appStarted: result.registerWinClass()
     appData.formCount += 1
+    result.mFormID = appData.formCount
     result.mKind = ctForm
     result.mWidth = width
     result.mHeight = height
@@ -223,6 +224,33 @@ proc addMenubar*(this: Form, args: varargs[string, `$`]) : MenuBar =
         this.mMenubar.addItems(args)
 
     result = this.mMenubar
+
+proc addTimer*(this: Form, interval: uint32 = 100, tickHandler: TimerTickHandler = nil): Timer =
+    new(result)
+    result.interval = interval
+    result.onTick = tickHandler
+    result.mParent = this
+    if this.mStaticTimerID > 0:
+        this.mStaticTimerID += 1
+    else:
+        this.mStaticTimerID = cast[UINT_PTR](this.mFormID * 1000)
+
+    result.mIdNum = this.mStaticTimerID
+    this.mTimerList.add(result)
+
+proc start*(this: Timer) =
+    this.mIsEnabled = true
+    SetTimer(this.mParent.mHandle, this.mIdNum, this.interval, nil)
+
+proc stop*(this: Timer) =
+    KillTimer(this.mParent.mHandle, this.mIdNum)
+    this.mIsEnabled = false
+
+proc timer_dtor(this: Timer) =
+    if this.mIsEnabled:
+        KillTimer(this.mParent.mHandle, this.mIdNum)
+
+
 
 
 # Private function
@@ -308,6 +336,29 @@ proc trackMouseMove(hw: HWND) =
     tme.hwndTrack = hw
     TrackMouseEventFunc(tme.unsafeAddr)
 
+proc form_timer_handler(this: Form, wpm: WPARAM) =
+    var timer : Timer = nil
+    let inID = cast[UINT_PTR](wpm)
+    for tmr in this.mTimerList:
+        if tmr.mIdNum == inID:
+            timer = tmr
+            break
+    if timer != nil and timer.onTick != nil:
+        timer.onTick(this, newEventArgs())
+
+
+proc form_dtor(this: Form, hw: HWND) =
+    if this.mTimerList.len > 0:
+        for tmr in this.mTimerList:
+            tmr.timer_dtor()
+            echo "Timer freed"
+
+    this.destructor() # Call the base destructor.
+    if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
+    if hw == appData.mainHwnd:
+        PostQuitMessage(0)
+
+
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
     # echo msg
@@ -315,11 +366,9 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     # echo msg
     case msg
 
-    of WM_DESTROY:
-        this.destructor()
-        if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
-        if hw == appData.mainHwnd:
-            PostQuitMessage(0)
+    of WM_DESTROY: this.form_dtor(hw)
+
+    of WM_TIMER: this.form_timer_handler(wpm)
 
     of MM_THREAD_MSG:
         if this.onThreadMsg != nil: this.onThreadMsg(wpm, lpm)
