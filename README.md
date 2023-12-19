@@ -27,7 +27,7 @@ mbar.menus["Windows"].addItems("Windows 8", "Windows 10", "Windows 11")
 mbar.menus["Windows"].menus["Windows 11"].addItem("My OS")
 
 #Let's add a timer control which ticks in each 800 ms.
-var tmr = frm.addTimer(800, proc(c: Form, e: EventArgs) = echo "Timer ticked...")
+var tmr = frm.addTimer(800, proc(c: Control, e: EventArgs) = echo "Timer ticked...")
 
 var btn = newButton(frm, "Normal", autoc=true)
 var btn2 = newButton(frm, "Flat Color", btn.right + 10, autoc=true)

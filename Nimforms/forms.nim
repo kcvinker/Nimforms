@@ -225,30 +225,25 @@ proc addMenubar*(this: Form, args: varargs[string, `$`]) : MenuBar =
 
     result = this.mMenubar
 
-proc addTimer*(this: Form, interval: uint32 = 100, tickHandler: TimerTickHandler = nil): Timer =
+proc addTimer*(this: Form, interval: uint32 = 100, tickHandler: EventHandler = nil): Timer =
     new(result)
     result.interval = interval
     result.onTick = tickHandler
-    result.mParent = this
-    if this.mStaticTimerID > 0:
-        this.mStaticTimerID += 1
-    else:
-        this.mStaticTimerID = cast[UINT_PTR](this.mFormID * 1000)
-
-    result.mIdNum = this.mStaticTimerID
-    this.mTimerList.add(result)
+    result.mParentHwnd = this.mHandle
+    result.mIdNum = cast[UINT_PTR](result)
+    this.mTimerTable[result.mIdNum] = result
 
 proc start*(this: Timer) =
     this.mIsEnabled = true
-    SetTimer(this.mParent.mHandle, this.mIdNum, this.interval, nil)
+    SetTimer(this.mParentHwnd, this.mIdNum, this.interval, nil)
 
 proc stop*(this: Timer) =
-    KillTimer(this.mParent.mHandle, this.mIdNum)
+    KillTimer(this.mParentHwnd, this.mIdNum)
     this.mIsEnabled = false
 
 proc timer_dtor(this: Timer) =
     if this.mIsEnabled:
-        KillTimer(this.mParent.mHandle, this.mIdNum)
+        KillTimer(this.mParentHwnd, this.mIdNum)
 
 
 
@@ -337,19 +332,15 @@ proc trackMouseMove(hw: HWND) =
     TrackMouseEventFunc(tme.unsafeAddr)
 
 proc form_timer_handler(this: Form, wpm: WPARAM) =
-    var timer : Timer = nil
-    let inID = cast[UINT_PTR](wpm)
-    for tmr in this.mTimerList:
-        if tmr.mIdNum == inID:
-            timer = tmr
-            break
+    let key = cast[UINT_PTR](wpm)
+    let timer : Timer = this.mTimerTable.getOrDefault(key)
     if timer != nil and timer.onTick != nil:
         timer.onTick(this, newEventArgs())
 
 
 proc form_dtor(this: Form, hw: HWND) =
-    if this.mTimerList.len > 0:
-        for tmr in this.mTimerList:
+    if this.mTimerTable.len > 0:
+        for key, tmr in this.mTimerTable:
             tmr.timer_dtor()
             echo "Timer freed"
 
