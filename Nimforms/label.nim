@@ -33,7 +33,9 @@ const
     SWP_NOMOVE = 0x0002
 
 var lbCount = 1
-let lbClsName = toWcharPtr("Static")
+# let lbClsName = toWcharPtr("Static")
+let lbClsName : array[8, uint16] = [0x53, 0x74, 0x61, 0x74, 0x69, 0x63, 0x6B, 0]
+
 
 # Forward declaration
 proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -42,7 +44,7 @@ proc createHandle*(this: Label)
 proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc : bool = false): Label =
     new(result)
     result.mKind = ctLabel
-    result.mClassName = lbClsName
+    result.mClassName = cast[LPCWSTR](lbClsName[0].addr)
     result.mName = "Label_" & $lbCount
     result.mParent = parent
     result.mXpos = x

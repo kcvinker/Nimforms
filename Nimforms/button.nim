@@ -82,7 +82,7 @@ const
     ROUND_CURVE = 5
 
 var btnCount = 1
-let btnClsName = toWcharPtr("Button")
+# let btnClsName = toWcharPtr("Button")
 # Forward declaration
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: Button)
@@ -90,7 +90,7 @@ proc createHandle*(this: Button)
 proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34, autoc: bool = false): Button =
     new(result)
     result.mKind = ctButton
-    result.mClassName = btnClsName
+    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
     result.mName = "Button_" & $btnCount
     result.mParent = parent
 

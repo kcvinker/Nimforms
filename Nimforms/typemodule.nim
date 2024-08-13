@@ -1,5 +1,6 @@
 # Type module
 import tables
+# import nimpy
 
 type
     ControlType* {.pure.} = enum

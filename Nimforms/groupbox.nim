@@ -27,7 +27,7 @@
 # const
 
 var gbCount = 1
-let gbClsName = toWcharPtr("Button")
+# let gbClsName = toWcharPtr("Button")
 
 let gbStyle: DWORD = WS_CHILD or WS_VISIBLE or BS_GROUPBOX or BS_NOTIFY or BS_TOP or WS_OVERLAPPED or WS_CLIPCHILDREN or WS_CLIPSIBLINGS
 
@@ -38,7 +38,7 @@ proc createHandle*(this: GroupBox)
 proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 150, h: int32 = 150, autoc : bool = false ): GroupBox =
     new(result)
     result.mKind = ctGroupBox
-    result.mClassName = gbClsName
+    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
     result.mName = "GroupBox_" & $gbCount
     result.mParent = parent
     result.mXpos = x

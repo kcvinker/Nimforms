@@ -78,6 +78,11 @@ proc cmenuWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR,
     return DefSubclassProc(hw, msg, wpm, lpm)
 
 
+# proc registerCmenuMsgWindow(this: ContextMenu) =
+#     wc : WNDCLASSEXW
+
+
+
 proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextMenu =
     new(result)
     result.mParent = parent
@@ -110,6 +115,7 @@ proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextM
             #     result.mMenus[name] = mi
             # elif mtyp == mtSeparator:
             #     AppendMenuW(result.mHandle, MF_SEPARATOR, 0, nil)
+
 
 proc addSubMenu*(this: ContextMenu, parenttext: string, menutext: string): MenuItem {.discardable.} =
     var parent : MenuItem = this.mMenus[parenttext]
@@ -153,7 +159,11 @@ proc showMenu(this: ContextMenu, lpm: LPARAM) =
     TrackPopupMenu(this.mHandle, mBtn, pt.x, pt.y, 0, this.mDummyHwnd, nil)
 
 proc menus*(this: ContextMenu): Table[string, MenuItem] = return this.mMenus
-
+proc `[]`*(this: ContextMenu, key: string): MenuItem = 
+    # for k, menu in this.mMenus:
+    #     if menu.mText == key:
+    #         return menu
+    result = this.mMenus[key]
 
 
 

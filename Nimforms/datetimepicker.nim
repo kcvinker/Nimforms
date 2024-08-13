@@ -79,7 +79,9 @@ const
     DTN_CLOSEUP = DTN_FIRST2
 
 var dtpCount = 1
-let dtpClsName = toWcharPtr("SysDateTimePick32")
+# let dtpClsName = toWcharPtr("SysDateTimePick32")
+let dtpClsName : array[18, uint16] = [0x53, 0x79, 0x73, 0x44, 0x61, 0x74, 0x65, 0x54, 0x69, 0x6D, 0x65, 0x50, 0x69, 0x63, 0x6B, 0x33, 0x32, 0]
+
 
 # Forward declaration
 proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -89,7 +91,7 @@ proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10,
                             w: int32 = 0, h: int32 = 10, autoc : bool = false): DateTimePicker =
     new(result)
     result.mKind = ctDateTimePicker
-    result.mClassName = dtpClsName
+    result.mClassName = cast[LPCWSTR](dtpClsName[0].addr)
     result.mName = "DateTimePicker_" & $dtpCount
     result.mParent = parent
     result.mXpos = x

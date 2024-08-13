@@ -122,7 +122,9 @@ const
     U16_MAX = 1 shl 16
 
 var tkbCount = 1
-let trkClsName = toWcharPtr("msctls_trackbar32")
+# let trkClsName = toWcharPtr("msctls_trackbar32")
+let trkClsName : array[18, uint16] = [0x6D, 0x73, 0x63, 0x74, 0x6C, 0x73, 0x5F, 0x74, 0x72, 0x61, 0x63, 0x6B, 0x62, 0x61, 0x72, 0x33, 0x32, 0]
+
 const UNKNOWN_MSG = cast[UINT](4294967280)
 
 
@@ -133,7 +135,7 @@ proc createHandle*(this: TrackBar)
 proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
     new(result)
     result.mKind = ctTrackBar
-    result.mClassName = trkClsName
+    result.mClassName = cast[LPCWSTR](trkClsName[0].addr)
     result.mName = "TrackBar_" & $tkbCount
     result.mParent = parent
     result.mXpos = x

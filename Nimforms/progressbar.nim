@@ -50,7 +50,9 @@ const
     PBM_SETSTATE  = (WM_USER+16)
 
 var pbCount = 1
-let pgbClsName = toWcharPtr("msctls_progress32")
+# let pgbClsName = toWcharPtr("msctls_progress32")
+let pgbClsName : array[18, uint16] = [0x6D, 0x73, 0x63, 0x74, 0x6C, 0x73, 0x5F, 0x70, 0x72, 0x6F, 0x67, 0x72, 0x65, 0x73, 0x73, 0x33, 0x32, 0]
+
 
 # Forward declaration
 proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -59,7 +61,7 @@ proc createHandle*(this: ProgressBar)
 proc progressBarCtor(parent: Form, x, y, w, h: int32): ProgressBar =
     new(result)
     result.mKind = ctProgressBar
-    result.mClassName = pgbClsName
+    result.mClassName = cast[LPCWSTR](pgbClsName[0].addr)
     result.mName = "ProgressBar_" & $pbCount
     result.mParent = parent
     result.mXpos = x

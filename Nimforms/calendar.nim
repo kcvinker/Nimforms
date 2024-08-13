@@ -62,7 +62,7 @@ const
     MCM_SETCURSEL = MCM_FIRST+2
 
 var calCount = 1
-let calClsName = toWcharPtr("SysMonthCal32")
+let calClsName : array[14, uint16] = [0x53, 0x79, 0x73, 0x4D, 0x6F, 0x6E, 0x74, 0x68, 0x43, 0x61, 0x6C, 0x33, 0x32, 0] 
 
 # Forward declaration
 proc calWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -94,7 +94,7 @@ proc makeSystemTime(dt: DateAndTime): SYSTEMTIME =
 proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10, autoc : bool = false): Calendar =
     new(result)
     result.mKind = ctCalendar
-    result.mClassName = calClsName
+    result.mClassName = cast[LPCWSTR](calClsName[0].addr)
     result.mName = "Calendar_" & $calCount
     result.mParent = parent
     result.mXpos = x

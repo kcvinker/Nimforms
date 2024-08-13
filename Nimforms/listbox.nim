@@ -118,7 +118,9 @@ const
 
 
 var lbxCount = 1
-let lbxClsName = toWcharPtr("Listbox")
+# let lbxClsName = toWcharPtr("Listbox")
+let lbxClsName : array[8, uint16] = [0x4C, 0x69, 0x73, 0x74, 0x62, 0x6F, 0x78, 0]
+
 
 # Forward declaration
 proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -128,7 +130,7 @@ proc createHandle*(this: ListBox)
 proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 140, autoc : bool = false ): ListBox =
     new(result)
     result.mKind = ctListBox
-    result.mClassName = lbxClsName
+    result.mClassName = cast[LPCWSTR](lbxClsName[0].addr)
     result.mName = "ListBox_" & $lbxCount
     result.mParent = parent
     result.mXpos = x
@@ -164,9 +166,12 @@ proc manageItems(this: ListBox) =
 
 proc getItemInternal(this: ListBox, index: int32) : string =
     let iLen = int32(this.sendMsg(LB_GETTEXTLEN, index, 0))
-    var buffer: seq[WCHAR] = newSeq[WCHAR](iLen + 1)
-    this.sendMsg(LB_GETTEXT, index, buffer[0].unsafeAddr)
-    result = toUtf8String(buffer)
+    var buffer = new_wstring(iLen + 1)
+    this.sendMsg(LB_GETTEXT, index, &buffer)
+    result = buffer.toString
+    
+    
+
 
 
 # Create ListBox's hwnd

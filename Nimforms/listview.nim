@@ -144,7 +144,9 @@ const
     LVN_ITEMCHANGED = (LVN_FIRST-1)
 
 var lvCount = 1
-let lvClsName = toWcharPtr("SysListView32")
+# let lvClsName = toWcharPtr("SysListView32")
+let lvClsName : array[14, uint16] = [0x53, 0x79, 0x73, 0x4C, 0x69, 0x73, 0x74, 0x56, 0x69, 0x65, 0x77, 0x33, 0x32, 0]
+
 
 let LVSTYLE: DWORD = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or
                         WS_CLIPSIBLINGS or LVS_REPORT or WS_BORDER or LVS_ALIGNLEFT or LVS_SINGLESEL
@@ -161,7 +163,7 @@ proc addColumnInternal(this: ListView, lvCol: ListViewColumn)
 proc listViewCtor(parent: Form, x, y, w, h: int32): ListView =
     new(result)
     result.mKind = ctListView
-    result.mClassName = lvClsName
+    result.mClassName = cast[LPCWSTR](lvClsName[0].addr)
     result.mName = "ListView_" & $lvCount
     result.mParent = parent
     result.mXpos = x

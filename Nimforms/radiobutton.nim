@@ -26,7 +26,7 @@
 
 
 var rbCount = 1
-let rbClsName = toWcharPtr("Button")
+# let rbClsName = toWcharPtr("Button")
 
 # Forward declaration
 proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -35,7 +35,7 @@ proc createHandle*(this: RadioButton)
 proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc : bool = false): RadioButton =
     new(result)
     result.mKind = ctRadioButton
-    result.mClassName = rbClsName
+    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
     result.mName = "RadioButton_" & $rbCount
     result.mParent = parent
     result.mXpos = x

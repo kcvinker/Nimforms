@@ -35,6 +35,9 @@ const
     EN_UPDATE = 0x0400
     EM_SETSEL = 0x00B1
 
+# Control class names
+let BtnClass : array[7, uint16] = [0x42, 0x75, 0x74, 0x74, 0x6F, 0x6E, 0]
+
 # Package variables==================================================
 var globalCtlID : int32 = 100
 var globalSubClassID : UINT_PTR = 1000
@@ -62,9 +65,12 @@ proc checkRedraw(this: Control) =
 
 proc getControlText(hw: HWND): string =
     let count = GetWindowTextLengthW(hw)
-    var buffer: seq[WCHAR] = newSeq[WCHAR](count + 1)
+    var buffer = new_wstring(count + 1)
     GetWindowTextW(hw, buffer[0].unsafeAddr, count + 1)
-    result = toUtf8String(buffer)
+    result = buffer.toString
+    
+
+
 
 proc mapParentPoints(this: Control) : RECT =
     var

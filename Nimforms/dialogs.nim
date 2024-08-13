@@ -86,17 +86,19 @@ proc `allowAllFiles=`*(this: DialogBase, value: bool) = this.mAllowAllFiles = va
 
 
 
-proc extractFileNames(this: FileOpenDialog, buff: seq[WCHAR], startPos: int) =
+proc extractFileNames(this: FileOpenDialog, buff: wstring, startPos: int) =
     var offset : int = startPos
-    let dirPath = toUtf8String(buff[0..startPos - 2]) # First item in buff is the directory path.
+    let dirPath = toString(buff[0..startPos - 2]) # First item in buff is the directory path.
     for i in startPos .. MAX_PATH:
         let wc : WCHAR = buff[i]
         if ord(wc) == 0:
-            var slice : seq[WCHAR] = buff[offset..i - 1]
+            var slice : wstring = buff[offset..i - 1]
             offset = i + 1
-            this.mSelFiles.add(fmt"{dirPath}\{toUtf8String(slice)}")
+            this.mSelFiles.add(fmt"{dirPath}\{slice.toString}")
             if ord(buff[offset]) == 0: break
     this.mSelPath = fmt("{this.mSelFiles[0]}")
+
+
 
 
 proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} =
@@ -106,11 +108,11 @@ proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} =
         if this.mAllowAllFiles:
             this.mFilter = fmt("{this.mFilter}All files\0*.*\0")
     var ofn: OPENFILENAMEW
-    var buffer: seq[WCHAR] = newSeq[WCHAR](MAX_PATH_NEW)
+    var buffer: wstring = new_wstring(MAX_PATH_NEW)    
     ofn.hwndOwner = hwnd
     ofn.lStructSize = cast[DWORD](sizeof(ofn))
     ofn.lpstrFilter = this.mFilter.toLPWSTR()
-    ofn.lpstrFile = buffer[0].unsafeAddr
+    ofn.lpstrFile = &buffer   
     ofn.lpstrInitialDir = (if len(this.mInitDir) > 0: this.mInitDir.toLPWSTR() else: nil)
     ofn.lpstrTitle = this.mTitle.toLPWSTR()
     ofn.nMaxFile = MAX_PATH_NEW
@@ -124,17 +126,17 @@ proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} =
             this.extractFileNames(buffer, cast[int](ofn.nFileOffset))
             result = true
         else:
-           this.mSelPath = toUtf8String(buffer)
+           this.mSelPath = buffer.toString
            result = true
 
 
 proc showDialog*(this: FileSaveDialog, hwnd: HWND = nil): bool =
     var ofn: OPENFILENAMEW
-    var buffer: seq[WCHAR] = newSeq[WCHAR](MAX_PATH)
+    var buffer: wstring = new_wstring(MAX_PATH)
     ofn.hwndOwner = hwnd
     ofn.lStructSize = cast[DWORD](sizeof(ofn))
     ofn.lpstrFilter = this.mFilter.toLPWSTR()
-    ofn.lpstrFile = buffer[0].unsafeAddr
+    ofn.lpstrFile = &buffer
     ofn.lpstrInitialDir = (if len(this.mInitDir) > 0: this.mInitDir.toLPWSTR() else: nil)
     ofn.lpstrTitle = this.mTitle.toLPWSTR()
     ofn.nMaxFile = MAX_PATH
@@ -144,12 +146,12 @@ proc showDialog*(this: FileSaveDialog, hwnd: HWND = nil): bool =
     if ret != 0:
         this.mFileStart = cast[int](ofn.nFileOffset)
         this.mExtStart = cast[int](ofn.nFileExtension)
-        this.mSelPath = toUtf8String(buffer)
+        this.mSelPath = buffer.toString
         result = true
 
 
 proc showDialog*(this: FolderBrowserDialog, hwnd: HWND = nil): bool {.discardable.} =
-    var buffer: seq[WCHAR] = newSeq[WCHAR](MAX_PATH)
+    var buffer: wstring = new_wstring(MAX_PATH)
     var bi: BROWSEINFOW
     bi.hwndOwner = hwnd;
     bi.lpszTitle = this.mTitle.toLPWSTR()
@@ -158,9 +160,9 @@ proc showDialog*(this: FolderBrowserDialog, hwnd: HWND = nil): bool {.discardabl
     if this.mShowFiles: bi.ulFlags = bi.ulFlags or BIF_BROWSEINCLUDEFILES
     var pidl : LPITEMIDLIST = SHBrowseForFolderW(bi.unsafeAddr)
     if pidl != nil:
-        if SHGetPathFromIDListW(pidl, buffer[0].unsafeAddr) != 0:
+        if SHGetPathFromIDListW(pidl, &buffer) != 0:
             CoTaskMemFree(pidl)
-            this.mSelPath = toUtf8String(buffer)
+            this.mSelPath = buffer.toString
             result = true
         else:
             CoTaskMemFree(pidl)

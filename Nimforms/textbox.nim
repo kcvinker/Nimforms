@@ -45,7 +45,9 @@ const
     EN_CHANGE = 0x0300
 
 var tbCount = 1
-let tbClsName = toWcharPtr("Edit")
+# let tbClsName = toWcharPtr("Edit")
+let tbClsName : array[5, uint16] = [0x45, 0x64, 0x69, 0x74, 0]
+
 
 let TBSTYLE : DWORD = WS_CHILD or WS_VISIBLE or ES_LEFT or WS_TABSTOP or ES_AUTOHSCROLL or WS_MAXIMIZEBOX or WS_OVERLAPPED
 let TBEXSTYLE: DWORD = WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_CLIENTEDGE or WS_EX_NOPARENTNOTIFY
@@ -57,7 +59,7 @@ proc createHandle*(this: TextBox)
 proc newTextBox*(parent: Form, text: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 120, h: int32 = 27, autoc: bool = false): TextBox =
     new(result)
     result.mKind = ctTextBox
-    result.mClassName = tbClsName
+    result.mClassName = cast[LPCWSTR](tbClsName[0].addr)
     result.mName = "TextBox_" & $tbCount
     result.mParent = parent
     result.mXpos = x

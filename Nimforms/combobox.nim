@@ -106,7 +106,7 @@ const
     CB_GETCOMBOBOXINFO = 0x0164
 
 var cmbCount = 1
-let cmbClsName = toWcharPtr("ComboBox")
+let cmbClsName : array[9, uint16] = [0x43, 0x6F, 0x6D, 0x62, 0x6F, 0x42, 0x6F, 0x78, 0]
 
 # Forward declaration
 proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -117,7 +117,7 @@ proc createHandle*(this: ComboBox)
 proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 27, autoc : bool = false): ComboBox =
     new(result)
     result.mKind = ctComboBox
-    result.mClassName = cmbClsName
+    result.mClassName = cast[LPCWSTR](cmbClsName[0].addr)
     result.mName = "ComboBox_" & $cmbCount
     result.mParent = parent
     result.mXpos = x
@@ -234,9 +234,11 @@ proc selctedItem*(this: ComboBox): string =
         this.mSelIndex = int32(this.sendMsg(CB_GETCURSEL, 0, 0))
         if this.mSelIndex != CB_ERR:
             let iLen = int32(this.sendMsg(CB_GETLBTEXTLEN, this.mSelIndex, 0))
-            var buffer: seq[WCHAR] = newSeq[WCHAR](iLen + 1)
-            this.sendMsg(CB_GETLBTEXT, this.mSelIndex, buffer[0].unsafeAddr)
-            result = toUtf8String(buffer)
+            var buffer = new_wstring(iLen + 1)
+            this.sendMsg(CB_GETLBTEXT, this.mSelIndex, &buffer)
+            result = buffer.toString
+            
+            
     else:
         result = ""
 

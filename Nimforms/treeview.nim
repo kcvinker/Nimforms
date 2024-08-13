@@ -152,7 +152,9 @@ const
 
 
 var tvCount = 1
-let tvClsName = toWcharPtr("SysTreeView32")
+# let tvClsName = toWcharPtr("SysTreeView32")
+let tvClsName : array[14, uint16] = [0x53, 0x79, 0x73, 0x54, 0x72, 0x65, 0x65, 0x56, 0x69, 0x65, 0x77, 0x33, 0x32, 0]
+
 
 let TVSTYLE : DWORD = WS_BORDER or WS_CHILD or WS_VISIBLE or TVS_HASLINES or TVS_HASBUTTONS or TVS_LINESATROOT or TVS_DISABLEDRAGDROP
 # Forward declaration
@@ -166,7 +168,7 @@ proc addChildNode*(this: TreeView, nodeText: string, parent: TreeNode) : TreeNod
 proc treeViewCtor(parent: Form, x, y, w, h: int32): TreeView =
     new(result)
     result.mKind = ctTreeView
-    result.mClassName = tvClsName
+    result.mClassName = cast[LPCWSTR](tvClsName[0].addr)
     result.mName = "TreeView_" & $tvCount
     result.mParent = parent
     result.mXpos = x

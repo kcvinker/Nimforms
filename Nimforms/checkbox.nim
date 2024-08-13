@@ -27,7 +27,8 @@
 # const
 
 var cbCount = 1
-let cbClsName = toWcharPtr("Button")
+# let cbClsName = toWcharPtr("Button")
+
 
 # Forward declaration
 proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
@@ -37,7 +38,7 @@ proc createHandle*(this: CheckBox)
 proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc: bool = false): CheckBox =
     new(result)
     result.mKind = ctCheckBox
-    result.mClassName = cbClsName
+    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
     result.mName = "CheckBox_" & $cbCount
     result.mParent = parent
     result.mXpos = x
@@ -119,7 +120,7 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             else:
                 nmcd.rc.right -= 18
             if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
-            DrawTextW(nmcd.hdc, this.mWideText, -1, nmcd.rc.unsafeAddr, this.mTextStyle)
+            DrawTextW(nmcd.hdc, this.mWideText, -1, nmcd.rc.addr, this.mTextStyle)
             return CDRF_SKIPDEFAULT
         else: discard
         return 0

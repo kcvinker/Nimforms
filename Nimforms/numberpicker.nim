@@ -61,7 +61,9 @@ const
     UDN_DELTAPOS = (UDN_FIRST - 1)
 
 var npCount = 1
-let npClsName = toWcharPtr("msctls_updown32")
+# let npClsName = toWcharPtr("msctls_updown32")
+let npClsName : array[16, uint16] = [0x6D, 0x73, 0x63, 0x74, 0x6C, 0x73, 0x5F, 0x75, 0x70, 0x64, 0x6F, 0x77, 0x6E, 0x33, 0x32, 0]
+
 
 let NPSTYLE: DWORD = WS_VISIBLE or WS_CHILD or UDS_ALIGNRIGHT or UDS_ARROWKEYS or UDS_AUTOBUDDY or UDS_HOTTRACK
 let SWP_FLAG: DWORD = SWP_SHOWWINDOW or SWP_NOACTIVATE or SWP_NOZORDER
@@ -75,7 +77,7 @@ proc createHandle*(this: NumberPicker)
 proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27, autoc: bool = false): NumberPicker =
     new(result)
     result.mKind = ctNumberPicker
-    result.mClassName = npClsName
+    result.mClassName = cast[LPCWSTR](npClsName[0].addr)
     result.mName = "NumberPicker_" & $npCount
     result.mParent = parent
     result.mXpos = x

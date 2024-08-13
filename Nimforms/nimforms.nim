@@ -5,13 +5,13 @@ include apimodule
 include winmessages
 include typemodule
 include colors
-include commons
+include commons # 'menu.nim' is included in this file.
 # include comtypes
 include events
 include controls
 include forms
 
-# Optional includes
+# Optional includes---------------
 include button
 include calendar
 include checkbox

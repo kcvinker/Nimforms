@@ -203,20 +203,22 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mText = (if title == "": "Form_" & $appData.formCount else: title)
 
 
-proc createHandle*(this: Form) =
-    this.setFormStyles()
-    this.setFormPosition()
-    this.mHandle = CreateWindowExW( this.mExStyle,
-                                    this.mClassName,
-                                    toWcharPtr(this.mText),
-                                    this.mStyle, this.mXpos, this.mYpos,
-                                    this.mWidth, this.mHeight,
-                                    nil, nil, this.hInstance, nil)
-    if this.mHandle != nil:
-        this.mIsCreated = true
-        SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
-        this.setFontInternal()
+proc createHandle*(self: Form) =
+    self.setFormStyles()
+    self.setFormPosition()
+    self.mHandle = CreateWindowExW( self.mExStyle,
+                                    self.mClassName,
+                                    toWcharPtr(self.mText),
+                                    self.mStyle, self.mXpos, self.mYpos,
+                                    self.mWidth, self.mHeight,
+                                    nil, nil, self.hInstance, nil)
+    if self.mHandle != nil:
+        self.mIsCreated = true
+        SetWindowLongPtrW(self.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](self)))
+        self.setFontInternal()
         # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
+    else:
+        echo "window creation error : ", GetLastError()
 
 proc addMenubar*(this: Form, args: varargs[string, `$`]) : MenuBar =
     this.mMenubar = newMenuBar(this)
@@ -249,9 +251,9 @@ proc timer_dtor(this: Timer) =
 
 
 # Private function
-proc createChildHandles(this: Form) =
-    if this.mIsMenuUsed: this.mMenubar.createHandle()
-    for ctl in this.mControls:
+proc createChildHandles(self: Form) =
+    if self.mIsMenuUsed: self.mMenubar.createHandle()
+    for ctl in self.mControls:
         if ctl.mHandle == nil: ctl.autoCreate()
 
 proc mainLoop() =
@@ -260,13 +262,13 @@ proc mainLoop() =
         TranslateMessage(uMsg.unsafeAddr)
         DispatchMessageW(uMsg.unsafeAddr)
 
-proc display*(this: Form) =
-    this.createChildHandles()
-    ShowWindow(this.mHandle, 5)
-    UpdateWindow(this.mHandle)
+proc display*(self: Form) =
+    self.createChildHandles()
+    ShowWindow(self.mHandle, 5)
+    UpdateWindow(self.mHandle)
     if not appData.loopStarted:
         appData.loopStarted = true
-        appData.mainHwnd = this.mHandle
+        appData.mainHwnd = self.mHandle
         mainLoop()
 
 proc close*(this: Form) = DestroyWindow(this.mHandle)
@@ -549,17 +551,24 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         if menu != nil and menu.onCloseup != nil : menu.onCloseup(menu, newEventArgs())
 
     of WM_COMMAND:
-        case HIWORD(wpm)
-        of 0:
-            if len(this.mMenuItemDict) > 0:
-                var menu = this.mMenuItemDict[uint32(LOWORD(wpm))]
-                if menu != nil and menu.onClick != nil: menu.onClick(menu, newEventArgs())
-                return 0
-        of 1:
-            discard
+        # echo "HIWORD(wpm) ", HIWORD(wpm), ", Lparam ", lpm, ", LOWORD(wpm) ", LOWORD(wpm)
+        let hwpm = HIWORD(wpm)
+        if hwpm == 0 and lpm == 0:
+            # It's menu message
+            case hwpm
+            of 0:
+                if len(this.mMenuItemDict) > 0:
+                    var menu = this.mMenuItemDict[uint32(LOWORD(wpm))]
+                    if menu != nil and menu.onClick != nil: menu.onClick(menu, newEventArgs())
+                    return 0
+            else:
+                discard
         else:
             let ctHwnd = cast[HWND](lpm)
             return SendMessageW(ctHwnd, MM_CTL_COMMAND, wpm, lpm)
+        
+        
+            
 
     of WM_CONTEXTMENU:
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
