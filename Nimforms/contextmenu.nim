@@ -19,73 +19,8 @@ proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem =
     for key, menu in this.mMenus:
         if menu.mId == idNum: return menu
 
-# proc cmenuWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-#     var this = cast[ContextMenu](refData)
-#     case msg
-#     of WM_DESTROY:
-#         DestroyMenu(this.mHandle)
-#         RemoveWindowSubclass(hw, cmenuWndProc, scID)
 
-#     of WM_MEASUREITEM:
-#         var pmi = cast[LPMEASUREITEMSTRUCT](lpm)
-#         pmi.itemWidth = UINT(this.mWidth)
-#         pmi.itemHeight = UINT(this.mHeight)
-#         return 1
-
-#     of WM_DRAWITEM:
-#         var dis = cast[LPDRAWITEMSTRUCT](lpm)
-#         var mi = cast[MenuItem](cast[PVOID](dis.itemData))
-#         var txtClrRef : COLORREF = mi.mFgColor.cref
-
-#         if dis.itemState == 257:
-#             # var rc : RECT
-#             if mi.mIsEnabled:
-#                 let rc = RECT(left: dis.rcItem.left + 4, top: dis.rcItem.top + 2,
-#                               right: dis.rcItem.right, bottom: dis.rcItem.bottom - 2)
-#                 FillRect(dis.hDC, rc.unsafeAddr, this.mHotBgBrush)
-#                 FrameRect(dis.hDC, rc.unsafeAddr, this.mBorderBrush)
-#                 txtClrRef = 0x00000000
-#             else:
-#                 FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mGrayBrush)
-#                 txtClrRef = this.mGrayCref
-#         else:
-#             FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mDefBgBrush)
-#             if not mi.mIsEnabled: txtClrRef = this.mGrayCref
-
-#         SetBkMode(dis.hDC, 1)
-#         dis.rcItem.left += 25
-#         SelectObject(dis.hDC, this.mFont.handle)
-#         SetTextColor(dis.hDC, txtClrRef)
-#         DrawTextW(dis.hDC, mi.mWideText, -1, dis.rcItem.unsafeAddr, DT_LEFT or DT_SINGLELINE or DT_VCENTER)
-#         return 0
-
-#     of WM_ENTERMENULOOP:
-#             if this.onMenuShown != nil: this.onMenuShown(this.mParent, newEventArgs())
-
-#     of WM_EXITMENULOOP:
-#         if this.onMenuClose != nil: this.onMenuClose(this.mParent, newEventArgs())
-
-#     of WM_MENUSELECT:
-#         let idNum = uint32(LOWORD(wpm))
-#         let hMenu = cast[HMENU](lpm)
-#         if hMenu != nil and idNum > 0:
-#             var menu = this.getMenuItem(idNum)
-#             if menu != nil and menu.mIsEnabled:
-#                 if menu.onFocus != nil: menu.onFocus(menu, newEventArgs())
-
-#     of WM_COMMAND:
-#         let idNum = uint32(LOWORD(wpm))
-#         if idNum > 0:
-#             var menu = this.getMenuItem(idNum)
-#             if menu != nil and menu.mIsEnabled:
-#                 if menu.onClick != nil: menu.onClick(menu, newEventArgs())
-
-#     else: return DefSubclassProc(hw, msg, wpm, lpm)
-#     return DefSubclassProc(hw, msg, wpm, lpm)
-
-
-
-proc createMsgWindow(this: ContextMenu)
+proc createMsgWindow(this: ContextMenu) # Foreard declaration
 
 
 proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextMenu =
@@ -201,10 +136,9 @@ proc createMsgWindow(this: ContextMenu) =
     
 
 proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
-
     case msg
-    of WM_DESTROY:
-        echo "Conetxt menu message-only window destroyed"
+    # of WM_DESTROY:
+    #     echo "Conetxt menu message-only window destroyed"
 
     of WM_MEASUREITEM:
         var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
