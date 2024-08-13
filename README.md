@@ -3,7 +3,7 @@ A simple gui library for Nim programming language based on Windows API
 
 ## Screenshots
 All controls
-![image](Screenshot_210.jpg)
+![image](nimforms_130824.jpg)
 
 ## How to use:
 1. Clone or download the repo.
