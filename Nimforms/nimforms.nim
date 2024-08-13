@@ -6,9 +6,8 @@ include winmessages
 include typemodule
 include colors
 include commons # 'menu.nim' is included in this file.
-# include comtypes
 include events
-include controls
+include controls # contextmenu.nim is included in this file.
 include forms
 
 # Optional includes---------------

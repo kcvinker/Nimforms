@@ -2,7 +2,7 @@
 # This module implements common functions & declarations.
 
 # Window style combinations
-import macros
+# import macros
 # import std/tables
 let
     fixedSingleExStyle : DWORD = WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR or WS_EX_WINDOWEDGE or WS_EX_CONTROLPARENT or WS_EX_APPWINDOW
@@ -23,7 +23,7 @@ const # These 4 constants are used by ListView
     HDM_LAYOUT = HDM_FIRST+5
     HDM_HITTEST = HDM_FIRST+6
     HDM_GETITEMRECT = HDM_FIRST+7
-
+    GWLP_USERDATA = -21
 
 
 # Font related functions
@@ -80,6 +80,17 @@ proc getMousePosOnMsg(): POINT =
     let dw_value = GetMessagePos()
     result.x = LONG(LOWORD(dw_value))
     result.y = LONG(HIWORD(dw_value))
+
+# template strLiteralToWChrPtr(s: string): LPCWSTR = 
+#     cast[LPCWSTR](cast[ptr UncheckedArray[byte]](s[0].addr).toOpenArray(0, s.len).map(a => a.uint16)[0].addr)
+ 
+proc registerMessageWindowClass(clsName: LPCWSTR, pFunc: WNDPROC) =
+    var wc : WNDCLASSEXW
+    wc.cbSize = cast[UINT](sizeof(wc))
+    wc.lpfnWndProc = pFunc
+    wc.hInstance = appData.hInstance
+    wc.lpszClassName = clsName
+    RegisterClassExW(wc.addr)
 
 
 #==========MENU FILE INCLUDE==============================================

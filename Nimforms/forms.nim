@@ -54,13 +54,15 @@ const
     ZERO_HINST = cast[HINSTANCE](0)
     ZERO_HWND = cast[HWND](0)
     ZERO_HMENU = cast[HMENU](0)
-    GWLP_USERDATA = -21
     SC_MINIMIZE = 0xF020
     SC_MAXIMIZE = 0xF030
     SC_RESTORE = 0xF120
     TME_HOVER = 0x00000001
     TME_LEAVE = 0x00000002
     HOVER_DEFAULT = 0xFFFFFFFF'i32
+
+# Window class name : 'Nimforms_Window'
+let frmClsName : array[16, uint16] = [0x4E, 0x69, 0x6D, 0x66, 0x6F, 0x72, 0x6D, 0x73, 0x5F, 0x57, 0x69, 0x6E, 0x64, 0x6F, 0x77, 0]
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.}
 
@@ -83,9 +85,9 @@ proc registerWinClass(this: Form) =
     appData.screenWidth = GetSystemMetrics(0)
     appData.screenHeight = GetSystemMetrics(1)
     appData.scaleFactor = GetScaleFactorForDevice(0)
-    this.hInstance = GetModuleHandleW(nil)
-
-    this.mClassName = toWcharPtr("Nimforms_Window")
+    appData.hInstance = GetModuleHandleW(nil)
+    this.hInstance = appData.hInstance
+    this.mClassName = cast[LPCWSTR](frmClsName[0].addr) #toWcharPtr("Nimforms_Window")
     this.mBackColor = newColor(0xF0F0F0)
 
     var wcex : WNDCLASSEXW
@@ -100,7 +102,7 @@ proc registerWinClass(this: Form) =
     wcex.hbrBackground = CreateSolidBrush(this.mBackColor.cref)         #
     wcex.lpszMenuName = nil
     wcex.lpszClassName = this.mClassName
-    var ret = RegisterClassEx(wcex.unsafeAddr)
+    var ret = RegisterClassExW(wcex.addr)
     # echo "Register result ", ret
 
 
@@ -339,15 +341,17 @@ proc form_timer_handler(this: Form, wpm: WPARAM) =
     if timer != nil and timer.onTick != nil:
         timer.onTick(this, newEventArgs())
 
+# proc menuBarDtor(this: MenuBar) # Forward declaration
 
 proc form_dtor(this: Form, hw: HWND) =
     if this.mTimerTable.len > 0:
         for key, tmr in this.mTimerTable:
             tmr.timer_dtor()
-            echo "Timer freed"
+            # echo "Timer freed"
 
     this.destructor() # Call the base destructor.
     if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
+    if this.mMenubar != nil: this.mMenubar.menuBarDtor()
     if hw == appData.mainHwnd:
         PostQuitMessage(0)
 

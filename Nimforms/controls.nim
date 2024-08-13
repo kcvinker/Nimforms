@@ -47,9 +47,10 @@ proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
     SetWindowSubclass(this.mHandle, ctlWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
     globalSubClassID += 1
 
+proc cmenuDtor*(this: ContextMenu)
 proc destructor(this: Control) =
     if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
-    if this.mContextMenu != nil: DestroyWindow(this.mContextMenu.mDummyHwnd)
+    if this.mCemnuUsed: this.mContextMenu.cmenuDtor()
     # if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
 
 proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
@@ -268,7 +269,9 @@ proc contextMenu*(this: Control): ContextMenu = this.mContextMenu
 
 proc `contextMenu=`*(this: Control, value: ContextMenu) =
     this.mContextMenu = value
+    this.mCemnuUsed = true
 
 proc setContextMenu*(parent: Control, menuNames: varargs[string, `$`]) : ContextMenu {.discardable.} =
     result = newContextMenu(parent, menuNames)
     parent.mContextMenu = result
+    parent.mCemnuUsed = true

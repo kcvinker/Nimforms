@@ -107,7 +107,7 @@ type
         mWidth, mHeight, mXpos, mYpos, mCtlID: int32
         mStyle, mExStyle: DWORD
         mDrawMode: uint32
-        mIsCreated, mLbDown, mRbDown, mIsMouseEntered, mHasText: bool
+        mIsCreated, mLbDown, mRbDown, mIsMouseEntered, mHasText, mCemnuUsed: bool
         mBkBrush: HBRUSH
         mFont: Font
         mParent: Form
@@ -484,11 +484,12 @@ type
         screenHeight: int32
         formCount: int32
         mainHwnd: HWND
+        hInstance: HINSTANCE
         isDateInit: bool
         iccEx: INITCOMMONCONTROLSEX
         scaleFactor: cint
 
-var appData : AppData
+var appData : AppData # Global object to hold some app level info.
 
 
 

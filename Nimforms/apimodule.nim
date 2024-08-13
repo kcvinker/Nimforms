@@ -687,7 +687,7 @@ proc MulDiv(nNumber: int32, nNumerator: int32, nDenominator: int32): int32 {.dll
 proc MessageBoxW(hWnd: HWND, lpText: LPCWSTR, lpCaption: LPCWSTR, uType: UINT): INT {.dll("user32", true).} 
 proc LoadIconW*(hInstance: HINSTANCE, lpIconName: LPCWSTR): HICON {.dll("user32", false).} 
 proc LoadCursorW*(hInstance: HINSTANCE, lpCursorName: LPCWSTR): HCURSOR {.dll("user32", false).}
-proc RegisterClassEx*(P1: ptr WNDCLASSEXW): ATOM {.stdcall, dynlib: "user32", importc: "RegisterClassExW".}
+proc RegisterClassExW*(P1: ptr WNDCLASSEXW): ATOM {.dll("user32", true).}
 proc PostQuitMessage*(nExitCode: int32): VOID {.dll("user32", false).}
 proc DefWindowProcW*(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.dll("user32", false).}
 proc CreateWindowExW*(dwExStyle: DWORD, lpClassName: LPCWSTR, 

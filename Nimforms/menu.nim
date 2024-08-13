@@ -14,6 +14,18 @@ proc newMenuBar*(parent: Form, menuFont: Font = nil ) : MenuBar {.discardable.} 
     result.mMenuGrayBrush = newColor(0xced4da).makeHBRUSH()
     result.mMenuGrayCref = newColor(0x979dac).cref
 
+proc menuItemDtor(this: MenuItem) # forward declaration
+
+proc menuBarDtor(this: MenuBar) =
+    if len(this.mMenus) > 0:
+        for key, menu in this.mMenus: menu.menuItemDtor()
+    DestroyMenu(this.mHandle)    
+    DeleteObject(this.mMenuDefBgBrush)
+    DeleteObject(this.mMenuHotBgBrush)
+    DeleteObject(this.mMenuFrameBrush)
+    DeleteObject(this.mMenuGrayBrush )
+    # echo "MenuBar destroy worked"
+
 
 proc newMenuItem*(txt: string, mtyp: MenuType, parentHmenu : HMENU, indexNum: uint32): MenuItem =
     new(result)
@@ -35,6 +47,12 @@ proc newMenuItem*(txt: string, mtyp: MenuType, parentHmenu : HMENU, indexNum: ui
         result.mIsEnabled = true
 
     staticMenuID += 1
+
+proc menuItemDtor(this: MenuItem) =
+    if len(this.mMenus) > 0:
+        for key, menu in this.mMenus: menu.menuItemDtor()
+    DestroyMenu(this.mHandle)
+    # echo "MenuItem destroy worked"
 
 proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU) =
     var mii : MENUITEMINFOW
