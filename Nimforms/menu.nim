@@ -1,5 +1,5 @@
 
-# contextmenu module - Created on 13-Aug-2024 01:45 
+# menu module - Created on 13-Aug-2024 01:45 
 # NOTE: This file is included in the middle of 'commons.nim'
 #================================================================================
 var staticMenuID : uint32 = 100
@@ -13,6 +13,7 @@ proc newMenuBar*(parent: Form, menuFont: Font = nil ) : MenuBar {.discardable.} 
     result.mFormPtr.mIsMenuUsed = true
     result.mMenuGrayBrush = newColor(0xced4da).makeHBRUSH()
     result.mMenuGrayCref = newColor(0x979dac).cref
+    
 
 proc menuItemDtor(this: MenuItem) # forward declaration
 
@@ -155,7 +156,7 @@ proc createHandle*(this: MenuBar) =
     this.mMenuDefBgBrush = newColor(0xe9ecef).makeHBRUSH()
     this.mMenuHotBgBrush = newColor(0x90e0ef).makeHBRUSH()
     this.mMenuFrameBrush = newColor(0x0077b6).makeHBRUSH()
-    if this.mFont.handle == nil: this.mFont.createHandle(this.mFormPtr.mHandle)
+    if this.mFont.handle == nil: this.mFont.createHandle()
     if len(this.mMenus) > 0:
         for key, menu in this.mMenus: menu.create()
 

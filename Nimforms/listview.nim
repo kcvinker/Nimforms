@@ -605,23 +605,39 @@ proc font*(this: ListViewItem): Font {.inline.} = this.mFont
 
 
 proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[ListView](refData)
+    
     # echo "533 ok ", $msg
     case msg
     of WM_DESTROY:
+        var this = cast[ListView](refData)
         this.destroyResources()
         RemoveWindowSubclass(hw, lvWndProc, scID)
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE: this.mouseLeaveHandler()
+
+    of WM_LBUTTONDOWN:
+        var this = cast[ListView](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+    of WM_LBUTTONUP:
+        var this = cast[ListView](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+    of WM_RBUTTONDOWN:
+        var this = cast[ListView](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+    of WM_RBUTTONUP:
+        var this = cast[ListView](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+    of WM_MOUSEMOVE:
+        var this = cast[ListView](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
+    of WM_MOUSELEAVE:
+        var this = cast[ListView](refData)
+        this.mouseLeaveHandler()
 
     of WM_CONTEXTMENU:
+        var this = cast[ListView](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of WM_NOTIFY: # This is from header.
+        var this = cast[ListView](refData)
         let nmh = cast[LPNMHDR](lpm)
         if nmh.code == NM_CUSTOMDRAW_NM:  # Let's draw header back & fore colors
             var nmcd = cast[LPNMCUSTOMDRAW](lpm)
@@ -633,6 +649,7 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             else: discard
 
     of MM_NOTIFY_REFLECT:
+        var this = cast[ListView](refData)
         let nmh = cast[LPNMHDR](lpm)
         # echo "nmhdr code ", $nmh.code
         case nmh.code
@@ -675,19 +692,24 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
 
 proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[ListView](refData)
+    
     case msg
     of WM_DESTROY:
+        var this = cast[ListView](refData)
         RemoveWindowSubclass(hw, hdrWndProc, scID)
 
     of WM_MOUSEMOVE:
+        var this = cast[ListView](refData)
         var hinfo: HDHITTESTINFO
         hinfo.pt = getMousePos(lpm)
         this.mHotHdrIndex = cast[DWORD_PTR](SendMessageW(hw, HDM_HITTEST, 0, cast[LPARAM](hinfo.unsafeAddr)))
 
-    of WM_MOUSELEAVE: this.mHotHdrIndex = cast[DWORD_PTR](-1)
+    of WM_MOUSELEAVE: 
+        var this = cast[ListView](refData)
+        this.mHotHdrIndex = cast[DWORD_PTR](-1)
 
     of HDM_LAYOUT:
+        var this = cast[ListView](refData)
         if this.mChangeHdrHeight:
             var pHl = cast[LPHDLAYOUT](lpm)
             pHl.pwpos.hwnd = hw
@@ -700,6 +722,7 @@ proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
             return 1
 
     of WM_PAINT:
+        var this = cast[ListView](refData)
         discard DefSubclassProc(hw, msg, wpm, lpm)
         var hrc: RECT
         SendMessageW(hw, HDM_GETITEMRECT, cast[WPARAM](int32(this.mColumns.len - 1)), cast[LPARAM](hrc.unsafeAddr))

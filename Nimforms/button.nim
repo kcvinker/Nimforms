@@ -216,25 +216,45 @@ proc btnDtor(this: Button) =
 
 
 
-proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[Button](refData)
-
+proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, 
+                        scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =  
     case msg
     of WM_DESTROY:
+        var this = cast[Button](refData)
         this.btnDtor()
         this.destructor()
         RemoveWindowSubclass(hw, btnWndProc, scID)
 
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE: this.mouseLeaveHandler()
+    of WM_LBUTTONDOWN:
+        var this = cast[Button](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+
+    of WM_LBUTTONUP:
+        var this = cast[Button](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONDOWN:
+        var this = cast[Button](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONUP:
+        var this = cast[Button](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+
+    of WM_MOUSEMOVE:
+        var this = cast[Button](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
+        
+    of WM_MOUSELEAVE:
+        var this = cast[Button](refData)
+        this.mouseLeaveHandler()
+        
     of WM_CONTEXTMENU:
+        var this = cast[Button](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of MM_NOTIFY_REFLECT:
+        var this = cast[Button](refData)
         var ret : LRESULT= CDRF_DODEFAULT
         if this.mDrawMode > 0:
             var nmcd = cast[LPNMCUSTOMDRAW](lpm)

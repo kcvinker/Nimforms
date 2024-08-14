@@ -269,50 +269,94 @@ proc mouseLeaveHandler(this: ComboBox): LRESULT =
 
 
 proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[ComboBox](refData)
     case msg
     of WM_DESTROY:
+        var this = cast[ComboBox](refData)
         this.destructor()
         RemoveWindowSubclass(hw, cmbWndProc, scID)
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE: return this.mouseLeaveHandler()
-    of WM_KEYDOWN: this.keyDownHandler(wpm)
-    of WM_KEYUP: this.keyUpHandler(wpm)
-    of WM_CHAR: this.keyPressHandler(wpm)
+
+    of WM_LBUTTONDOWN:
+        var this = cast[ComboBox](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+
+    of WM_LBUTTONUP:
+        var this = cast[ComboBox](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONDOWN:
+        var this = cast[ComboBox](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONUP:
+        var this = cast[ComboBox](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+
+    of WM_MOUSEMOVE:
+        var this = cast[ComboBox](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
+
+    of WM_MOUSELEAVE:
+        var this = cast[ComboBox](refData)
+        return this.mouseLeaveHandler()
+
+    of WM_KEYDOWN:
+        var this = cast[ComboBox](refData)
+        this.keyDownHandler(wpm)
+
+    of WM_KEYUP:
+        var this = cast[ComboBox](refData)
+        this.keyUpHandler(wpm)
+
+    of WM_CHAR:
+        var this = cast[ComboBox](refData)
+        this.keyPressHandler(wpm)
+
     of WM_CONTEXTMENU:
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+        var this = cast[ComboBox](refData)
+        if this.mContextMenu != nil:
+            this.mContextMenu.showMenu(lpm)
 
     of MM_CTL_COMMAND:
-        var ncode = HIWORD(wpm)
-        case ncode
+        var this = cast[ComboBox](refData) 
+        case HIWORD(wpm)
         of CBN_SELCHANGE:
-            if this.onSelectionChanged != nil: this.onSelectionChanged(this, newEventArgs())
+            if this.onSelectionChanged != nil:
+                this.onSelectionChanged(this, newEventArgs())
         of CBN_EDITCHANGE:
-            if this.onTextChanged != nil: this.onTextChanged(this, newEventArgs())
+            if this.onTextChanged != nil:
+                this.onTextChanged(this, newEventArgs())
         of CBN_EDITUPDATE:
-            if this.onTextUpdated != nil: this.onTextUpdated(this, newEventArgs())
+            if this.onTextUpdated != nil:
+                this.onTextUpdated(this, newEventArgs())
         of CBN_DROPDOWN:
-            if this.onListOpened != nil: this.onListOpened(this, newEventArgs())
+            if this.onListOpened != nil:
+                this.onListOpened(this, newEventArgs())
         of CBN_CLOSEUP:
-            if this.onListClosed != nil: this.onListClosed(this, newEventArgs())
+            if this.onListClosed != nil:
+                this.onListClosed(this, newEventArgs())
         of CBN_SELENDOK:
-            if this.onSelectionCommitted != nil: this.onSelectionCommitted(this, newEventArgs())
+            if this.onSelectionCommitted != nil:
+                this.onSelectionCommitted(this, newEventArgs())
         of CBN_SELENDCANCEL:
-            if this.onSelectionCancelled != nil: this.onSelectionCancelled(this, newEventArgs())
-        else: discard
+            if this.onSelectionCancelled != nil:
+                this.onSelectionCancelled(this, newEventArgs())
+        else:
+            discard
+
     of MM_LABEL_COLOR:
+        var this = cast[ComboBox](refData)
         if this.mDrawMode > 0:
             let hdc = cast[HDC](wpm)
-            if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
-            if (this.mDrawMode and 2) == 2: SetBkColor(hdc, this.mBackColor.cref)
+            if (this.mDrawMode and 1) == 1:
+                SetTextColor(hdc, this.mForeColor.cref)
+            if (this.mDrawMode and 2) == 2:
+                SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
-    else: return DefSubclassProc(hw, msg, wpm, lpm)
+    else:
+        return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)
+
 
 
 
@@ -320,25 +364,48 @@ proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PT
     var this = cast[ComboBox](refData)
     case msg
     of WM_DESTROY:
+        var this = cast[ComboBox](refData)
         RemoveWindowSubclass(hw, cmbEditWndProc, scID)
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE: return this.mouseLeaveHandler()
+    of WM_LBUTTONDOWN:
+        var this = cast[ComboBox](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+    of WM_LBUTTONUP:
+        var this = cast[ComboBox](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+    of WM_RBUTTONDOWN:
+        var this = cast[ComboBox](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+    of WM_RBUTTONUP:
+        var this = cast[ComboBox](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+    of WM_MOUSEMOVE:
+        var this = cast[ComboBox](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
+    of WM_MOUSELEAVE:
+        var this = cast[ComboBox](refData)
+        return this.mouseLeaveHandler()
     of WM_KEYDOWN:
-        if this.hasInput: this.keyDownHandler(wpm)
+        var this = cast[ComboBox](refData)
+        if this.hasInput:
+            this.keyDownHandler(wpm)
     of WM_KEYUP:
-        if this.hasInput: this.keyUpHandler(wpm)
+        var this = cast[ComboBox](refData)
+        if this.hasInput:
+            this.keyUpHandler(wpm)
     of WM_CHAR:
-        if this.hasInput: this.keyPressHandler(wpm)
+        var this = cast[ComboBox](refData)
+        if this.hasInput:
+            this.keyPressHandler(wpm)
     of MM_EDIT_COLOR:
+        var this = cast[ComboBox](refData)
         if this.mDrawMode > 0:
             let hdc = cast[HDC](wpm)
-            if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
-            if (this.mDrawMode and 2) == 2: SetBkColor(hdc, this.mBackColor.cref)
+            if (this.mDrawMode and 1) == 1:
+                SetTextColor(hdc, this.mForeColor.cref)
+            if (this.mDrawMode and 2) == 2:
+                SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
+
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

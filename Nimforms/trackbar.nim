@@ -455,21 +455,37 @@ proc `backColor=`*(this: TrackBar, value: Color) {.inline.} =
 
 
 proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[TrackBar](refData)
+    
     case msg
     of WM_DESTROY:
+        var this = cast[TrackBar](refData)
         this.destroyResources()
         RemoveWindowSubclass(hw, tkbWndProc, scID)
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE: this.mouseLeaveHandler()
+
+    of WM_LBUTTONDOWN:
+        var this = cast[TrackBar](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+    of WM_LBUTTONUP:
+        var this = cast[TrackBar](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+    of WM_RBUTTONDOWN:
+        var this = cast[TrackBar](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+    of WM_RBUTTONUP:
+        var this = cast[TrackBar](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+    of WM_MOUSEMOVE:
+        var this = cast[TrackBar](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
+    of WM_MOUSELEAVE:
+        var this = cast[TrackBar](refData)
+        this.mouseLeaveHandler()
     of WM_CONTEXTMENU:
+        var this = cast[TrackBar](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of MM_HSCROLL, MM_VSCROLL:
+        var this = cast[TrackBar](refData)
         let lwp = LOWORD(wpm)
         case lwp
         of TB_THUMBPOSITION:
@@ -518,6 +534,7 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         else: discard
 
     of MM_NOTIFY_REFLECT:
+        var this = cast[TrackBar](refData)
         let nmh = cast[LPNMHDR](lpm)
         case nmh.code
         of NM_CUSTOMDRAW_NM:
@@ -552,6 +569,7 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         else: discard
 
     of MM_LABEL_COLOR:
+        var this = cast[TrackBar](refData)
         return cast[LRESULT](this.mBkBrush)
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)

@@ -37,6 +37,10 @@ const
 let CLR_WHITE = newColor(0xFFFFFF)
 let CLR_BLACK = newColor(0x000000)
 
+proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
+    
+
+
 
 proc newFont*(fname: string, fsize: int32, fweight: FontWeight = FontWeight.fwNormal,
                 italic: bool = false, underline: bool = false, strikeout: bool = false) : Font =
@@ -49,12 +53,11 @@ proc newFont*(fname: string, fsize: int32, fweight: FontWeight = FontWeight.fwNo
     result.underLine = underline
     result.strikeOut = strikeout
 
-proc createHandle(this: Font, hw: HWND) =
-    var hdc = GetDC(hw)
+proc createHandle(this: Font) =    
     let scale = appData.scaleFactor / 100
-    let fsiz = int32(scale * float(this.size))
-    let iHeight = -MulDiv(fsiz , GetDeviceCaps(hdc, LOGPIXELSY), 72)
-    ReleaseDC(hw, hdc)
+    let fsiz = int32(scale * float(this.size))   
+    let iHeight = -MulDiv(fsiz , appData.sysDPI, 72)
+    
     var fname = newWideCString(this.name)
     var lf : LOGFONTW
     lf.lfItalic = cast[BYTE](this.italics)

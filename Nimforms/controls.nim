@@ -58,7 +58,7 @@ proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discarda
 
 proc setFontInternal(this: Control) =
     if this.mIsCreated:
-        if this.mFont.handle == nil: this.mFont.createHandle(this.mHandle)
+        if this.mFont.handle == nil: this.mFont.createHandle()
         this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
 
 proc checkRedraw(this: Control) =

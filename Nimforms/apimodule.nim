@@ -94,7 +94,18 @@ macro dll(lib: static string, disc: static bool, x: untyped): untyped =
         x.addPragma(newIdentNode("discardable"))
     result = x
 
+template MAKEINTRESOURCE(i: untyped): untyped = cast[LPTSTR](i and 0xffff)
 
+# Icons & Cursors
+const 
+    IDI_APPLICATION = MAKEINTRESOURCE(32512)
+    IDC_ARROW = MAKEINTRESOURCE(32512)
+    IDI_ERROR = MAKEINTRESOURCE(32513)
+    IDI_QUESTION = MAKEINTRESOURCE(32514)
+    IDI_EXCLAMATION = MAKEINTRESOURCE(32515)
+    IDC_ASTERIK = MAKEINTRESOURCE(32516)
+    IDI_WINLOGO = MAKEINTRESOURCE(32517)
+    IDI_SHIELD = MAKEINTRESOURCE(32518)
 
 
 # Windows API constants
@@ -132,6 +143,7 @@ const
     LANG_NEUTRAL* = 0x00
 
 # Custom  consts
+
 const
     CDRF_DODEFAULT = 0x0
     CDRF_NEWFONT = 0x2
@@ -264,6 +276,12 @@ const
     MF_RIGHTJUSTIFY = 0x00004000
     MF_MOUSESELECT = 0x00008000
     MF_END = 0x00000080
+
+    IMAGE_BITMAP = 0
+    IMAGE_ICON = 1
+    IMAGE_CURSOR = 2
+    LR_LOADFROMFILE = 0x00000010
+    LR_DEFAULTCOLOR = 0x00000000
 
 # Structs
 type
@@ -671,36 +689,57 @@ type
 
     LPBROWSEINFOW = ptr BROWSEINFOW
 
+    NOTIFYICONDATA {.pure.} = object
+        cbSize: DWORD
+        hWnd: HWND
+        uID: uint32
+        uFlags: uint32
+        uCallbackMessage: uint32
+        hIcon: HICON
+        tooltipText: array[128, WCHAR]
+        dwState: DWORD
+        dwStateMask: DWORD
+        balloonText: array[256, WCHAR]
+        uVersionOrTimeout: uint32
+        balloonTitle: array[64, WCHAR]
+        dwInfoFlags: DWORD
+        
+    LPNOTIFYICONDATA = ptr NOTIFYICONDATA
+
+
 
 # Kernel32 functions 
-proc MultiByteToWideChar*(CodePage: UINT, dwFlags: DWORD, lpMultiByteStr: LPCCH, cbMultiByte: INT,
+proc MultiByteToWideChar(CodePage: UINT, dwFlags: DWORD, lpMultiByteStr: LPCCH, cbMultiByte: INT,
                         lpWideCharStr: LPWSTR, cchWideChar: INT): INT {.dll("kernel32", false).}
 proc WideCharToMultiByte(CodePage: UINT, dwFlags: DWORD, lpWideCharStr: LPCWCH, cchWideChar: INT,
                         lpMultiByteStr: LPSTR, cbMultiByte: INT, lpDefaultChar: LPCCH,
                         lpUsedDefaultChar: LPBOOL): INT {.dll("kernel32", false).}
-proc GetModuleHandleW*(lpModuleName: LPCWSTR): HMODULE {.dll("kernel32", false).}
-proc GetLastError*(): DWORD {.dll("kernel32", false).}
+proc GetModuleHandleW(lpModuleName: LPCWSTR): HMODULE {.dll("kernel32", false).}
+proc GetLastError(): DWORD {.dll("kernel32", false).}
 proc MulDiv(nNumber: int32, nNumerator: int32, nDenominator: int32): int32 {.dll("kernel32", false).}
 #-------------------------------------------------------------------------------------------------------
 
 # User32 functions
 proc MessageBoxW(hWnd: HWND, lpText: LPCWSTR, lpCaption: LPCWSTR, uType: UINT): INT {.dll("user32", true).} 
-proc LoadIconW*(hInstance: HINSTANCE, lpIconName: LPCWSTR): HICON {.dll("user32", false).} 
-proc LoadCursorW*(hInstance: HINSTANCE, lpCursorName: LPCWSTR): HCURSOR {.dll("user32", false).}
-proc RegisterClassExW*(P1: ptr WNDCLASSEXW): ATOM {.dll("user32", true).}
-proc PostQuitMessage*(nExitCode: int32): VOID {.dll("user32", false).}
-proc DefWindowProcW*(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.dll("user32", false).}
-proc CreateWindowExW*(dwExStyle: DWORD, lpClassName: LPCWSTR, 
+proc LoadIconW(hInstance: HINSTANCE, lpIconName: LPCWSTR): HICON {.dll("user32", false).} 
+proc DestroyIcon(ico: HICON) : BOOL {.dll("user32", true)}
+proc LoadCursorW(hInstance: HINSTANCE, lpCursorName: LPCWSTR): HCURSOR {.dll("user32", false).}
+proc LoadImageW(h: HINSTANCE, n: LPCWSTR, t: uint32, x: int32, y: int32, 
+                            f: uint32): HANDLE {.dll("user32", false).}
+proc RegisterClassExW(P1: ptr WNDCLASSEXW): ATOM {.dll("user32", true).}
+proc PostQuitMessage(nExitCode: int32): VOID {.dll("user32", false).}
+proc DefWindowProcW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {.dll("user32", false).}
+proc CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR, 
                         lpWindowName: LPCWSTR, dwStyle: DWORD, 
                         X: int32, Y: int32, nWidth: int32, 
                         nHeight: int32, hWndParent: HWND, 
                         hMenu: HMENU, hInstance: HINSTANCE, 
                         lpParam: LPVOID): HWND {.dll("user32", false).}
-proc ShowWindow*(hWnd: HWND, nCmdShow: int32): BOOL {.dll("user32", true).}
-proc UpdateWindow*(hWnd: HWND): BOOL {.dll("user32", true).}
-proc GetMessageW*(lpMsg: LPMSG, hWnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT): BOOL {.dll("user32", false).}
-proc TranslateMessage*(lpMsg: ptr MSG): BOOL {.dll("user32", true).}
-proc DispatchMessageW*(lpMsg: ptr MSG): LRESULT {.dll("user32", true).}
+proc ShowWindow(hWnd: HWND, nCmdShow: int32): BOOL {.dll("user32", true).}
+proc UpdateWindow(hWnd: HWND): BOOL {.dll("user32", true).}
+proc GetMessageW(lpMsg: LPMSG, hWnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT): BOOL {.dll("user32", false).}
+proc TranslateMessage(lpMsg: ptr MSG): BOOL {.dll("user32", true).}
+proc DispatchMessageW(lpMsg: ptr MSG): LRESULT {.dll("user32", true).}
 proc GetSystemMetrics(nIndex: int32): int32 {.dll("user32", false).}
 proc DestroyWindow(hWnd: HWND): BOOL {.dll("user32", true).}
 proc SetWindowLongPtrW(hWnd: HWND, nIndex: int32, dwNewLong: LONG_PTR): LONG_PTR {.dll("user32", true).}
@@ -722,7 +761,7 @@ proc GetMessagePos(): DWORD {.dll("user32", false).}
 proc GetWindowRect(hWnd: HWND, lpRect: LPRECT): BOOL {.dll("user32", true).}
 proc PtInRect(lprc: ptr RECT, pt: POINT): BOOL {.dll("user32", false).}
 proc GetClientRect(hWnd: HWND, lpRect: LPRECT): BOOL {.dll("user32", true).}
-proc SetWindowTextW*(hWnd: HWND, lpString: LPCWSTR): BOOL {.dll("user32", true).}
+proc SetWindowTextW(hWnd: HWND, lpString: LPCWSTR): BOOL {.dll("user32", true).}
 proc GetWindowTextLengthW(hWnd: HWND): int32 {.dll("user32", false).}
 proc GetWindowTextW(hWnd: HWND, lpString: LPWSTR, nMaxCount: int32): int32 {.dll("user32", true).}
 proc GetCursorPos(lpPoint: LPPOINT): BOOL {.dll("user32", true).}
@@ -749,7 +788,7 @@ proc KillTimer(hwnd: HWND, nID: UINT_PTR): BOOL {.dll("user32", true).}
 # End of User32---------------------------------------------------------------------------------------------
 
 # Gdi32 functions {.dll("gdi32", true).}
-proc CreateSolidBrush*(color: COLORREF): HBRUSH {.dll("gdi32", false).}
+proc CreateSolidBrush(color: COLORREF): HBRUSH {.dll("gdi32", false).}
 proc GetDeviceCaps(hdc: HDC, index: int32): int32 {.dll("gdi32", false).}
 proc CreateFontIndirectW(lplf: ptr LOGFONTW): HFONT {.dll("gdi32", false).}
 proc SetTextColor(hdc: HDC, color: COLORREF): COLORREF {.dll("gdi32", true).}
@@ -784,11 +823,12 @@ proc InitCommonControlsFunc(P1: ptr INITCOMMONCONTROLSEX): BOOL
                                 {.stdcall, dynlib: "comctl32", importc: "InitCommonControlsEx", discardable.}
 proc wcslen(pstr: LPCWSTR) : csize_t {.cdecl, header: "<wchar.h>",importc.}
 proc sprintf(dest: cstring; format: cstring): cint {.importc, varargs, header: "stdio.h", discardable.}
-proc GetScaleFactorForDevice*(disp: cint): cint {.importc, dynlib: "Shcore.dll".}
+proc GetScaleFactorForDevice(disp: cint): cint {.importc, dynlib: "Shcore.dll".}
+proc Shell_NotifyIconW(dwMsg: DWORD, pNotify: LPNOTIFYICONDATA) : BOOL {.dll("shell32", true)}
 # End of Misc dll funcs------------------------------------------------------------------------------
 
 # COM functions
-proc CoInitializeEx*(pvReserved: LPVOID, dwCoInit: DWORD): HRESULT {.stdcall, dynlib: "ole32", importc.}
+proc CoInitializeEx(pvReserved: LPVOID, dwCoInit: DWORD): HRESULT {.stdcall, dynlib: "ole32", importc.}
 
 
 

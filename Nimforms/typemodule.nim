@@ -76,6 +76,8 @@ type
 
     DateTimeEventHandler* = proc(c: Control, e: DateTimeEventArgs)
 
+    TrayIconEventHandler* = proc(c: TrayIcon, e: EventArgs)
+
     TreeViewAction* {.pure.} = enum
         tvaUnknown, tvaByKeyboard, tvaByMouse, tvaCollapse, tvaExpand
 
@@ -340,14 +342,15 @@ type
 
     ContextMenu* = ref object of MenuBase
         mWidth, mHeight : int32
-        mRightClick, mMenuInserted: bool
+        mRightClick, mMenuInserted, mTrayParent: bool
         mGrayCref : COLORREF
         mDummyHwnd : HWND
         mParent: Control
+        mTray: TrayIcon
         mDefBgBrush, mHotBgBrush, mBorderBrush, mGrayBrush : HBRUSH
         # Events
         onMenuShown*, onMenuClose* : EventHandler
-
+        onTrayMenuShown*, onTrayMenuClose*: TrayIconEventHandler
 
     NumberPicker* = ref object of Control
         mButtonLeft, mHasSeperator, mAutoRotate, mHideCaret: bool
@@ -439,6 +442,28 @@ type
         #Events
         onValueChanged*, onDragging*, onDragged*: EventHandler
 
+    TrayMenuTrigger* {.pure.} = enum 
+        tmtNone, tmtLeftClick, tmtleftDoubleClick, tmtRightClick
+
+    BalloonIcon* {.pure.} = enum
+        biNone, biInfo, biWarning, biError, biCustom
+
+    TrayIcon* = ref object
+        mResetIcon, mCmenuUsed, mRetainIcon: bool 
+        mMenuTrigger : TrayMenuTrigger
+        mhTrayIcon: HICON
+        mMsgHwnd: HWND
+        mCmenu: ContextMenu
+        mTooltip, mIconpath: string
+        userData: pointer
+        mNid: NOTIFYICONDATA
+
+        onBalloonShow, onBalloonClose, onBalloonClick: TrayIconEventHandler 
+        onMouseMove, onLeftMouseDown, onLeftMouseUp: TrayIconEventHandler
+        onRightMouseDown, onRightMouseUp, onLeftClick: TrayIconEventHandler
+        onRightClick, onLeftDoubleClick: TrayIconEventHandler
+
+
     # NodeNotifyHandler = proc(tv: TreeView, parent: TreeNode, child: TreeNode, nop: NodeOps, pos: int32)
     TreeNode* = ref object
         mImgIndex, mSelImgIndex, mChildCount, mIndex, mNodeCount, mNodeID: int32
@@ -476,6 +501,10 @@ type
         onAfterSelected, onBeforeExpanded, onAfterExpanded: TreeEventHandler
         onBeforeCollapsed, onAfterCollapsed: TreeEventHandler
 
+    # FormMap = object 
+    #     key: HWND
+    #     value: Form 
+
 
     AppData = object
         appStarted: bool
@@ -484,13 +513,19 @@ type
         screenHeight: int32
         formCount: int32
         mainHwnd: HWND
+        trayHwnd: HWND
         hInstance: HINSTANCE
         isDateInit: bool
         iccEx: INITCOMMONCONTROLSEX
         scaleFactor: cint
+        sysDPI: int32
+        scaleF: float
+        # forms: seq[FormMap]
 
 var appData : AppData # Global object to hold some app level info.
 
+proc appFinalize(this: AppData) =
+    if this.trayHwnd != nil: DestroyWindow(this.trayHwnd)
 
 
 

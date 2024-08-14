@@ -1,13 +1,20 @@
-# app.nim
-# include Nimforms/nimforms
+
 import nimforms
-# import macros
-# import std/osproc
-# import std/strformat
+
 
 var frm = newForm("Nimforms GUI Library", 900, 500)
 frm.onMouseUp = proc(c: Control, e: MouseEventArgs) = echo "X: " & $e.x & " Y: " & $e.y
 frm.createHandle()
+
+# Let's create a tray icon
+var ti = newTrayIcon("Nimforms tray icon!", "nficon.ico")
+
+# Now add a context menu to our tray icon.
+ti.addContextMenu(TrayMenuTrigger.tmtRightClick, "Windows", "Linux", "ReactOS")
+
+# Add a click event handler for "Windows" menu.
+let winmenu = ti.contextMenu["Windows"]
+proc onWinmenuClick(c: MenuItem, e: EventArgs) {.handles: winmenu.onClick} = echo "Windows menu selected"
 
 
 var mbar = frm.addMenubar("Windows", "Linux", "ReactOS")
@@ -19,9 +26,14 @@ var tmr = frm.addTimer(800, proc(c: Control, e: EventArgs) = echo "Timer ticked.
 
 
 var btn = newButton(frm, "Normal", autoc=true)
+btn.onClick = proc(c: Control, e: EventArgs) = 
+                ti.showBalloon("Nimform", "Hi from Nimforms", 3000) # Button click will show the balloon 
+
 var btn2 = newButton(frm, "Flat Color", btn->10, autoc=true)
-btn2.onClick = proc(c: Control, e: EventArgs) = tmr.start() # Button click will start the timer
 btn2.backColor = 0x83c5be
+
+btn2.onClick = proc(c: Control, e: EventArgs) = tmr.start() # Button click will start the timer 
+
 
 var btn3 = newButton(frm, "Gradient", btn2.right(10), autoc=true)
 btn3.setGradientColor(0xeeef20, 0x70e000)
@@ -49,8 +61,8 @@ lv.addRow("Win8", "Debian:", "Catalina")
 lv.addRow("Win10", "Fedora", " Big Sur")
 lv.addRow("Win11", "Ubuntu", "Monterey")
 
-lv.setContextMenu("Windows NT", "Linux", "ReactOS")
-lv.contextMenu.addSubMenu("Windows NT", "Windows 11000")
+var cmenu = lv.setContextMenu("Windows NT", "Linux", "ReactOS")
+# lv.contextMenu.addSubMenu("Windows NT", "Windows 11000")
 
 var np = newNumberPicker(frm, 20, lb.bottom(40))
 np.decimalDigits = 2
@@ -81,7 +93,7 @@ tv.addTreeNodeWithChilds("MacOS", "Mojave (10.14)", "Catalina (10.15)", " Big Su
 
 # var n1 = tv.addNode("Windows")
 # var n2 = tv.addNode("Linux")
-# tv.addChildNode("Win 7", n1)
+# tv.addChildNode("Win 7", n1) C:\Compilers\nim-2.0.0\dist\mingw64\bin\gcc.exe
 # tv.addChildNode("Uduntu", n2)
 # var w8 = newTreeNode("Win 8")
 # tv.nodes[0].addChildNode(w8)
@@ -91,34 +103,22 @@ tv.addTreeNodeWithChilds("MacOS", "Mojave (10.14)", "Catalina (10.15)", " Big Su
 # pb.showPercentage = true
 # pb.createHandle()
 
-var cal = newCalendar(frm, 646, 10, autoc=true)
-
-
-
-
-proc btnClick(c: Control, e: EventArgs) {.handles:btn.onClick.} =
-    echo "clicked on btn"
-    #pb.value = 24
-    var fod = newFileOpenDialog(multisel = true)
-    # fod.setFilter("Video Files", ".mp4")
-    fod.setFilters("Documents", @[".doc", ".docx", ".xls"])
-    fod.showDialog(frm.handle)
-    echo "Selected file : " & fod.selectedPath
+var cal = newCalendar(frm, cmb.right(10), 10, autoc=true)
 
 
 
 proc onTrackChange(c: Control, e: EventArgs) {.handles:tkb.onValueChanged.} =
     pgb.value = tkb.value
 
-btn.onClick = btnClick
+# btn.onClick = btnClick
 
 proc flatBtnClick(c: Control, e: EventArgs) =
     # frm.backColor= 0xe63946
     frm.setGradientBackColor(0xe85d04, 0xffba08)
 btn2.onClick = flatBtnClick
 
-var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
-let aw = cmenu["Add Work"]
+# var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
+let aw = cmenu["Windows NT"]
 
 proc addWork(m: MenuItem, e: EventArgs) {.handles: aw.onClick} = echo "Add Work menu clicked"
 

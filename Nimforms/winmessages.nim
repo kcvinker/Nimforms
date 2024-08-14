@@ -351,7 +351,7 @@ const
 
 # My messages
 const
-    MM_NUMBER : UINT = 9000
+    MM_NUMBER : UINT = WM_APP 
     MM_MOUSE_LB_CLICK: UINT = MM_NUMBER + 1
     MM_MOUSE_RB_CLICK: UINT = MM_NUMBER + 2
     MM_NOTIFY_REFLECT: UINT = MM_NUMBER + 3
@@ -366,6 +366,7 @@ const
     MM_NODE_NOTIFY: UINT = MM_NUMBER + 12
     MM_MENU_ADDED: UINT = MM_NUMBER + 13
     MM_THREAD_MSG: UINT = WM_USER + 5
+    MM_TRAY_MSG: UINT = MM_NUMBER + 14
 
 
 type # Key enum to represent all the keyboard keys

@@ -27,3 +27,4 @@ include textbox
 include trackbar
 include treeview
 include dialogs
+include trayicon

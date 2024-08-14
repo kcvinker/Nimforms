@@ -87,30 +87,47 @@ proc checked*(this: CheckBox): bool = this.mChecked
 
 
 proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[CheckBox](refData)
+    
     case msg
     of WM_DESTROY:
+        var this = cast[CheckBox](refData)
         this.destructor()
         RemoveWindowSubclass(hw, cbWndProc, scID)
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE: this.mouseLeaveHandler()
+    of WM_LBUTTONDOWN:
+        var this = cast[CheckBox](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+    of WM_LBUTTONUP:
+        var this = cast[CheckBox](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+    of WM_RBUTTONDOWN:
+        var this = cast[CheckBox](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+    of WM_RBUTTONUP:
+        var this = cast[CheckBox](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+    of WM_MOUSEMOVE:
+        var this = cast[CheckBox](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
+    of WM_MOUSELEAVE:
+        var this = cast[CheckBox](refData)
+        this.mouseLeaveHandler()
     of WM_CONTEXTMENU:
+        var this = cast[CheckBox](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of MM_LABEL_COLOR:
+        var this = cast[CheckBox](refData)
         let hdc = cast[HDC](wpm)
         SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
     of MM_CTL_COMMAND:
+        var this = cast[CheckBox](refData)
         this.mChecked = bool(this.sendMsg(BM_GETCHECK, 0, 0))
         if this.onCheckedChanged != nil: this.onCheckedChanged(this, newEventArgs())
 
     of MM_NOTIFY_REFLECT:
+        var this = cast[CheckBox](refData)
         let nmcd = cast[LPNMCUSTOMDRAW](lpm)
         case nmcd.dwDrawStage
         of CDDS_PREERASE: return CDRF_NOTIFYPOSTERASE

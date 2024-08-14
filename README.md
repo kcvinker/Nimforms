@@ -26,6 +26,13 @@ frm.createHandle()
 # Let's create a tray icon
 var ti = newTrayIcon("Nimforms tray icon!", "nficon.ico")
 
+# Now add a context menu to our tray icon.
+ti.addContextMenu(TrayMenuTrigger.tmtRightClick, "Windows", "Linux", "ReactOS")
+
+# Add a click event handler for "Windows" menu.
+let winmenu = ti.contextMenu["Windows"]
+proc onWinmenuClick(c: MenuItem, e: EventArgs) {.handles: winmenu.onClick} = echo "Windows menu selected"
+
 # Create a menubar and some menus
 var mbar = frm.addMenubar("Windows", "Linux", "ReactOS")
 mbar.menus["Windows"].addItems("Windows 8", "Windows 10", "Windows 11")

@@ -261,28 +261,42 @@ proc textAlign*(this: NumberPicker): TextAlignment = this.mTxtPos
 
 
 proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[NumberPicker](refData)
+    
     case msg
     of WM_DESTROY:
+        var this = cast[NumberPicker](refData)
         this.destructor()
         if this.mPen != nil: DeleteObject(this.mPen)
         RemoveWindowSubclass(hw, npWndProc, scID)
 
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
+    of WM_LBUTTONDOWN:
+        var this = cast[NumberPicker](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+    of WM_LBUTTONUP:
+        var this = cast[NumberPicker](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+    of WM_RBUTTONDOWN:
+        var this = cast[NumberPicker](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+    of WM_RBUTTONUP:
+        var this = cast[NumberPicker](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+    of WM_MOUSEMOVE:
+        var this = cast[NumberPicker](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
     of WM_CONTEXTMENU:
+        var this = cast[NumberPicker](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of WM_MOUSELEAVE:
+        var this = cast[NumberPicker](refData)
         if this.mTrackMouseLeave:
             if not this.isMouseUponMe():
                 this.mIsMouseEntered = false
                 if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
 
     of MM_NOTIFY_REFLECT:
+        var this = cast[NumberPicker](refData)
         let nm = cast[LPNMUPDOWN](lpm)
         if nm.hdr.code == UDN_DELTAPOS:
             let valStrz = getControlText(this.mBuddyHandle)
@@ -296,14 +310,18 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
 
 proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[NumberPicker](refData)
+   
     case msg
     of WM_DESTROY:
+        var this = cast[NumberPicker](refData)
         RemoveWindowSubclass(hw, npEditWndProc, scID)
 
-    of MM_BUDDY_RESIZE: this.resizeBuddy()
+    of MM_BUDDY_RESIZE: 
+        var this = cast[NumberPicker](refData)
+        this.resizeBuddy()
 
     of WM_PAINT:
+        var this = cast[NumberPicker](refData)
         discard DefSubclassProc(hw, msg, wpm, lpm)
         var hdc : HDC = GetDC(hw)
         DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_SUNKENOUTER, this.mTopEdgeFlag)
@@ -315,33 +333,57 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
         return 1
 
     of MM_EDIT_COLOR:
+        var this = cast[NumberPicker](refData)
         var hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
         SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
     of WM_KEYDOWN:
+        var this = cast[NumberPicker](refData)
         this.mKeyPressed = true
         this.keyDownHandler(wpm)
-    of WM_KEYUP: this.keyUpHandler(wpm)
-    of WM_CHAR: this.keyPressHandler(wpm)
-    of EM_SETSEL: return 1
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
+
+    of WM_KEYUP:
+        var this = cast[NumberPicker](refData)
+        this.keyUpHandler(wpm)
+    of WM_CHAR:
+        var this = cast[NumberPicker](refData)
+        this.keyPressHandler(wpm)
+    of EM_SETSEL:
+        var this = cast[NumberPicker](refData)
+        return 1
+    of WM_MOUSEMOVE:
+        var this = cast[NumberPicker](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
     of WM_MOUSELEAVE:
+        var this = cast[NumberPicker](refData)
         if this.mTrackMouseLeave:
             if not this.isMouseUponMe():
                 this.mIsMouseEntered = false
                 if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
 
     of MM_CTL_COMMAND:
+        var this = cast[NumberPicker](refData)
         let nCode = HIWORD(wpm)
         if nCode == EN_UPDATE:
             if this.mHideCaret: HideCaret(hw)
 
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
+    of WM_LBUTTONDOWN: 
+        var this = cast[NumberPicker](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+
+    of WM_LBUTTONUP: 
+        var this = cast[NumberPicker](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONDOWN: 
+        var this = cast[NumberPicker](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONUP: 
+        var this = cast[NumberPicker](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

@@ -109,6 +109,7 @@ proc `icon=`*(this: TrayIcon, value: string) =
     this.mNid.hIcon = this.mhTrayIcon
     let x = Shell_NotifyIconW(NIM_MODIFY, &this.mNid)
 
+proc contextMenu*(this: TrayIcon): ContextMenu = this.mCmenu
 # Methods---------------------------------------------------
 
 proc showBalloon*(this: TrayIcon, title, message: string, # Balloon title & Balloon text
@@ -139,6 +140,14 @@ proc showBalloon*(this: TrayIcon, title, message: string, # Balloon title & Ball
     Shell_NotifyIconW(NIM_MODIFY, &this.mNid)
     this.mNid.dwInfoFlags = 0
     this.mNid.uFlags = 0
+
+
+proc addContextMenu*(this: TrayIcon, trigger: TrayMenuTrigger, 
+                        menuNames: varargs[string, `$`]) : ContextMenu {.discardable.} =
+    result = newContextMenu(this, menuNames)
+    this.mCmenu = result 
+    this.mCmenuUsed = true
+    this.mMenuTrigger = trigger
 
 
 

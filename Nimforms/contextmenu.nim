@@ -5,47 +5,33 @@
 # const
     # TPM_LEFTBUTTON = 0x0000
     # TPM_RIGHTBUTTON = 0x0002
-
+# 
+# Class name - "Cmenu_Msg_Win"
 let cmenuClsName : array[14, uint16] = [0x43, 0x6D, 0x65, 0x6E, 0x75, 0x5F, 0x4D, 0x73, 0x67, 0x5F, 0x57, 0x69, 0x6E, 0]
 var cmenuMsgWinCreated : bool 
 
-# let trayClsName : array[13, uint16] = [0x54, 0x72, 0x61, 0x79, 0x5F, 0x4D, 0x73, 0x67, 0x5F, 0x57, 0x69, 0x6E, 0]
 
-
-# You might ask why did functions are scattered around in this module.
-# Well, this is Nim. We can't place related functions in a single location.
-# This function is needed in below function. So we need to put this here.
-proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem =
-    for key, menu in this.mMenus:
-        if menu.mId == idNum: return menu
 
 
 proc createMsgWindow(this: ContextMenu) # Foreard declaration
 
-
-proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextMenu =
+proc init(t: typedesc[ContextMenu]): ContextMenu =
     new(result)
-    result.mParent = parent
     result.mHandle = CreatePopupMenu()
     result.mWidth = 120
     result.mHeight = 25
     result.mRightClick = true
-    result.mFont = parent.mFont
-    # result.mMenus = @[]
     result.mDefBgBrush = newColor(0xe9ecef).makeHBRUSH()
     result.mHotBgBrush = newColor(0x90e0ef).makeHBRUSH()
     result.mBorderBrush = newColor(0x0077b6).makeHBRUSH()
-    # result.mSelTxtClr = newColor(0x000000)
     result.mGrayBrush = newColor(0xced4da).makeHBRUSH()
     result.mGrayCref = newColor(0x979dac).cref
-    let pHwnd = if parent.mKind == ctForm: parent.mHandle else: parent.mParent.mHandle
-    let hinst = if parent.mKind == ctForm: cast[Form](parent).hInstance else: parent.mParent.hInstance
 
+proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextMenu =
+    result = ContextMenu.init()
+    result.mParent = parent    
+    result.mFont = parent.mFont    
     result.createMsgWindow()
-    # result.mDummyHwnd = CreateWindowExW(0, "Button".toWcharPtr(), nil, WS_CHILD, 0, 0, 0, 0, pHwnd, nil, hinst, nil)
-    # SetWindowSubclass(result.mDummyHwnd, cmenuWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](result)))
-    # globalSubClassID += 1
-
     if len(menuNames) > 0:
         for name in menuNames:
             let mtyp = if name == "|": mtContextSep else: mtContextMenu
@@ -57,6 +43,20 @@ proc newContextMenu*(parent: Control, menuNames: varargs[string, `$`]): ContextM
             #     result.mMenus[name] = mi
             # elif mtyp == mtSeparator:
             #     AppendMenuW(result.mHandle, MF_SEPARATOR, 0, nil)
+
+
+proc newContextMenu*(parent: TrayIcon, menuNames: varargs[string, `$`]): ContextMenu =
+    result = ContextMenu.init()
+    result.mTray = parent 
+    result.mTrayParent = true   
+    result.mFont = newFont("Tahoma", 11)    
+    result.createMsgWindow()
+    if len(menuNames) > 0:
+        for name in menuNames:
+            let mtyp = if name == "|": mtContextSep else: mtContextMenu
+            var mi = newMenuItem(name, mtyp, result.mHandle, result.mMenuCount)
+            result.mMenuCount += 1
+            result.mMenus[name] = mi
 
 
 proc cmenuDtor(this: ContextMenu) =
@@ -129,11 +129,14 @@ proc createMsgWindow(this: ContextMenu) =
         registerMessageWindowClass(clsname, cmenuWndProc)
         cmenuMsgWinCreated = true
 
-    this.mDummyHwnd = CreateWindowExW(0, clsname, nil, WS_CHILD, 0, 0, 0, 0, 
+    this.mDummyHwnd = CreateWindowExW(0, clsname, nil, 0, 0, 0, 0, 0, 
                                         HWND_MESSAGE, nil, appData.hInstance, nil)
     if this.mDummyHwnd != nil:
         SetWindowLongPtrW(this.mDummyHwnd, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
     
+proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem =
+    for key, menu in this.mMenus:
+        if menu.mId == idNum: return menu
 
 proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
     case msg

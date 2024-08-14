@@ -78,23 +78,41 @@ proc createHandle*(this: GroupBox) =
 method autoCreate(this: GroupBox) = this.createHandle()
 
 proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    var this = cast[GroupBox](refData)
+    
     case msg
     of WM_DESTROY:
+        var this = cast[GroupBox](refData)
         if this.mPen != nil: DeleteObject(this.mPen)
         this.destructor()
         RemoveWindowSubclass(hw, gbWndProc, scID)
-    of WM_LBUTTONDOWN: this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP: this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN: this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP: this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE: this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE: this.mouseLeaveHandler()
-    of WM_GETTEXTLENGTH: return 0
+
+    of WM_LBUTTONDOWN:
+        var this = cast[GroupBox](refData)
+        this.leftButtonDownHandler(msg, wpm, lpm)
+    of WM_LBUTTONUP:
+        var this = cast[GroupBox](refData)
+        this.leftButtonUpHandler(msg, wpm, lpm)
+    of WM_RBUTTONDOWN:
+        var this = cast[GroupBox](refData)
+        this.rightButtonDownHandler(msg, wpm, lpm)
+    of WM_RBUTTONUP:
+        var this = cast[GroupBox](refData)
+        this.rightButtonUpHandler(msg, wpm, lpm)
+    of WM_MOUSEMOVE:
+        var this = cast[GroupBox](refData)
+        this.mouseMoveHandler(msg, wpm, lpm)
+    of WM_MOUSELEAVE:
+        var this = cast[GroupBox](refData)
+        this.mouseLeaveHandler()
+    of WM_GETTEXTLENGTH:
+        var this = cast[GroupBox](refData)
+        return 0
     of WM_CONTEXTMENU:
+        var this = cast[GroupBox](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of WM_ERASEBKGND:
+        var this = cast[GroupBox](refData)
         if this.mDrawMode > 0:
             var rc: RECT
             GetClientRect(hw, rc.unsafeAddr)
@@ -102,6 +120,7 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             return 1
 
     of WM_PAINT:
+        var this = cast[GroupBox](refData)
         let ret = DefSubclassProc(hw, msg, wpm, lpm)
         let yp: int32 = 9
         var hdc = GetDC(hw)
