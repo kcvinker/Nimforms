@@ -237,6 +237,7 @@ proc createHandle*(this: Form) =
         # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
     else:
         echo "window creation error : ", GetLastError()
+    
 
 proc addMenubar*(this: Form, args: varargs[string, `$`]) : MenuBar =
     this.mMenubar = newMenuBar(this)

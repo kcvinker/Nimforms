@@ -702,7 +702,8 @@ proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         var this = cast[ListView](refData)
         var hinfo: HDHITTESTINFO
         hinfo.pt = getMousePos(lpm)
-        this.mHotHdrIndex = cast[DWORD_PTR](SendMessageW(hw, HDM_HITTEST, 0, cast[LPARAM](hinfo.unsafeAddr)))
+        this.mHotHdrIndex = cast[DWORD_PTR](
+            SendMessageW(hw, HDM_HITTEST, 0, cast[LPARAM](hinfo.unsafeAddr)))
 
     of WM_MOUSELEAVE: 
         var this = cast[ListView](refData)
@@ -725,8 +726,11 @@ proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         var this = cast[ListView](refData)
         discard DefSubclassProc(hw, msg, wpm, lpm)
         var hrc: RECT
-        SendMessageW(hw, HDM_GETITEMRECT, cast[WPARAM](int32(this.mColumns.len - 1)), cast[LPARAM](hrc.unsafeAddr))
-        var rc = RECT(left: hrc.right + 1, top: hrc.top, right: this.width, bottom: hrc.bottom)
+        SendMessageW(hw, HDM_GETITEMRECT, 
+                        cast[WPARAM](int32(this.mColumns.len - 1)), 
+                        cast[LPARAM](hrc.unsafeAddr))
+        var rc = RECT(left: hrc.right + 1, top: hrc.top, 
+                        right: this.width, bottom: hrc.bottom)
         var hdc: HDC = GetDC(hw)
         FillRect(hdc, rc.unsafeAddr, this.mHdrBkBrush)
         ReleaseDC(hw, hdc)

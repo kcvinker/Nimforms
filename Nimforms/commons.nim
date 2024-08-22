@@ -37,13 +37,18 @@ const
 let CLR_WHITE = newColor(0xFFFFFF)
 let CLR_BLACK = newColor(0x000000)
 
+proc createHandle(this: Font) # Foreard declaration
+
+
 proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
     
 
 
 
-proc newFont*(fname: string, fsize: int32, fweight: FontWeight = FontWeight.fwNormal,
-                italic: bool = false, underline: bool = false, strikeout: bool = false) : Font =
+proc newFont*(fname: string, fsize: int32, 
+                fweight: FontWeight = FontWeight.fwNormal,
+                italic: bool = false, underline: bool = false, 
+                strikeout: bool = false, autoc: bool = false) : Font =
     new(result)
     if fname.len > 32 : raise newException(OSError, "Length of font name exceeds 32 characters")
     result.name = fname
@@ -52,6 +57,7 @@ proc newFont*(fname: string, fsize: int32, fweight: FontWeight = FontWeight.fwNo
     result.italics = italic
     result.underLine = underline
     result.strikeOut = strikeout
+    if autoc: result.createHandle()
 
 proc createHandle(this: Font) =    
     let scale = appData.scaleFactor / 100
@@ -76,8 +82,22 @@ proc createHandle(this: Font) =
 
 # End of Font related area
 
+proc u16_to_i16(value: uint16): int16 = cast[int16]((value and 0xFFFF))
+
 # Some control needs to extract mouse position from lparam value.
-proc getMousePos(lpm: LPARAM): POINT = POINT(x: int32(LOWORD(lpm)), y: int32(HIWORD(lpm)))
+proc getMousePos(pt: ptr POINT, lpm: LPARAM) =
+    if lpm == 0:
+        GetCursorPos(pt)
+    else:
+        # echo "hwd lpm ", HIWORD(lpm), ", lpm ", lpm 
+        pt.x = int32(u16_to_i16(LOWORD(lpm)))
+        pt.y = int32(u16_to_i16(HIWORD(lpm)))
+
+proc getMousePos(lpm: LPARAM): POINT =
+    result = POINT( x: int32(u16_to_i16(LOWORD(lpm))), 
+                    y: int32(u16_to_i16(HIWORD(lpm)))
+                   )
+    
 
 proc getMousePosOnMsg(): POINT =
     let dw_value = GetMessagePos()

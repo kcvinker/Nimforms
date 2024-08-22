@@ -785,6 +785,7 @@ proc FrameRect(hDc: HDC, lprc: LPRECT, hBr: HBRUSH): INT {.dll("user32", true).}
 proc MapWindowPoints(hwndFrom: HWND, hwndTo: HWND, lpnt: LPPOINT, cpnt: UINT): INT {.dll("user32", true).}
 proc SetTimer(hwnd: HWND, nID: UINT_PTR, uEla: UINT, lpfn: TIMERPROC): UINT_PTR {.dll("user32", true).}
 proc KillTimer(hwnd: HWND, nID: UINT_PTR): BOOL {.dll("user32", true).}
+proc SetForegroundWindow(hwnd: HWND): BOOL {.dll("user32", true).}
 # End of User32---------------------------------------------------------------------------------------------
 
 # Gdi32 functions {.dll("gdi32", true).}
@@ -878,8 +879,8 @@ proc toWcharPtr*(txt: string): LPCWSTR =
 
 proc toLPWSTR(txt: string): LPWSTR {.inline.} = newWideCString(txt)[0].addr
 
-template LOWORD(l: untyped): WORD  = WORD(l and 0xffff)
-template HIWORD(l: untyped): WORD = WORD((l shr 16) and 0xffff)
+template LOWORD(l: untyped): WORD = cast[WORD]((l and 0xFFFF))
+template HIWORD(l: untyped): WORD = cast[WORD]((l shr 16))
 template GET_WHEEL_DELTA_WPARAM*(wParam: untyped): SHORT = cast[SHORT](HIWORD(wParam))
 proc `&`*[T](x: var T): ptr T {.inline.} = result = x.addr ## Use `&` like it in C/C++.
 proc `&`*(x: var wstring): ptr WCHAR {.inline.} = result = x[0].addr

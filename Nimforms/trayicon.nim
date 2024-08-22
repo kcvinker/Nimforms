@@ -157,11 +157,11 @@ proc resetIconInternal(this: TrayIcon) =
     Shell_NotifyIconW(NIM_MODIFY, &this.mNid)
     this.mResetIcon = false # Revert to the default state
 
-proc showContextMenu(this: TrayIcon) =
-    var pt : POINT    
-    if not this.mCmenu.mMenuInserted: this.mCmenu.cmenuCreateHandle()
-    GetCursorPos(&pt)
-    TrackPopupMenu(this.mCmenu.mHandle, 2, pt.x, pt.y, 0, this.mCmenu.mDummyHwnd, nil)
+# proc showContextMenu(this: TrayIcon) =
+#     var pt : POINT    
+#     if not this.mCmenu.mMenuInserted: this.mCmenu.cmenuCreateHandle()
+#     GetCursorPos(&pt)
+#     TrackPopupMenu(this.mCmenu.mHandle, 2, pt.x, pt.y, 0, this.mCmenu.mDummyHwnd, nil)
 
 
 proc createTrayMsgWindow(this: TrayIcon) =
@@ -213,12 +213,14 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onLeftMouseUp != nil: this.onLeftMouseUp(this, newEventArgs())
             if this.onLeftClick != nil: this.onLeftClick(this, newEventArgs())
-            if this.mCmenuUsed and this.mMenuTrigger == tmtLeftClick: this.showContextMenu()
+            if this.mCmenuUsed and this.mMenuTrigger == tmtLeftClick: 
+                this.mCmenu.showMenu(0)
 
         of WM_LBUTTONDBLCLK:
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onLeftDoubleClick != nil: this.onLeftDoubleClick(this, newEventArgs())
-            if this.mCmenuUsed and this.mMenuTrigger == tmtleftDoubleClick: this.showContextMenu()
+            if this.mCmenuUsed and this.mMenuTrigger == tmtleftDoubleClick:
+                this.mCmenu.showMenu(0)
 
         of WM_RBUTTONDOWN:
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
@@ -228,7 +230,8 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onRightMouseUp != nil: this.onRightMouseUp(this, newEventArgs())
             if this.onRightClick != nil: this.onRightClick(this, newEventArgs())
-            if this.mCmenuUsed and this.mMenuTrigger == tmtRightClick: this.showContextMenu()
+            if this.mCmenuUsed and this.mMenuTrigger == tmtRightClick:
+                this.mCmenu.showMenu(0)
 
         of WM_MOUSEMOVE:
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
