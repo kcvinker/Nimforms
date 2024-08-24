@@ -10,7 +10,7 @@ frm.createHandle()
 var ti = newTrayIcon("Nimforms tray icon!", "nficon.ico")
 
 # Now add a context menu to our tray icon.
-ti.addContextMenu(TrayMenuTrigger.tmtRightClick, "Windows", "Linux", "ReactOS")
+ti.addContextMenu(TrayMenuTrigger.tmtRightClick, "Windows", "|", "Linux", "ReactOS")
 
 # Add a click event handler for "Windows" menu.
 let winmenu = ti.contextMenu["Windows"]
@@ -18,7 +18,7 @@ proc onWinmenuClick(c: MenuItem, e: EventArgs) {.handles: winmenu.onClick} = ech
 
 
 var mbar = frm.addMenubar("Windows", "Linux", "ReactOS")
-mbar.menus["Windows"].addItems("Windows 8", "Windows 10", "Windows 11")
+mbar.menus["Windows"].addItems("Windows 8", "Windows 10", "|", "Windows 11")
 mbar.menus["Windows"].menus["Windows 11"].addItem("My OS")
 
 #Let's add a timer control which ticks in each 800 ms.
@@ -61,7 +61,7 @@ lv.addRow("Win8", "Debian:", "Catalina")
 lv.addRow("Win10", "Fedora", " Big Sur")
 lv.addRow("Win11", "Ubuntu", "Monterey")
 
-var cmenu = lv.setContextMenu("Windows NT", "Linux", "ReactOS")
+var cmenu = lv.setContextMenu("Windows NT", "Linux", "|", "ReactOS")
 # lv.contextMenu.addSubMenu("Windows NT", "Windows 11000")
 
 var np = newNumberPicker(frm, 20, lb.bottom(40))

@@ -14,8 +14,8 @@ let TPM_RETURNCMD : uint32 = 0x100
 
 
 
-proc createMsgWindow(this: ContextMenu) # Foreard declaration
-proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem # Foreard declaration
+proc createMsgWindow(this: ContextMenu) # Forward declaration
+proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem # Forward declaration
 
 proc init(t: typedesc[ContextMenu]): ContextMenu =
     new(result)
@@ -73,7 +73,6 @@ proc cmenuDtor(this: ContextMenu) =
     # echo "Context menu destroy worked"
 
 
-
 proc addSubMenu*(this: ContextMenu, parenttext: string, menutext: string): MenuItem {.discardable.} =
     var parent : MenuItem = this.mMenus[parenttext]
     parent.mHandle = CreatePopupMenu()
@@ -89,11 +88,12 @@ proc cmenuInsertItem(this: MenuItem) =
     if len(this.mMenus) > 0:
         for key, menu in this.mMenus:
             menu.cmenuInsertItem()
-
+    # echo "menu: ", this.mText, ", type: ", this.mType
     if this.mType == mtContextMenu:
         this.insertMenuInternal(this.mParentHandle)
-    elif this.mType == mtSeparator:
-        AppendMenuW(this.mHandle, MF_SEPARATOR, 0, nil)
+    elif this.mType == mtContextSep:
+        AppendMenuW(this.mParentHandle, MF_SEPARATOR, 0, nil)
+
 
 # This proc will get called right before context menu showed
 proc cmenuCreateHandle(this: ContextMenu) =
@@ -133,14 +133,19 @@ proc showMenu(this: ContextMenu, lpm: LPARAM) =
             if menu.onClick != nil: menu.onClick(menu, newEventArgs())
 #--------------------------------------------------------------------------
 
+
 proc menus*(this: ContextMenu): Table[string, MenuItem] = return this.mMenus
+
+
 proc `[]`*(this: ContextMenu, key: string): MenuItem = 
     # for k, menu in this.mMenus:
     #     if menu.mText == key:
     #         return menu
     result = this.mMenus[key]
 
+
 proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.}
+
 
 proc createMsgWindow(this: ContextMenu) =
     if not cmenuMsgWinCreated:
@@ -151,10 +156,12 @@ proc createMsgWindow(this: ContextMenu) =
                                         HWND_MESSAGE, nil, appData.hInstance, nil)
     if this.mDummyHwnd != nil:
         SetWindowLongPtrW(this.mDummyHwnd, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
-    
+
+
 proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem =
     for key, menu in this.mMenus:
         if menu.mId == idNum: return menu
+
 
 proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
     case msg

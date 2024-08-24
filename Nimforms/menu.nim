@@ -2,7 +2,7 @@
 # menu module - Created on 13-Aug-2024 01:45 
 # NOTE: This file is included in the middle of 'commons.nim'
 #================================================================================
-var staticMenuID : uint32 = 100
+var staticMenuID : uint32 = 100 # Global static menu id.
 
 proc newMenuBar*(parent: Form, menuFont: Font = nil ) : MenuBar {.discardable.} =
     new(result)
@@ -106,6 +106,7 @@ proc addItems*(this: MenuBar, args: varargs[string, `$`]) =
         this.mMenuCount += 1
         this.mMenus[item] = mi
         this.mFormPtr.mMenuItemDict[mi.mId] = mi
+        # echo "Name: ", mi.mText, ", type: ", mi.mType
 
 
 proc addItem*(this: MenuItem, txt: string, txtColor: uint = 0x000000) : MenuItem {.discardable.} =
