@@ -85,6 +85,7 @@ proc menuTrigger*(this: TrayIcon): TrayMenuTrigger = this.mMenuTrigger
 
 proc `menuTrigger=`*(this: TrayIcon, value: TrayMenuTrigger) =
     this.mMenuTrigger = value
+    this.mTrig = cast[uint8](value)
 
 proc tooltip*(this: TrayIcon): string = this.mToolTip
 
@@ -148,6 +149,7 @@ proc addContextMenu*(this: TrayIcon, trigger: TrayMenuTrigger,
     this.mCmenu = result 
     this.mCmenuUsed = true
     this.mMenuTrigger = trigger
+    this.mTrig = cast[uint8](trigger)
 
 
 
@@ -213,13 +215,13 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onLeftMouseUp != nil: this.onLeftMouseUp(this, newEventArgs())
             if this.onLeftClick != nil: this.onLeftClick(this, newEventArgs())
-            if this.mCmenuUsed and this.mMenuTrigger == tmtLeftClick: 
+            if this.mCmenuUsed and (this.mTrig and 1) == 1 : 
                 this.mCmenu.showMenu(0)
 
         of WM_LBUTTONDBLCLK:
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onLeftDoubleClick != nil: this.onLeftDoubleClick(this, newEventArgs())
-            if this.mCmenuUsed and this.mMenuTrigger == tmtleftDoubleClick:
+            if this.mCmenuUsed and (this.mTrig and 2) == 2:
                 this.mCmenu.showMenu(0)
 
         of WM_RBUTTONDOWN:
@@ -230,7 +232,7 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onRightMouseUp != nil: this.onRightMouseUp(this, newEventArgs())
             if this.onRightClick != nil: this.onRightClick(this, newEventArgs())
-            if this.mCmenuUsed and this.mMenuTrigger == tmtRightClick:
+            if this.mCmenuUsed and (this.mTrig and 4) == 4:
                 this.mCmenu.showMenu(0)
 
         of WM_MOUSEMOVE:

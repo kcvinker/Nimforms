@@ -10,7 +10,7 @@ frm.createHandle()
 var ti = newTrayIcon("Nimforms tray icon!", "nficon.ico")
 
 # Now add a context menu to our tray icon.
-ti.addContextMenu(TrayMenuTrigger.tmtRightClick, "Windows", "|", "Linux", "ReactOS")
+ti.addContextMenu(TrayMenuTrigger.tmtAnyClick, "Windows", "|", "Linux", "ReactOS")
 
 # Add a click event handler for "Windows" menu.
 let winmenu = ti.contextMenu["Windows"]

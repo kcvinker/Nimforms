@@ -443,13 +443,14 @@ type
         onValueChanged*, onDragging*, onDragged*: EventHandler
 
     TrayMenuTrigger* {.pure.} = enum 
-        tmtNone, tmtLeftClick, tmtleftDoubleClick, tmtRightClick
+        tmtNone, tmtLeftClick, tmtleftDoubleClick, tmtRightClick = 4, tmtAnyClick = 7
 
     BalloonIcon* {.pure.} = enum
         biNone, biInfo, biWarning, biError, biCustom
 
     TrayIcon* = ref object
         mResetIcon, mCmenuUsed, mRetainIcon: bool 
+        mTrig: uint8
         mMenuTrigger : TrayMenuTrigger
         mhTrayIcon: HICON
         mMsgHwnd: HWND
