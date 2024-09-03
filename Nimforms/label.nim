@@ -41,7 +41,7 @@ let lbClsName : array[8, uint16] = [0x53, 0x74, 0x61, 0x74, 0x69, 0x63, 0x6B, 0]
 proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: Label)
 # Label constructor
-proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc : bool = false): Label =
+proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): Label =
     new(result)
     result.mKind = ctLabel
     result.mClassName = cast[LPCWSTR](lbClsName[0].addr)
@@ -61,7 +61,7 @@ proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int3
     result.mExStyle = 0
     lbCount += 1
     parent.mControls.add(result)
-    if autoc: createHandle(result)
+    if parent.mCreateChilds: createHandle(result)
 
 
 proc setLbStyle(this: Label) =

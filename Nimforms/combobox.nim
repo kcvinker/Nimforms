@@ -114,7 +114,7 @@ proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PT
 proc createHandle*(this: ComboBox)
 
 # ComboBox constructor
-proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 27, autoc : bool = false): ComboBox =
+proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 27): ComboBox =
     new(result)
     result.mKind = ctComboBox
     result.mClassName = cast[LPCWSTR](cmbClsName[0].addr)
@@ -132,7 +132,7 @@ proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h:
     result.mExStyle = WS_EX_CLIENTEDGE
     cmbCount += 1
     parent.mControls.add(result)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc setCmbStyle(this: ComboBox) =
     if this.mReEnabled:

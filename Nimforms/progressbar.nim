@@ -87,7 +87,7 @@ proc progressBarCtor(parent: Form, x, y, w, h: int32): ProgressBar =
 proc newProgressBar*(parent: Form, x, y: int32, w: int32 = 200, h: int32 = 25, autoc = false, perc = false): ProgressBar =
     result = progressBarCtor(parent, x, y, w, h)
     result.mShowPerc = perc
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 
 proc setPbStyle(this: ProgressBar) =

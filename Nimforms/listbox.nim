@@ -127,7 +127,7 @@ proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
 proc createHandle*(this: ListBox)
 
 # ListBox constructor
-proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 140, autoc : bool = false ): ListBox =
+proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 140 ): ListBox =
     new(result)
     result.mKind = ctListBox
     result.mClassName = cast[LPCWSTR](lbxClsName[0].addr)
@@ -146,7 +146,7 @@ proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: 
     result.mExStyle = 0
     lbxCount += 1
     parent.mControls.add(result)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc setLbxStyle(this: ListBox) =
     if this.mHasSort: this.mStyle = this.mStyle or LBS_SORT

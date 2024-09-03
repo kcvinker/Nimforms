@@ -35,7 +35,7 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 proc createHandle*(this: CheckBox)
 
 # CheckBox constructor
-proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc: bool = false): CheckBox =
+proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): CheckBox =
     new(result)
     result.mKind = ctCheckBox
     result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
@@ -56,7 +56,7 @@ proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
     result.mTextStyle = DT_SINGLELINE or DT_VCENTER
     cbCount += 1
     parent.mControls.add(result)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc setCbStyle(this: CheckBox) =
     if this.mRightAlign:

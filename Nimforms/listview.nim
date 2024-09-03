@@ -191,9 +191,9 @@ proc listViewCtor(parent: Form, x, y, w, h: int32): ListView =
     lvCount += 1
     parent.mControls.add(result)
 
-proc newListView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 250, h: int32 = 200, autoc : bool = false): ListView =
+proc newListView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 250, h: int32 = 200): ListView =
     result = listViewCtor(parent, x, y, w, h)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc newListView*(parent: Form, x, y: int32, colnames: varargs[string, `$`] ): ListView =
     result = listViewCtor(parent, x, y, 100, 150)

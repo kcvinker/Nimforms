@@ -74,7 +74,7 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
 proc createHandle*(this: NumberPicker)
 
 # NumberPicker constructor
-proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27, autoc: bool = false): NumberPicker =
+proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27): NumberPicker =
     new(result)
     result.mKind = ctNumberPicker
     result.mClassName = cast[LPCWSTR](npClsName[0].addr)
@@ -100,7 +100,7 @@ proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75,
     result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
     npCount += 1
     parent.mControls.add(result)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 
 proc setNPStyle(this: NumberPicker) =

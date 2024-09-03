@@ -39,7 +39,7 @@ btn2.onClick = proc(c: Control, e: EventArgs) = tmr.start() # Button click will 
 var btn3 = newButton(frm, "Gradient", btn2.right(10))
 btn3.setGradientColor(0xeeef20, 0x70e000)
 
-var dtp = newDateTimePicker(frm, btn3.right(10), autoc = true)
+var dtp = newDateTimePicker(frm, btn3.right(10))
 dtp.font = newFont("Tahoma", 14)
 dtp.foreColor = 0xe63946
 
@@ -73,20 +73,20 @@ var np2 = newNumberPicker(frm, 20, np.bottom(10))
 np2.buttonLeft = true
 np2.backColor = 0xffbf69
 
-var gb2 = newGroupBox(frm, "Compiler Options", 10, gb.bottom(20), 180, 170, true)
-var cb = newCheckBox(frm, "Threads On", gb2.xpos + 20, gb2.ypos + 40, autoc = true)
-var cb2 = newCheckBox(frm, "Hints off", gb2.xpos + 20, cb.bottom(10), autoc = true)
-var rb = newRadioButton(frm, "Consoe App", gb2.xpos + 20, cb2.bottom(10), autoc = true)
+var gb2 = newGroupBox(frm, "Compiler Options", 10, gb.bottom(20), 180, 170)
+var cb = newCheckBox(frm, "Threads On", gb2.xpos + 20, gb2.ypos + 40)
+var cb2 = newCheckBox(frm, "Hints off", gb2.xpos + 20, cb.bottom(10))
+var rb = newRadioButton(frm, "Consoe App", gb2.xpos + 20, cb2.bottom(10))
 var rb2 = newRadioButton(frm, "GUI App", gb2.xpos + 20, rb.bottom(10))
 rb2.foreColor = 0xff0054
 
-var tb = newTextBox(frm, "Enter text", gb2.right(20), gb.bottom(40), autoc = true)
+var tb = newTextBox(frm, "Enter text", gb2.right(20), gb.bottom(40))
 
-var tkb = newTrackBar(frm, gb2.right(20), tb.bottom(20), cdraw = true, autoc=true)
+var tkb = newTrackBar(frm, gb2.right(20), tb.bottom(20), cdraw = true)
 
-var pgb = newProgressBar(frm, gb2.right(20), tkb.bottom(20), perc=true, autoc=true )
+var pgb = newProgressBar(frm, gb2.right(20), tkb.bottom(20), perc=true )
 
-var tv = newTreeView(frm, pgb.right(20), lv.bottom(20), h=200, autoc=true)
+var tv = newTreeView(frm, pgb.right(20), lv.bottom(20), h=200)
 tv.addTreeNodeWithChilds("Windows", "Win7", "Win8", "Win10", "Win11")
 tv.addTreeNodeWithChilds("Linux", "openSUSE Leap 15.3", "Debian 11", "Fedora 35", "Ubuntu 22.04 LTS")
 tv.addTreeNodeWithChilds("MacOS", "Mojave (10.14)", "Catalina (10.15)", " Big Sur (11.0)", "Monterey (12.0)")
@@ -104,7 +104,7 @@ tv.addTreeNodeWithChilds("MacOS", "Mojave (10.14)", "Catalina (10.15)", " Big Su
 # pb.showPercentage = true
 # pb.createHandle()
 
-var cal = newCalendar(frm, cmb.right(10), 10, autoc=true)
+var cal = newCalendar(frm, cmb.right(10), 10)
 
 
 

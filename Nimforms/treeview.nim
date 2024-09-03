@@ -186,9 +186,9 @@ proc treeViewCtor(parent: Form, x, y, w, h: int32): TreeView =
     parent.mControls.add(result)
 
 
-proc newTreeView*(parent: Form, x, y: int32, w: int32 = 200, h: int32 = 150, autoc : bool = false): TreeView =
+proc newTreeView*(parent: Form, x, y: int32, w: int32 = 200, h: int32 = 150): TreeView =
     result = treeViewCtor(parent, x, y, w, h)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc newTreeNode*(text: string, img: int32 = -1, selImg: int32 = -1): TreeNode =
     new(result)

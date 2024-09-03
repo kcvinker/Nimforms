@@ -88,7 +88,7 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
 proc createHandle*(this: DateTimePicker)
 # DateTimePicker constructor
 proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10,
-                            w: int32 = 0, h: int32 = 10, autoc : bool = false): DateTimePicker =
+                            w: int32 = 0, h: int32 = 10): DateTimePicker =
     new(result)
     result.mKind = ctDateTimePicker
     result.mClassName = cast[LPCWSTR](dtpClsName[0].addr)
@@ -113,7 +113,7 @@ proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10,
 
     dtpCount += 1
     parent.mControls.add(result)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc setDTPStyles(this: DateTimePicker) =
     case this.mFormat

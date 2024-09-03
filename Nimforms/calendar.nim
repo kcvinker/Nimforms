@@ -91,7 +91,7 @@ proc makeSystemTime(dt: DateAndTime): SYSTEMTIME =
 
 
 # Calendar constructor
-proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10, autoc : bool = false): Calendar =
+proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar =
     new(result)
     result.mKind = ctCalendar
     result.mClassName = cast[LPCWSTR](calClsName[0].addr)
@@ -106,7 +106,7 @@ proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10, autoc : bool = fal
     result.mViewMode = vmMonthView
     calCount += 1
     parent.mControls.add(result)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc setCalStyle(this: Calendar) =
     if this.mShowWeekNum: this.mStyle = this.mStyle or MCS_WEEKNUMBERS

@@ -166,10 +166,10 @@ proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
 
 
 
-proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, h: int32 = 45, cdraw: bool = false, autoc : bool = false): TrackBar =
+proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, h: int32 = 45, cdraw: bool = false): TrackBar =
     result = trackBarCtor(parent, x, y, w, h)
     result.mCustDraw = cdraw
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 
 proc setTKBStyle(this: TrackBar) =

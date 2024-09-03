@@ -32,7 +32,7 @@ var rbCount = 1
 proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: RadioButton)
 # RadioButton constructor
-proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0, autoc : bool = false): RadioButton =
+proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): RadioButton =
     new(result)
     result.mKind = ctRadioButton
     result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
@@ -54,7 +54,7 @@ proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w
     # result.mTextStyle = DT_SINGLELINE or DT_VCENTER
     rbCount += 1
     parent.mControls.add(result)
-    if autoc: result.createHandle()
+    if parent.mCreateChilds: result.createHandle()
 
 proc setRBStyle(this: RadioButton) =
     if this.mRightAlign:
