@@ -5,6 +5,7 @@ import nimforms
 var frm = newForm("Nimforms GUI Library", 900, 500)
 frm.onMouseUp = proc(c: Control, e: MouseEventArgs) = echo "X: " & $e.x & " Y: " & $e.y
 frm.createHandle()
+frm.createChilds = true
 
 # Let's create a tray icon
 var ti = newTrayIcon("Nimforms tray icon!", "nficon.ico")
@@ -25,17 +26,17 @@ mbar.menus["Windows"].menus["Windows 11"].addItem("My OS")
 var tmr = frm.addTimer(800, proc(c: Control, e: EventArgs) = echo "Timer ticked...")
 
 
-var btn = newButton(frm, "Normal", autoc=true)
+var btn = newButton(frm, "Normal")
 btn.onClick = proc(c: Control, e: EventArgs) = 
                 ti.showBalloon("Nimform", "Hi from Nimforms", 3000) # Button click will show the balloon 
 
-var btn2 = newButton(frm, "Flat Color", btn->10, autoc=true)
+var btn2 = newButton(frm, "Flat Color", btn->10)
 btn2.backColor = 0x83c5be
 
 btn2.onClick = proc(c: Control, e: EventArgs) = tmr.start() # Button click will start the timer 
 
 
-var btn3 = newButton(frm, "Gradient", btn2.right(10), autoc=true)
+var btn3 = newButton(frm, "Gradient", btn2.right(10))
 btn3.setGradientColor(0xeeef20, 0x70e000)
 
 var dtp = newDateTimePicker(frm, btn3.right(10), autoc = true)

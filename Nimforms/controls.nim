@@ -1,28 +1,37 @@
 # Controls module. Created on 27-Mar-2023 01:35 AM; Author kcvinker
-## Control type - Base type for all other controls and Form.
-#     Constructor - No constructor available. This is an astract type.
-#     Functions - No public function in this type
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
+#[ 
+    Control type - Base type for all other controls and Form.
+    Constructor - No constructor available. This is an astract type.
+    
+    Properties - Getter & Setter available
+      Name            Type
+        font          Font
+        text          string
+        width         int32
+        height        int32
+        xpos          int32
+        ypos          int32
+        backColor     Color
+        foreColor     Color
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+    Functions:
+        
 
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+    Events
+        EventHandler - proc(c: Control, e: EventArgs)
+            onMouseEnter, onClick, onMouseLeave, onRightClick, onDoubleClick,
+            onLostFocus, onGotFocus
 
-    #     onKeyDown*, onKeyUp*: KeyEventHandler - proc(c: Control, e: KeyEventArgs)
-    #     onKeyPress*: KeyPressEventHandler - proc(c: Control, e: KeyPressEventArgs)
+        MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
+            onMouseWheel, onMouseHover, onMouseMove, onMouseDown, onMouseUp
+            onRightMouseDown, onRightMouseUp
 
+        KeyEventHandler - proc(c: Control, e: KeyEventArgs)
+            onKeyDown, onKeyUp
+
+        KeyPressEventHandler - proc(c: Control, e: KeyPressEventArgs)            
+            onKeyPress
+====================================================================================================]#
 
 const
     BCM_FIRST = 0x1600
@@ -42,52 +51,19 @@ let BtnClass : array[7, uint16] = [0x42, 0x75, 0x74, 0x74, 0x6F, 0x6E, 0]
 var globalCtlID : int32 = 100
 var globalSubClassID : UINT_PTR = 1000
 
+#===================Forward Declarations===================================
+proc getMappedRect(this: Control): RECT
+proc setFontInternal(this: Control)
+proc cmenuDtor(this: ContextMenu)
+
+
 # Control class's methods====================================================
-proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
-    SetWindowSubclass(this.mHandle, ctlWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
-    globalSubClassID += 1
 
-proc cmenuDtor*(this: ContextMenu)
-proc destructor(this: Control) =
-    if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
-    if this.mCemnuUsed: this.mContextMenu.cmenuDtor()
-    # if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
+proc right*(this: Control, value: int32): int32 = this.getMappedRect().right + value
+proc bottom*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
 
-proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
-    return SendMessageW(this.mHandle, msg, cast[WPARAM](wpm), cast[LPARAM](lpm))
-
-proc setFontInternal(this: Control) =
-    if this.mIsCreated:
-        if this.mFont.handle == nil: this.mFont.createHandle()
-        this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
-
-proc checkRedraw(this: Control) =
-    if this.mIsCreated: InvalidateRect(this.mHandle, nil, 0)
-
-proc getControlText(hw: HWND): string =
-    let count = GetWindowTextLengthW(hw)
-    var buffer = new_wstring(count + 1)
-    GetWindowTextW(hw, buffer[0].unsafeAddr, count + 1)
-    result = buffer.toString
-    
-
-
-
-proc mapParentPoints(this: Control) : RECT =
-    var
-        rc : RECT
-        firstHwnd : HWND
-    if this.mIsCreated:
-        GetClientRect(this.mHandle, rc.unsafeAddr)
-        firstHwnd = this.mHandle
-    else:
-        firstHwnd = this.mParent.mHandle
-        rc = RECT(left: this.mXpos, top: this.mYpos,
-                    right: (this.mXpos + this.mWidth), bottom: (this.mYpos + this.mHeight ))
-
-    MapWindowPoints(firstHwnd, this.mParent.mHandle, cast[LPPOINT](rc.unsafeAddr), 2)
-    # echo rc.repr
-    result = rc
+proc `->`*(this: Control, value: int32) : int32 = this.getMappedRect().right + value
+proc `>>`*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
 
 # Control class's properties==========================================
 proc handle*(this: Control): HWND = this.mHandle
@@ -157,7 +133,8 @@ proc foreColor*(this: Control): Color {.inline.} = return this.mForeColor
 # proc left*(this: Control): int32 = int32(this.mcRect.left)
 # proc top*(this: Control): int32 = int32(this.mcRect.top)
 
-# private function
+# ============================================Private functions====================================
+
 proc getMappedRect(this: Control): RECT =
     var fhwnd : HWND
     var rct : RECT
@@ -171,19 +148,56 @@ proc getMappedRect(this: Control): RECT =
     MapWindowPoints(fhwnd, this.mParent.handle, cast[LPPOINT](rct.unsafeAddr), 2)
     result = rct
 
+proc mapParentPoints(this: Control) : RECT =
+    var
+        rc : RECT
+        firstHwnd : HWND
+    if this.mIsCreated:
+        GetClientRect(this.mHandle, rc.unsafeAddr)
+        firstHwnd = this.mHandle
+    else:
+        firstHwnd = this.mParent.mHandle
+        rc = RECT(left: this.mXpos, top: this.mYpos,
+                    right: (this.mXpos + this.mWidth), bottom: (this.mYpos + this.mHeight ))
 
-proc right*(this: Control, value: int32): int32 = this.getMappedRect().right + value
-proc bottom*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
+    MapWindowPoints(firstHwnd, this.mParent.mHandle, cast[LPPOINT](rc.unsafeAddr), 2)
+    # echo rc.repr
+    result = rc
 
-proc `->`*(this: Control, value: int32) : int32 = this.getMappedRect().right + value
-proc `>>`*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
+proc destructor(this: Control) =
+    if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
+    if this.mCemnuUsed: this.mContextMenu.cmenuDtor()
+    # if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
+
+proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
+    return SendMessageW(this.mHandle, msg, cast[WPARAM](wpm), cast[LPARAM](lpm))
+
+proc setFontInternal(this: Control) =
+    if this.mIsCreated:
+        if this.mFont.handle == nil: this.mFont.createHandle()
+        this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
+
+proc checkRedraw(this: Control) =
+    if this.mIsCreated: InvalidateRect(this.mHandle, nil, 0)
+
+proc getControlText(hw: HWND): string =
+    let count = GetWindowTextLengthW(hw)
+    var buffer = new_wstring(count + 1)
+    GetWindowTextW(hw, buffer[0].unsafeAddr, count + 1)
+    result = buffer.toString
+
+proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
+    SetWindowSubclass(this.mHandle, ctlWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
+    globalSubClassID += 1
 
 
 
 
 
 
-# Event handlers for Control======================================================
+
+
+# ===========================Event handlers for Control======================================================
 proc leftButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
     if this.onMouseDown != nil: this.onMouseDown(this, newMouseEventArgs(msg, wp, lp))
 

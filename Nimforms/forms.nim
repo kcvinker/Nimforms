@@ -1,41 +1,41 @@
 # forms module Created on 23-Mar-2023 08:52 PM
 
-# Form type
-#   constructor - newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
-#   functions
-        # createHandle() - Create the handle of form
-        # display() - Show the form on screen
-        # close() - Closes the form
-        # setGradientColor*(clr1, clr2: uint) - Set gradient back color
+ #[====================================================Form type===============================================
+  Constructor - newForm()
+  functions
+        createHandle()      - Create the handle of form
+        display()           - Show the form on screen
+        close()             - Closes the form
+        setGradientColor()  - Set gradient back color
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # startPos      FormPos
-        # formStyle     FormStyle
-        # formState     WindowState
-        # maximizeBox   bool
-        # minimizeBox   bool
-        # topMost       bool
+    Properties - 
+        Form is inheriting all Control type properties. See 'controls.nim'
+      Name             Type
+        startPos      FormPos
+        formStyle     FormStyle
+        formState     WindowState
+        maximizeBox   bool
+        minimizeBox   bool
+        topMost       bool
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - proc(c: Control, e: MouseEventArgs)
-
-    #     onLoad*, onActivate*, onDeActivate*, onMinimized*, onMoving*,
-    #     onMoved*, onClosing*, onMaximized*, onRestored*: EventHandler
-    #     onSizing*, onSized*: SizeEventHandler - proc(c: Control, e: SizeEventArgs)
-
+    Events
+        Form is inheriting all Control type events. See 'controls.nim'
+        EventHandler type events - proc(c: Control, e: EventArgs)
+            onLoad
+            onActivate
+            onDeActivate
+            onMinimized
+            onMoving
+            onMoved
+            onClosing
+            onMaximized
+            onRestored
+        SizeEventHandler type events - proc(c: Control, e: SizeEventArgs)
+            onSizing
+            onSized
+        ThreadMsgHandler type event - proc(wpm: WPARAM, lpm: LPARAM)
+            onThreadMsg
+============================================================================================================]#
 
 # const menuTxtFlag : UINT =
 import std/monotimes
@@ -339,6 +339,8 @@ proc `topMost=`*(this: Form, value: bool) {.inline.} =
     if this.mIsCreated: discard
 
 proc topMost*(this: Form): bool {.inline.} = return this.mTopMost
+
+proc `createChilds=`*(this: Form, value: bool) = this.mCreateChilds = value
 
 proc printPointProc(ctl: Control, e: MouseEventArgs) =
     echo "[X]: ", e.x, "  [Y]: ", e.y

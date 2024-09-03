@@ -1,31 +1,19 @@
 
 # button module Created on 27-Mar-2023 01:56 PM
 
-# Button type
-#   constructor - newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34): Button
-#   functions
-        # createHandle() - Create the handle of button
-        # setGradientColor*(clr1, clr2: uint) - Set gradient back color
+#[========================================Button Docs========================================
+    constructor - newButton(): Button
+    Properties
+        All props inherited from Control type
+   
+   Functions
+         createHandle - Create the handle of button
+         setGradientColor - Set gradient back color     
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
+    Events
+        All events inherited from Control type.
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
-
+======================================================================================================]#
 
 # Constants
 const
@@ -82,18 +70,19 @@ const
     ROUND_CURVE = 5
 
 var btnCount = 1
-# let btnClsName = toWcharPtr("Button")
+
 # Forward declaration
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: Button)
+
 # Button constructor
-proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 110, h: int32 = 34, autoc: bool = false): Button =
+proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, 
+                w: int32 = 110, h: int32 = 34, evtFn: EventHandler = nil): Button =
     new(result)
     result.mKind = ctButton
     result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
     result.mName = "Button_" & $btnCount
     result.mParent = parent
-
     result.mXpos = x
     result.mYpos = y
     result.mWidth = w
@@ -101,10 +90,12 @@ proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, w:
     result.mFont = parent.mFont
     result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
     result.mText = (if txt == "": "Button_" & $btnCount else: txt)
-    # result.createFnPtr = cast[CreateFnHandler](createHandle)
     parent.mControls.add(result)
     btnCount += 1
-    if autoc: result.createHandle()
+    if evtFn != nil: result.onClick = evtFn
+    if parent.mCreateChilds: result.createHandle()
+
+
 # Create button's hwnd
 proc createHandle*(this: Button) =
     this.createHandleInternal()

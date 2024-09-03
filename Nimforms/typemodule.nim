@@ -149,7 +149,7 @@ type
         mFormState: WindowState
         mFdMode: FormDrawMode
         mMaximizeBox, mMinimizeBox, mTopMost, mIsLoaded: bool
-        mIsMouseTracking: bool
+        mIsMouseTracking, mCreateChilds: bool
         mMenuGrayBrush, mMenuDefBgBrush, mMenuHotBgBrush, mMenuFrameBrush : HBRUSH
         mMenuFont : Font
         mMenuGrayCref : COLORREF
