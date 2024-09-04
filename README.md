@@ -20,8 +20,7 @@ import nimforms
 
 var frm = newForm("Nimforms GUI Library", 900, 500)
 frm.onMouseUp = proc(c: Control, e: MouseEventArgs) = echo "X: " & $e.x & " Y: " & $e.y
-frm.createHandle()
-frm.createChilds = true
+frm.createHandle(true)
 
 # Let's create a tray icon
 var ti = newTrayIcon("Nimforms tray icon!", "nficon.ico")

@@ -220,9 +220,10 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mText = (if title == "": "Form_" & $appData.formCount else: title)
 
 
-proc createHandle*(this: Form) =
+proc createHandle*(this: Form, create_childs: bool = false) =
     this.setFormStyles()
     this.setFormPosition()
+    this.mCreateChilds = create_childs
     this.mHandle = CreateWindowExW( this.mExStyle,
                                     this.mClassName,
                                     toWcharPtr(this.mText),
