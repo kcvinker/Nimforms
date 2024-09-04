@@ -1,42 +1,32 @@
 # datetimepicker module Created on 30-Mar-2023 12:22 PM
 
-## DateTimePicker type
-#     Constructor - newDateTimePicker*(parent: Form, x, y: int32 = 10, w, h: int32 = 10): DateTimePicker
-#     Functions - createHandle - Create handle of the DateTimePicker control.
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # value         DateAndTime
-        # formatString  string
-        # format        DTPFormat - Values {dfLongDate = 1, dfShortDate, dfTimeOnly = 4, dfCustom = 8}
-        # rightAlign    bool
-        # noToday       bool
-        # showUpdown    bool
-        # showWeekNumber    bool
-        # noTodayCircle     bool
-        # noTrailingDates   bool
-        # shortDateNames    bool
-        # fourDigitYear     bool
+#[=========================================DateTimePicker Docs===========================================
+    Constructor - newDateTimePicker
+   Functions:
+        createHandle
+    Properties:
+        All props inherited from Control type 
+        value           : DateAndTime
+        formatString    : string
+        format          : DTPFormat - An enum (See typemodule.nim)
+        rightAlign      : bool
+        noToday         : bool
+        showUpdown      : bool
+        showWeekNumber  : bool
+        noTodayCircle   : bool
+        noTrailingDates : bool
+        shortDateNames  : bool
+        fourDigitYear   : bool
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: DateTimePicker, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: DateTimePicker, e: MouseEventArgs)
-
-    #     onKeyDown*, onKeyUp*: KeyEventHandler - proc(c: DateTimePicker, e: KeyEventArgs)
-    #     onKeyPress*: KeyPressEventHandler - proc(c: DateTimePicker, e: KeyPressEventArgs)
-
-    #     onValueChanged*, onCalendarOpened*, onCalendarClosed*: EventHandler
-    #     onTextChanged*: DateTimeEventHandler - proc(c: Control, e: DateTimeEventArgs)
-
+    Events:
+        All events inherited from Control type 
+        EventHandler - proc(c: Control, e: EventArgs)
+            onValueChanged
+            onCalendarOpened
+            onCalendarClosed
+        DateTimeEventHandler - proc(c: Control, e: DateTimeEventArgs)
+            onTextChanged
+========================================================================================================]#
 # Constants
 const
     DTM_FIRST = 0x1000

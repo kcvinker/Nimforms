@@ -1,27 +1,16 @@
 # checkbox module Created on 29-Mar-2023 11:23 PM; Author kcvinker
-# CheckBox type
-#     Constructor - newCheckBox*(parent: Form, x: int32 = 10, y: int32 = 10): CheckBox
-#     Functions - createHandle - Create handle of a CheckBox
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # checked       bool
+#[============================================CheckBox type======================================
+    Constructor - newCheckBox
+    Functions:
+        createHandle 
+    Properties:
+        All props inherited from Control type 
+        checked     : bool
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-    #     onCheckedChanged*: EventHandler
-
+     Events
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onCheckedChanged
+==========================================================================================================]#
 
 # Constants
 # const

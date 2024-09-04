@@ -1,42 +1,32 @@
 # combobox module Created on 30-Mar-2023 03:23 AM; Author kcvinker
-# ComboBox type
-#     Constructor - newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10): ComboBox
-#     Functions
-        # createHandle() - Create handle of a ComboBox
-        # addItem*(item: auto) - Add an item to ComboBox
-        # addItems*(args: varargs[string, `$`]) - Add multiple items
-        # removeItem*(item: auto) - Remove the given item
-        # removeItem*(index: int32) - Remove the item with given index
-        # removeAll*() - Remove all items
+#[======================================= ComboBox Docs==================================================
+    Constructor - newComboBox
+    Functions:
+        createHandle
+        addItem
+        addItems
+        removeItem
+        removeItem
+        removeAll
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # hasInput      bool
-        # selectedIndex int32
-        # selctedItem   string
-        # items         seq[string]
+    Properties:
+        All props inherited from Control type 
+        hasInput      bool
+        selectedIndex int32
+        selctedItem   string
+        items         seq[string]
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
-    #     onKeyDown*, onKeyUp*: KeyEventHandler - proc(c: Control, e: KeyEventArgs)
-    #     onKeyPress*: KeyPressEventHandler - proc(c: Control, e: KeyPressEventArgs)
-
-    #     onSelectionChanged*, onTextChanged*, onTextUpdated*: EventHandler
-    #     onListOpened*, onListClosed*, onSelectionCommitted*, onSelectionCancelled*: EventHandler
-
+    Events
+        All events inherited from Control type
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onSelectionChanged
+            onTextChanged
+            onTextUpdated
+            onListOpened
+            onListClosed
+            onSelectionCommitted
+            onSelectionCancelled
+========================================================================================================]#
 
 
 # Constants

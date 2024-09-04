@@ -1,36 +1,29 @@
 
 # calendar module Created on 29-Mar-2023 05:03 PM; Author kcvinker
 
-# Calendar type
-#     Constructor - newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar
-#     Functions - createHandle - Create handle of a Calendar
-        #     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # value         DateAndTime
-        # viewMode      ViewMode
-        # oldViewMode   ViewMode
-        # noToday       bool
-        # shortDateNames    bool
-        # showWeekNumber    bool
-        # noTodayCircle     bool
-        # noTrailingDates   bool
+#[ Calendar type
+    Constructor - newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar
+    Functions
+        createHandle
+    
+    Properties
+        All props inherited from Control type 
+        value          :    DateAndTime - See typemodule.nim
+        viewMode       :    ViewMode    - An enum, see typemodule.nim
+        oldViewMode    :    ViewMode    - Ad enum.
+        noToday        :    bool
+        shortDateNames :    bool
+        showWeekNumber :    bool
+        noTodayCircle  :    bool
+        noTrailingDates:    bool
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
-    #     onSelectionCommitted*, onValueChanged*, onViewChanged*: EventHandler
+    Events
+        All events inherited from Control type
+        EventHandler - proc(c: Control, e: EventArgs)
+            onSelectionCommitted
+            onValueChanged
+            onViewChanged
+==========================================================================================================]#
 
 
 

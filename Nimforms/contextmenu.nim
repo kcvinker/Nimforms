@@ -1,6 +1,21 @@
 
 # contextmenu module - Created on 29-Apr-2023 16:45
 # This module is included at the end of controls.nim
+#[====================================ContextMenu Docs=========================================
+    
+    ContextMenu is inheriting from 'MenuBase', an Abstract type.            
+    Constructor - newContextMenu
+    Functions:
+        addMenuItem
+
+    Properties:
+        menus       : Table[string, MenuItem] (Getter only)
+
+    Events
+        EventHandler type - proc(c: Control, e: EventArgs)
+            
+
+===============================================================================================]#
 
 # const
     # TPM_LEFTBUTTON = 0x0000
@@ -73,7 +88,7 @@ proc cmenuDtor(this: ContextMenu) =
     # echo "Context menu destroy worked"
 
 
-proc addSubMenu*(this: ContextMenu, parenttext: string, menutext: string): MenuItem {.discardable.} =
+proc addMenuItem*(this: ContextMenu, parenttext: string, menutext: string): MenuItem {.discardable.} =
     var parent : MenuItem = this.mMenus[parenttext]
     parent.mHandle = CreatePopupMenu()
     parent.mPopup = true
