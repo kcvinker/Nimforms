@@ -1,4 +1,5 @@
-# PropertyGrid module Created on 01-Jun-2023 08:36 AM; Author kcvinker
+# PropertyGrid module [WIP!!!] 
+# Created on 01-Jun-2023 08:36 AM; Author kcvinker
 
 var pgridCount = 1
 proc pGridWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.}

@@ -1,37 +1,25 @@
 # progressbar module Created on 09-Apr-2023 01:42 AM; Author kcvinker
-# ProgressBar type
-#   Constructor - newProgressBar*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 25): ProgressBar
-#   Functions
-        # createHandle() - Create the handle of progressBar
-        # increment*()
-        # startMarquee*()
-        # stopMarquee*()
+#[==============================================ProgressBar type==============================================
+  Constructor - newProgressBar
+  Functions:
+        createHandle() - Create the handle of progressBar
+        increment*()
+        startMarquee*()
+        stopMarquee*()
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # value         int32
-        # step          int32
-        # style         ProgressBarStyle - {pbsBlock, pbsMarquee}
-        # state         ProgressBarState - {pbsNone, pbsNormal, pbsError, pbsPaused}
-        # marqueeSpeed  int32
-        # showPercentage bool
+    Properties:
+        All props inherited from Control type 
+        value           : int32
+        step            : int32
+        style           : ProgressBarStyle - {pbsBlock, pbsMarquee}
+        state           : ProgressBarState - {pbsNone, pbsNormal, pbsError, pbsPaused}
+        marqueeSpeed    : int32
+        showPercentage  : bool
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
-    #     onProgressChanged*: EventHandler
+    Events:
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onProgressChanged
+==========================================================================================================]#
 
 # Constants
 const

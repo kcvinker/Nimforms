@@ -2,6 +2,35 @@
 # menu module - Created on 13-Aug-2024 01:45 
 # NOTE: This file is included in the middle of 'commons.nim'
 #================================================================================
+#[=====================================Menu Docs==================================================
+    MenuBase:
+        Abstract base type
+        Properties:
+            handle  : HMENU
+            font    : Font
+            menus   : Table[string, MenuItem]
+        
+    MenuBar ref object of MenuBase
+        Constructor: newMenuBar
+        Functions:
+            addItem
+            createHandle
+    
+    MenuItem ref object of MenuBase
+        Constructor : newMenuItem
+        Properties:
+            foreColor   : Color
+            enabled     : bool
+        Functions:
+            addItem
+
+        Events:
+            MenuEventHandler type - proc(m: MenuItem, e: EventArgs)
+                onClick
+                onPopup
+                onCloseup
+                onFocus
+===================================================================================================]#
 var staticMenuID : uint32 = 100 # Global static menu id.
 
 proc newMenuBar*(parent: Form, menuFont: Font = nil ) : MenuBar {.discardable.} =
@@ -49,11 +78,13 @@ proc newMenuItem*(txt: string, mtyp: MenuType, parentHmenu : HMENU, indexNum: ui
 
     staticMenuID += 1
 
+
 proc menuItemDtor(this: MenuItem) =
     if len(this.mMenus) > 0:
         for key, menu in this.mMenus: menu.menuItemDtor()
     DestroyMenu(this.mHandle)
     # echo "MenuItem destroy worked"
+
 
 proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU) =
     var mii : MENUITEMINFOW
@@ -68,6 +99,7 @@ proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU) =
     InsertMenuItemW(parentHmenu, UINT(this.mIndex), 1, mii.unsafeAddr)
     this.mIsCreated = true
     # echo "insert menu : ", this.mText, ", popup : ", this.mPopup
+
 
 proc create(this: MenuItem) =
     case this.mType
@@ -129,6 +161,7 @@ proc addItem*(this: MenuItem, txt: string, txtColor: uint = 0x000000) : MenuItem
     this.mMenuCount += 1
     this.mMenus[txt] = result # Put new item in parent menu's dict
 
+
 proc addItems*(this: MenuItem, args: varargs[string, `$`]) =
     if this.mType == mtMenuItem:
         this.mHandle = CreatePopupMenu()
@@ -146,12 +179,6 @@ proc addItems*(this: MenuItem, args: varargs[string, `$`]) =
         this.mMenus[item] = mi # Put new item in parent menu's dict
         this.mBar.mFormPtr.mMenuItemDict[mi.mId] = mi # Put new item in form's dict.
 
-
-
-# proc addSeparator*(this: MenuItem) =
-    # var mi = newMenuItem("", mtSeparator, this.mHmenu, this.mChildCount)
-    # this.mChildCount += 1
-    # this.mMenus[mi.mText] = mi
 
 proc createHandle*(this: MenuBar) =
     this.mMenuDefBgBrush = newColor(0xe9ecef).makeHBRUSH()

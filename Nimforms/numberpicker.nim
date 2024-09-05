@@ -1,37 +1,26 @@
 # numberpicker module Created on 03-Apr-2023 01:57 PM; Author kcvinker
-# NumberPicker type
-#   Constructor - newNumberPicker*(parent: Form, x, y: int32 = 10, w: int32 = 100, h: int32 = 27): NumberPicker
-#   Functions
-        # createHandle() - Create the handle of numberPicker
+#[=============================================NumberPicker Docs=================================================
+    Constructor - newNumberPicker
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # value         float/int
-        # buttonLeft    bool
-        # autoRotate    bool
-        # hideCaret     bool
-        # minRange      float
-        # maxRange      float
-        # step          float/int
-        # textAlign     TextAlignment - {taLeft, taCenter, taRight}
-        # decimalDigits int
+    Functions
+        createHandle() - Create the handle of numberPicker
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
+    Properties:
+        All props inherited from Control type 
+        value           : float/int
+        buttonLeft      : bool
+        autoRotate      : bool
+        hideCaret       : bool
+        minRange        : float
+        maxRange        : float
+        step            : float/int
+        textAlign       : TextAlignment - {taLeft, taCenter, taRight}
+        decimalDigits   : int
 
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-    #     onValueChanged*: EventHandler
-
+    Events:
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onValueChanged
+============================================================================================================]#
 # Constants
 const
     UDN_FIRST = cast[UINT](0-721)

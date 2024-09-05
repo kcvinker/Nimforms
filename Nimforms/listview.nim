@@ -1,96 +1,89 @@
 # listview module Created on 01-Apr-2023 11:22 PM; Author kcvinker
-# ListView type
-#   constructor - newListView*(parent: Form, x, y: int32 = 10, w: int32 = 250, h: int32 = 200): ListView
-#   functions
-        # createHandle() - Create the handle of listView
-        # addColumn*(text: string, width: int32, imgIndex: int32 = -1): ListViewColumn {.discardable.}
-        # addColumns*(colNames: seq[string], colWidths: seq[auto]): seq[ListViewColumn] {.discardable.}
-        # addColumns*(colCount: int, nameAndWidth: varargs[string, `$`]): seq[ListViewColumn] {.discardable.}
-        # addItem*(itemTxt: auto, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1) : ListViewItem {.discardable.}
-        # addItem*(item: ListViewItem)
-        # addItems*(items: varargs[ListViewItem])
-        # addItems*(itemTextList: varargs[string, `$`]) : seq[ListViewItem] {.discardable.}
-        # addRow*(items: varargs[string, `$`]) : ListViewItem {.discardable.}
-        # addSubItem*(subitem: auto, subIndx: int32, imgIndex: int32 = -1)
-        # addSubItems*(subitems: varargs[string, `$`])
+#[============================================ListView Docs================================================
+    constructor - newListView
+    Functions:
+         createHandle
+         addColumn
+         addColumns
+         addColumns
+         addItem 
+         addItem
+         addItems
+         addItems
+         addRow
+         addSubItem
+         addSubItems
 
-#     Properties - Getter & Setter available
-#       Name                Type
-        # font              Font
-        # text              string
-        # width             int32
-        # height            int32
-        # xpos              int32
-        # ypos              int32
-        # backColor         Color
-        # foreColor         Color
-        # headerHeight      int32
-        # editLabel         bool
-        # hideSelection     bool
-        # multiSelection    bool
-        # hasCheckBox       bool
-        # fullRowSelection  bool
-        # showGrid          bool
-        # oneClickActivate  bool
-        # hotTrackSelection bool
-        # headerClickable   bool
-        # checkBoxLast      bool
-        # headerBackColor   Getter - Color, Setter - [Color, uint]
-        # headerForeColor   Getter - Color, Setter - [Color, uint]
-        # headerFont        Font
-        # selectedItem      ListViewItem
-        # viewStyle         ListViewStyle {lvsLargeIcon, lvsReport, lvsSmallIcon, lvsList, lvsTile}
+    Properties:
+        All props inherited from Control type 
+        font              Font
+        text              string
+        width             int32
+        height            int32
+        xpos              int32
+        ypos              int32
+        backColor         Color
+        foreColor         Color
+        headerHeight      int32
+        editLabel         bool
+        hideSelection     bool
+        multiSelection    bool
+        hasCheckBox       bool
+        fullRowSelection  bool
+        showGrid          bool
+        oneClickActivate  bool
+        hotTrackSelection bool
+        headerClickable   bool
+        checkBoxLast      bool
+        headerBackColor   Getter - Color, Setter - [Color, uint]
+        headerForeColor   Getter - Color, Setter - [Color, uint]
+        headerFont        Font
+        selectedItem      ListViewItem
+        viewStyle         ListViewStyle {lvsLargeIcon, lvsReport, lvsSmallIcon, lvsList, lvsTile}
 
-        # Getter only------------
-        # selectedIndex         int32
-        # selectedSubIndex      int32
-        # checked               bool
-        # columns               seq[ListViewColumn]
-        # items                 seq[ListViewItem]
+        Getter only------------
+            selectedIndex         int32
+            selectedSubIndex      int32
+            checked               bool
+            columns               seq[ListViewColumn]
+            items                 seq[ListViewItem]
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
-    #     onCheckedChanged*, onSelectionChanged*, onItemDoubleClicked*,
-    #     onItemClicked*, onItemHover*: EventHandler
+     Events:
+        All events inherited from Control type 
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onCheckedChanged
+            onSelectionChanged
+            onItemDoubleClicked
+            onItemClicked
+            onItemHover
 #---------------------------------------------------------------------------------------
 
-# ListViewColumn type
-    # constructor - newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : ListViewColumn
-
-    # Properties
-    # Name                  Type
-    # index                 int32
-    # text                  string
-    # width                 int32
-    # imageIndex            int32
-    # imageOnRight          bool
-    # hasImage              bool
-    # textAlign             TextAlignment - {taLeft, taCenter, taRight}
-    # headerTextAlign       TextAlignment
-    # backColor             Color (Use uint also for setter)
-    # foreColor             Color (Use uint also for setter)
-
+ListViewColumn type
+    constructor - newListViewColumn
+    Properties:    
+        index                 int32
+        text                  string
+        width                 int32
+        imageIndex            int32
+        imageOnRight          bool
+        hasImage              bool
+        textAlign             TextAlignment - {taLeft, taCenter, taRight}
+        headerTextAlign       TextAlignment
+        backColor             Color (Use uint also for setter)
+        foreColor             Color (Use uint also for setter)
 #-------------------------------------------------------------------------------------------
 
-# ListViewItem type
-    # Constructor - newListViewItem*(text: string, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1): ListViewItem
-
-    # Properties
-    # Name              Type
-    # index             int32 (Getter only)
-    # subItems          seq[string (Getter only)
-    # text              string
-    # imageIndex        int32
-    # backColor         Color (Use uint also for setter)
-    # foreColor         Color (Use uint also for setter)
-    # font              Font
-
-
+ListViewItem type
+    Constructor - newListViewItem
+    Properties:
+        index             int32 (Getter only)
+        subItems          seq[string (Getter only)
+        text              string
+        imageIndex        int32
+        backColor         Color (Use uint also for setter)
+        foreColor         Color (Use uint also for setter)
+        font              Font
+=====================================================================================================]#
 # Note: Improve some properties to respond at runtime
 # Constants
 const
