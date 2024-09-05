@@ -1,4 +1,29 @@
 # menu module - Created on 14-Aug-2024 00:57
+#[========================================TrayIcon Docs========================================
+    Constructor: newTrayIcon
+    Functions:
+        showBalloon
+        addContextMenu
+
+    Properties:
+        menuTrigger     : TrayMenuTrigger - enum [See typemodule.nim]
+        tooltip         : string
+        icon            : string
+
+    Events:
+        TrayIconEventHandler type - proc(c: TrayIcon, e: EventArgs)
+            onBalloonShow
+            onBalloonClose
+            onBalloonClick
+            onMouseMove
+            onLeftMouseDown
+            onLeftMouseUp
+            onRightMouseDown
+            onRightMouseUp
+            onLeftClick
+            onRightClick
+            onLeftDoubleClick
+===============================================================================================]#
 
 # Class name - "Tray_Msg_Win"
 let trayClsName : array[13, uint16] = [0x54, 0x72, 0x61, 0x79, 0x5F, 0x4D, 0x73, 0x67, 0x5F, 0x57, 0x69, 0x6E, 0]

@@ -1,77 +1,70 @@
 # treeview module Created on 05-Apr-2023 12:51 AM; Author kcvinker
-# TreeView type
-#   Constructor - newTreeView*(parent: Form, x, y: int32 = 10, w: int32 = 200, h: int32 = 150): TreeView
-#   Functions
-        # createHandle() - Create the handle of treeView
-        # addNode*(nodeText: string) : TreeNode {.discardable.}
-        # addNode*(node: TreeNode)
-        # addChildNode*(nodeText: string, parent: TreeNode) : TreeNode {.discardable.}
-        # addChildNode*(node: TreeNode, parent: TreeNode)
-        # insertNode*(nodeText: string, position: int32) : TreeNode {.discardable.}
-        # insertNode*(node: TreeNode, position: int32)
-        # insertChildNode*(nodeText: string, parent: TreeNode, position: int32) : TreeNode {.discardable.}
-        # insertChildNode*(node: TreeNode, parent: TreeNode, position: int32)
-        # deleteSelNode*(index: int32): bool
-        # expandAll*()
+#[===========================================TreeView Docs===============================================
+    Constructor - newTreeView
+    Functions:
+        createHandle      - Create the handle of treeView
+        addNode             
+        addNode
+        addChildNode    
+        addChildNode
+        insertNode
+        insertNode
+        insertChildNode
+        insertChildNode
+        deleteSelNode
+        expandAll
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font              Font
-        # text              string
-        # width             int32
-        # height            int32
-        # xpos              int32
-        # ypos              int32
-        # backColor         Color
-        # foreColor         Color
+    Properties:
+        All props inherited from Control type
+        selectedNode      : TreeNode
+        foreColor         : Color, For setter, uint is also acceptable
+        noLine            : bool
+        noButton          : bool
+        hasCheckBox       : bool
+        fullRowSelect     : bool
+        isEditable        : bool
+        showSelection     : bool
+        hotTrack          : bool
+        nodeCount         : int32
+        uniqNodeID        : int32
+        lineColor         : Color, For setter, uint is also acceptable
+        nodes             : seq[TreeNode]
 
-        # selectedNode      TreeNode
-        # foreColor         Color, For setter, uint is also acceptable
-        # noLine            bool
-        # noButton          bool
-        # hasCheckBox       bool
-        # fullRowSelect     bool
-        # isEditable        bool
-        # showSelection     bool
-        # hotTrack          bool
-        # nodeCount         int32
-        # uniqNodeID        int32
-        # lineColor         Color, For setter, uint is also acceptable
-        # nodes             seq[TreeNode]
+    Events:
+        All events inherited from Control type 
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onBeginEdit
+            onEndEdit
+            onNodeDeleted
+        TreeEventHandler type - proc(c: Control, e: TreeEventArgs)
+            onBeforeChecked
+            onAfterChecked
+            onBeforeSelected
+            onAfterSelected
+            onBeforeExpanded
+            onAfterExpanded
+            onBeforeCollapsed
+            onAfterCollapsed
+======================================================================================================
+    TreeNode type
+        Constructor - newTreeNode
+        Functions:
+            addChildNode
+            addChildNode
+            insertChildNode
+            insertChildNode
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
-        # onBeginEdit, onEndEdit, onNodeDeleted : EventHandler
-        # onBeforeChecked, onAfterChecked, onBeforeSelected: TreeEventHandler
-        # onAfterSelected, onBeforeExpanded, onAfterExpanded: TreeEventHandler
-        # onBeforeCollapsed, onAfterCollapsed: TreeEventHandler - proc(c: Control, e: TreeEventArgs)
-#-----------------------------------------------------------------------------------------------------
-
-# TreeNode type
-    # Constructor - newTreeNode*(text: string, img, selImg: int32 = -1): TreeNode
-    # Functions
-        # addChildNode*(nodeText: string) : TreeNode {.discardable.}
-        # addChildNode*(chNode: TreeNode)
-        # insertChildNode*(nodeText: string, position: int32) : TreeNode {.discardable.}
-        # insertChildNode*(node: TreeNode, position: int32)
-
-#     Properties - Getter & Setter available
-#       Name                          Type
-        # nodes                     seq[TreeNode] (Getter only)
-        # index                     int32 (Getter only)
-        # text                      string
-        # imageIndex                int32
-        # selectedImageIndex        int32
-        # childCount                int32
-        # nodeID                    int32
-        # checked                   bool
-        # foreColor                 Color, For setter, uint is also acceptable
-
+        Properties:
+            nodes                     seq[TreeNode] (Getter only)
+            index                     int32 (Getter only)
+            text                      string
+            imageIndex                int32
+            selectedImageIndex        int32
+            childCount                int32
+            nodeID                    int32
+            checked                   bool
+            foreColor                 Color, For setter, uint is also acceptable
+======================================================================================================]#
 # Constants
 const
     TVS_HASBUTTONS = 0x0001

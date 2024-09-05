@@ -1,50 +1,41 @@
 # trackbar module Created on 04-Apr-2023 01:48 PM; Author kcvinker
-# TrackBar type
-#   Constructor - newTrackBar*(parent: Form, x, y: int32 = 10, w: int32 = 180, h: int32 = 45): TrackBar
-#   Functions
-        # createHandle() - Create the handle of trackBar
+#[===========================================TrackBar Docs==============================================
+  Constructor - newTrackBar
+  Functions
+        createHandle() - Create the handle of trackBar
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font              Font
-        # text              string
-        # width             int32
-        # height            int32
-        # xpos              int32
-        # ypos              int32
-        # backColor         Color
-        # foreColor         Color
-        # channelStyle      Color, For setter, uint is also acceptable
-        # ticPosition       int32
-        # ticColor          Color, For setter, uint is also acceptable
-        # channelColor      Color, For setter, uint is also acceptable
-        # selectionColor    Color, For setter, uint is also acceptable
-        # vertical          bool
-        # reversed          bool
-        # noTics            bool
-        # showSelRange      bool
-        # toolTip           bool
-        # customDraw        bool
-        # freeMove          bool
-        # noThumb           bool
-        # ticWidth          int32
-        # minRange          int32
-        # maxRange          int32
-        # frequency         int32
-        # pageSize          int32
-        # lineSize          int32
-        # ticLength         int32
-        # value             int32
-        # trackChange       TrackChange (Getter only) - {tcNone, tcArrowLow, tcArrowHigh, tcPageLow, tcPageHigh, tcMouseClick, tcMouseDrag}
+    Properties:
+        All props inherited from Control type 
+        channelStyle      : Color, For setter, uint is also acceptable
+        ticPosition       : int32
+        ticColor          : Color, For setter, uint is also acceptable
+        channelColor      : Color, For setter, uint is also acceptable
+        selectionColor    : Color, For setter, uint is also acceptable
+        vertical          : bool
+        reversed          : bool
+        noTics            : bool
+        showSelRange      : bool
+        toolTip           : bool
+        customDraw        : bool
+        freeMove          : bool
+        noThumb           : bool
+        ticWidth          : int32
+        minRange          : int32
+        maxRange          : int32
+        frequency         : int32
+        pageSize          : int32
+        lineSize          : int32
+        ticLength         : int32
+        value             : int32
+        trackChange       : TrackChange (Getter only) - Enum [See typemodule.nim]
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-    #     onValueChanged*, onDragging*, onDragged*: EventHandler
-
+    Events:
+        All events inherited from Control type 
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onValueChanged
+            onDragging
+            onDragged
+==========================================================================================================]#
 # Constants
 const
     TRBN_FIRST = cast[UINT](0-1501)

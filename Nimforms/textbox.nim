@@ -1,35 +1,24 @@
 # textbox module Created on 04-Apr-2023 03:44 AM; Author kcvinker
-# TextBox type
-#   Constructor - newTextBox*(parent: Form, text: string, x, y: int32 = 10, w: int32 = 120, h: int32 = 27): TextBox
-#   Functions
-        # createHandle() - Create the handle of textBox
+#[=================================================TextBox Docs===============================================
+  Constructor - newTextBox
+  Functions
+        createHandle() - Create the handle of textBox
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # textAlign     TextAlignment - {taLeft, taCenter, taRight}
-        # textCase      TextCase - {tcNormal, tcLowerCase, tcUpperCase}
-        # textType      TextType - {ttNormal, ttNumberOnly, ttPasswordChar}
-        # cueBanner     string
-        # multiLine     bool
-        # hideSelection bool
-        # readOnly      bool
+    Properties:
+        All props inherited from Control type 
+        textAlign     TextAlignment - {taLeft, taCenter, taRight}
+        textCase      TextCase - {tcNormal, tcLowerCase, tcUpperCase}
+        textType      TextType - {ttNormal, ttNumberOnly, ttPasswordChar}
+        cueBanner     string
+        multiLine     bool
+        hideSelection bool
+        readOnly      bool
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-    #     onTextChanged*: EventHandler
-
+    Events
+        All events inherited from Control type 
+        EventHandler type - proc(c: Control, e: EventArgs)
+            onTextChanged
+=========================================================================================================]#
 # Constants
 const
     ECM_FIRST = 0x1500

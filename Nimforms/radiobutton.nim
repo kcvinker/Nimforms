@@ -1,29 +1,18 @@
 # radiobutton module Created on 04-Apr-2023 02:34 AM; Author kcvinker
-# RadioButton type
-#   Constructor - newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w, h: int32 = 0): RadioButton
-#   Functions
-        # createHandle() - Create the handle of radioButton
+#[==========================================RadioButton Docs=========================================================
+  Constructor - newRadioButton
+  Functions:
+        createHandle() - Create the handle of radioButton
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # checked       bool
+    Properties:
+        All props inherited from Control type 
+        checked       bool
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-    #     onCheckedChanged*: EventHandler
-
+    Events:
+        All events inherited from Control type 
+        EventHandler type - proc(c: Control, e: EventArgs)        
+            onCheckedChanged
+=========================================================================================================]#
 
 var rbCount = 1
 # let rbClsName = toWcharPtr("Button")
