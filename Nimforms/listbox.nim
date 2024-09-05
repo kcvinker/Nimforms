@@ -1,48 +1,37 @@
 # listbox module Created on 01-Apr-2023 03:55 AM; Author kcvinker
-# ListBox type
-#   constructor - newListBox*(parent: Form, x, y: int32 = 10, w, h: int32 = 140): ListBox
-#   functions
-        # createHandle() - Create the handle of listBox
-        # selectAll*()
-        # clearSelection*()
-        # addItem*( item: auto)
-        # addItems*(args: varargs[string, `$`])
-        # insertItem*(item: auto, index: int32)
-        # removeItem*(item: auto)
-        # removeItem*(index: int32)
-        # removeAll*()
-        # indexOf*(item: auto): int32
+#[===========================================ListBox Docs========================================
+  constructor - newListBox
+  functions
+        createHandle() - Create the handle of listBox
+        selectAll*()
+        clearSelection*()
+        addItem*( item: auto)
+        addItems*(args: varargs[string, `$`])
+        insertItem*(item: auto, index: int32)
+        removeItem*(item: auto)
+        removeItem*(index: int32)
+        removeAll*()
+        indexOf*(item: auto): int32
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # items         seq[string]
-        # hotIndex      int32
-        # hotItem       string
-        # horizontalScroll  bool
-        # verticalScroll    bool
-        # selectedIndex     int32
-        # selectedIndices   seq[int32]
-        # multiSelection    bool
-        # selectedItem      string
-        # selctedItems      seq[string]
+    Properties:
+        All props inherited from Control type 
+        items               : seq[string]
+        hotIndex            : int32
+        hotItem             : string
+        horizontalScroll    : bool
+        verticalScroll      : bool
+        selectedIndex       : int32
+        selectedIndices     : seq[int32]
+        multiSelection      : bool
+        selectedItem        : string
+        selctedItems        : seq[string]
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
-    #     onSelectionChanged*, onSelectionCancelled*: EventHandler
-
+    Events
+        All events inherited from Control type 
+        EventHandler - proc(c: Control, e: EventArgs)
+            onSelectionChanged
+            onSelectionCancelled
+=======================================================================================================]#
 # Constants
 const
     # LB_CTLCODE = 0

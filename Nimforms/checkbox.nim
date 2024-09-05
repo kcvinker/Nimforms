@@ -1,5 +1,5 @@
 # checkbox module Created on 29-Mar-2023 11:23 PM; Author kcvinker
-#[============================================CheckBox type======================================
+#[============================================CheckBox Docs======================================
     Constructor - newCheckBox
     Functions:
         createHandle 

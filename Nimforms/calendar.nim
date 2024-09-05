@@ -1,7 +1,7 @@
 
 # calendar module Created on 29-Mar-2023 05:03 PM; Author kcvinker
 
-#[ Calendar type
+#[=========================================Calendar Docs=======================================
     Constructor - newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar
     Functions
         createHandle

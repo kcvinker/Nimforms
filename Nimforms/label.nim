@@ -1,31 +1,19 @@
 # label module Created on 01-Apr-2023 12:32 AM; Author kcvinker
-# Label type
-#   constructor - newLabel*(parent: Form, text: string, x, y: int32 = 10, w, h: int32 = 0): Label
-#   functions
-        # createHandle() - Create the handle of Label
+#[==========================================Label Docs==========================================
+    Constructor - newLabel
+    Functions
+        createHandle() - Create the handle of Label
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
-        # autoSize      bool
-        # multiLine     bool
-        # textAlign     bool
-        # borderStyle   bool
+    Properties:
+        All props inherited from Control type       
+        autoSize      bool
+        multiLine     bool
+        textAlign     TextAlignment - Enum (See typemodule.nim)
+        borderStyle   LabelBorder - Enum (See typemodule.nim)
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
+    Events
+        All events inherited from Control type 
+================================================================================================]#
 # Constants
 const
     SS_NOTIFY = 0x00000100

@@ -1,28 +1,24 @@
 # groupbox module Created on 31-Mar-2023 11:14 PM; Author kcvinker
 
-# GroupBox type
-#   constructor - newGroupBox*(parent: Form, text: string, x, y: int32 = 10, w, h: int32 = 150): GroupBox
-#   functions
-        # createHandle() - Create the handle of GroupBox
+#[========================================GroupBox Docs====================================================
+  constructor - newGroupBox*
+  functions
+        createHandle() - Create the handle of GroupBox
 
-#     Properties - Getter & Setter available
-#       Name            Type
-        # font          Font
-        # text          string
-        # width         int32
-        # height        int32
-        # xpos          int32
-        # ypos          int32
-        # backColor     Color
-        # foreColor     Color
+    Properties:
+        All props inherited from Control type       
+        font          Font      (See commons.nim)
+        text          string
+        width         int32
+        height        int32
+        xpos          int32
+        ypos          int32
+        backColor     Color     (See colors.nim)
+        foreColor     Color
 
-    # Events
-    #     onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*,
-    #     onLostFocus*, onGotFocus*: EventHandler - proc(c: Control, e: EventArgs)
-
-    #     onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*
-    #     onRightMouseDown*, onRightMouseUp*: MouseEventHandler - - proc(c: Control, e: MouseEventArgs)
-
+    Events:
+        All events inherited from Control type              
+=========================================================================================================]#
 # Constants
 # const
 

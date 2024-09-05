@@ -1,5 +1,44 @@
 # dialogs module Created on 17-May-2023 06:32
+#[=========================================Dialog Docs===========================================
 
+    DialogBase - Abstract type
+        Properties:
+            selectedPath    : string
+            nameStartPos    : int
+            extStartPos     : int
+            title           : string
+            initialFolder   : string
+            filter          : string
+        Functions:
+            setFilter
+            setFilters
+
+    FileOpenDialog:
+        Constructor - newFileOpenDialog
+        Properties:
+            All props inherited from DialogBase type 
+            multiSelect
+            showHiddenFiles
+            fileNames
+        Functions:
+            showDialog : bool
+
+    FileSaveDialog:
+        Constructor - newFileSaveDialog
+        Properties:
+            All props inherited from DialogBase type 
+        Functions:
+            showDialog : bool
+        
+    FolderBrowserDialog:
+        Constructor - newFolderBrowserDialog
+        Properties:
+            All props inherited from DialogBase type 
+            newFolderButton
+            showFiles
+        Functions:
+            showDialog : bool    
+========================================================================================================]#
 
 const
     MAX_PATH = 260
