@@ -10,7 +10,7 @@ All controls
 2. Place the **Nimforms** folder in your project folder.
 3. Import **Nimforms/nimforms** module in your source file. And start coding.
 4. NOTE: Copy and paste the `app.exe.manifest` file from this repo to your exe location. And rename the file with your exe file's name. For example, if your exe file's name is `program.exe`, the manifest file must be `program.exe.manifest`.
-
+5. IMPORTANT NOTE: Use the `--mm:refc` flag when compiling your nim file.
 
 ## Sample code
 This is the code that created the window in above screenshot
