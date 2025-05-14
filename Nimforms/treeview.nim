@@ -169,6 +169,7 @@ proc treeViewCtor(parent: Form, x, y, w, h: int32): TreeView =
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mStyle = TVSTYLE
     result.mExStyle = 0
     result.mBackColor = CLR_WHITE
@@ -471,28 +472,34 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, tvWndProc, scID)
         var this = cast[TreeView](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, tvWndProc, scID)
 
     of WM_LBUTTONDOWN:
         var this = cast[TreeView](refData)
         this.leftButtonDownHandler(msg, wpm, lpm)
+
     of WM_LBUTTONUP:
         var this = cast[TreeView](refData)
         this.leftButtonUpHandler(msg, wpm, lpm)
+
     of WM_RBUTTONDOWN:
         var this = cast[TreeView](refData)
         this.rightButtonDownHandler(msg, wpm, lpm)
+
     of WM_RBUTTONUP:
         var this = cast[TreeView](refData)
         this.rightButtonUpHandler(msg, wpm, lpm)
+
     of WM_MOUSEMOVE:
         var this = cast[TreeView](refData)
         this.mouseMoveHandler(msg, wpm, lpm)
+
     of WM_MOUSELEAVE:
         var this = cast[TreeView](refData)
         this.mouseLeaveHandler()
+        
     of WM_CONTEXTMENU:
         var this = cast[TreeView](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)

@@ -41,6 +41,7 @@ proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int3
     result.mHeight = h
     result.mText = text
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = parent.mBackColor
     result.mForeColor = CLR_BLACK
     result.mAutoSize = true
@@ -99,9 +100,9 @@ proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, lbWndProc, scID)
         var this = cast[Label](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, lbWndProc, scID)
 
     of WM_LBUTTONDOWN:
         var this = cast[Label](refData)

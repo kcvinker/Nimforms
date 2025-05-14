@@ -109,6 +109,7 @@ proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h:
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mSelIndex = -1
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK
@@ -140,9 +141,22 @@ proc getComboInfo(this: ComboBox) =
         SetWindowSubclass(cmbInfo.hwndItem, cmbEditWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
         globalSubClassID += 1
 
+proc getBiggerLength(this: ComboBox): int = 
+    var biggerItem = this.mitems[0]
+    for item in this.mitems:
+        if len(item) > len(biggerItem):
+            biggerItem = item 
+    result = len(biggerItem)
+
 proc insertItemsInternal(this: ComboBox) =
     if this.mItems.len > 0:
-        for item in this.mItems: this.sendMsg(CB_ADDSTRING, 0, item.toWcharPtr)
+        let bytes = (this.getBiggerLength() + 1) * 2
+        var wptr = cast[WArrayPtr](alloc0(bytes))
+        for item in this.mItems: 
+            fillWstring(wptr[0].addr, item)
+            this.sendMsg(CB_ADDSTRING, 0, wptr[0].addr)
+        
+        dealloc(wptr)
     if this.mSelIndex > -1: this.sendMsg(CB_SETCURSEL, this.mSelIndex, 0)
 
 # Create ComboBox's hwnd
@@ -255,9 +269,9 @@ proc mouseLeaveHandler(this: ComboBox): LRESULT =
 proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, cmbWndProc, scID)
         var this = cast[ComboBox](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, cmbWndProc, scID)
 
     of WM_LBUTTONDOWN:
         var this = cast[ComboBox](refData)

@@ -5,6 +5,8 @@ include apimodule
 include winmessages
 include typemodule
 include colors
+include widestring
+include graphics
 include commons # 'menu.nim' is included in this file.
 include events
 include controls # contextmenu.nim is included in this file.

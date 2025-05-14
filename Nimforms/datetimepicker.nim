@@ -89,6 +89,7 @@ proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10,
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK
     result.mFormat = dfCustom
@@ -152,7 +153,7 @@ proc createHandle*(this: DateTimePicker) =
 method autoCreate(this: DateTimePicker) = this.createHandle()
 
 # Property section
-proc `value=`*(this: DateTimePicker, dateValue: DateAndTime) =
+proc `value=`*(this: DateTimePicker, dateValue: DateAndTime) = # TODO
     this.mValue = dateValue
     let stime = makeSystemTime(this.mValue)
     if this.mIsCreated: this.sendMsg(DTM_SETSYSTEMTIME, 0, stime)
@@ -207,9 +208,9 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     # echo msg
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, dtpWndProc, scID)
         var this = cast[DateTimePicker](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, dtpWndProc, scID)
 
     of WM_LBUTTONDOWN:
         var this = cast[DateTimePicker](refData)

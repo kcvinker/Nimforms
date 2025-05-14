@@ -33,6 +33,7 @@ proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w
     result.mHeight = h
     result.mText = text
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = parent.mBackColor
     result.mWideText = text.toLPWSTR()
     result.mForeColor = CLR_BLACK
@@ -77,28 +78,34 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, rbWndProc, scID)
         var this = cast[RadioButton](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, rbWndProc, scID)
 
     of WM_LBUTTONDOWN:
         var this = cast[RadioButton](refData)
         this.leftButtonDownHandler(msg, wpm, lpm)
+
     of WM_LBUTTONUP:
         var this = cast[RadioButton](refData)
         this.leftButtonUpHandler(msg, wpm, lpm)
+
     of WM_RBUTTONDOWN:
         var this = cast[RadioButton](refData)
         this.rightButtonDownHandler(msg, wpm, lpm)
+
     of WM_RBUTTONUP:
         var this = cast[RadioButton](refData)
         this.rightButtonUpHandler(msg, wpm, lpm)
+
     of WM_MOUSEMOVE:
         var this = cast[RadioButton](refData)
         this.mouseMoveHandler(msg, wpm, lpm)
+
     of WM_MOUSELEAVE:
         var this = cast[RadioButton](refData)
         this.mouseLeaveHandler()
+        
     of WM_CONTEXTMENU:
         var this = cast[RadioButton](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)

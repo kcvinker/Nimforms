@@ -7,6 +7,20 @@ type
         ctNone, ctButton, ctCalendar, ctCheckBox, ctComboBox, ctDateTimePicker, ctForm, ctGroupBox, ctLabel,
         ctListBox, ctListView, ctNumberPicker, ctProgressBar, ctRadioButton, ctTextBox, ctTrackBar, ctTreeView
 
+    WArrayPtr = ptr UncheckedArray[Utf16Char]
+
+    WideString* = object 
+        mData : WArrayPtr
+        mInputLen: int32 
+        mBytes: int
+        mInputStr: cstring
+
+    Graphics = object 
+        mHdc: HDC
+        mHwnd: HWND
+        mFree: bool
+
+
     Color* = object
         red*, green*, blue*, value*: uint
         cref*: COLORREF
@@ -15,12 +29,13 @@ type
         fwLight = 300, fwNormal = 400, fwMedium = 500, fwSemiBold = 600, fwBold = 700,
         fwExtraBold = 800, fwUltraBold = 900
 
-    Font* = ref object
+    Font* = object
         name*: string
         size*: int32
         weight*: FontWeight
         italics*, underLine*, strikeOut*: bool
         handle: HFONT
+        wtext: WideString
 
     TextAlignment* {.pure.} = enum
         taLeft, taCenter, taRight
@@ -109,11 +124,13 @@ type
         mWidth, mHeight, mXpos, mYpos, mCtlID: int32
         mStyle, mExStyle: DWORD
         mDrawMode: uint32
-        mIsCreated, mLbDown, mRbDown, mIsMouseEntered, mHasText, mCemnuUsed: bool
+        mIsCreated, mLbDown, mRbDown, mIsMouseEntered: bool 
+        mHasFont, mHasText, mCemnuUsed: bool
         mBkBrush: HBRUSH
         mFont: Font
         mParent: Form
         mcRect: RECT
+        mWtext: WideString
         #Events
         onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*: EventHandler
         onLostFocus*, onGotFocus*: EventHandler
@@ -151,7 +168,7 @@ type
         mMaximizeBox, mMinimizeBox, mTopMost, mIsLoaded: bool
         mIsMouseTracking, mCreateChilds: bool
         mMenuGrayBrush, mMenuDefBgBrush, mMenuHotBgBrush, mMenuFrameBrush : HBRUSH
-        mMenuFont : Font
+        # mMenuFont : Font
         mMenuGrayCref : COLORREF
         mGrad : FormGrad
         mMenubar: MenuBar
@@ -184,11 +201,16 @@ type
         c1: Color
         c2: Color
 
+    GdrawMode = enum
+        gmDefault, gmFocused, gmClicked
+
     GradDraw = object
         gcDef: GradColor
         gcHot: GradColor
         defPen: HPEN
         hotPen: HPEN
+        defBrush : HBRUSH
+        hotBrush : HBRUSH
         rtl, isActive: bool
 
 
@@ -247,8 +269,12 @@ type
 
     GroupBox* = ref object of Control
         mTextWidth: int32
+        mDBFill: bool
+        mGetWidth: bool
         mPen: HPEN
         mRect: RECT
+        mHdc: HDC
+        mBmp: HBITMAP
 
     LabelBorder* {.pure.} = enum
         lbNone, lbSingle, lbSunken
@@ -527,6 +553,7 @@ var appData : AppData # Global object to hold some app level info.
 
 proc appFinalize(this: AppData) =
     if this.trayHwnd != nil: DestroyWindow(this.trayHwnd)
+    echo "Nimforms is exiting..."
 
 
 

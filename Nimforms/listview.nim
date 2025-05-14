@@ -164,6 +164,7 @@ proc listViewCtor(parent: Form, x, y, w, h: int32): ListView =
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK
     result.mStyle = LVSTYLE
@@ -602,9 +603,9 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     # echo "533 ok ", $msg
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, lvWndProc, scID)
         var this = cast[ListView](refData)
         this.destroyResources()
-        RemoveWindowSubclass(hw, lvWndProc, scID)
 
     of WM_LBUTTONDOWN:
         var this = cast[ListView](refData)
@@ -688,7 +689,7 @@ proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     
     case msg
     of WM_DESTROY:
-        var this = cast[ListView](refData)
+        # var this = cast[ListView](refData)
         RemoveWindowSubclass(hw, hdrWndProc, scID)
 
     of WM_MOUSEMOVE:

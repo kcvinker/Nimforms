@@ -37,7 +37,7 @@ const
 let CLR_WHITE = newColor(0xFFFFFF)
 let CLR_BLACK = newColor(0x000000)
 
-proc createHandle(this: Font) # Foreard declaration
+proc createHandle(this: var Font) # Foreard declaration
 
 
 proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
@@ -49,7 +49,7 @@ proc newFont*(fname: string, fsize: int32,
                 fweight: FontWeight = FontWeight.fwNormal,
                 italic: bool = false, underline: bool = false, 
                 strikeout: bool = false, autoc: bool = false) : Font =
-    new(result)
+    # new(result)
     if fname.len > 32 : raise newException(OSError, "Length of font name exceeds 32 characters")
     result.name = fname
     result.size = fsize
@@ -57,19 +57,20 @@ proc newFont*(fname: string, fsize: int32,
     result.italics = italic
     result.underLine = underline
     result.strikeOut = strikeout
+    result.wtext = newWideString(fname)
     if autoc: result.createHandle()
 
-proc createHandle(this: Font) =    
+proc createHandle(this: var Font) =    
     let scale = appData.scaleFactor / 100
     let fsiz = int32(scale * float(this.size))   
     let iHeight = -MulDiv(fsiz , appData.sysDPI, 72)
     
-    var fname = newWideCString(this.name)
+    # var fname = newWideCString(this.name)
     var lf : LOGFONTW
     lf.lfItalic = cast[BYTE](this.italics)
     lf.lfUnderline = cast[BYTE](this.underLine)
-    for i in 0..fname.len :
-        lf.lfFaceName[i] = fname[i]
+    for i in 0..this.wtext.mBytes:
+        lf.lfFaceName[i] = this.wtext.mData[i]
 
     lf.lfHeight = iHeight
     lf.lfWeight = cast[LONG](this.weight)
@@ -79,6 +80,37 @@ proc createHandle(this: Font) =
     lf.lfQuality = cast[BYTE](DEFAULT_QUALITY)
     lf.lfPitchAndFamily = 1
     this.handle = CreateFontIndirectW(lf.unsafeAddr)
+
+proc `=copy`*(dst: var Font, src: Font) =
+    dst.name = src.name
+    dst.size = src.size
+    dst.weight = src.weight
+    dst.italics = src.italics
+    dst.underLine = src.underLine
+    dst.strikeOut = src.strikeOut
+    if dst.wtext.mBytes >= src.wtext.mBytes:
+        dst.wtext.copyFrom(src.wtext)
+    else:
+        dst.wtext.initWideString(src.wtext)
+    if src.handle != nil: 
+        # echo "going to create my own font handle"
+        dst.createHandle()
+
+
+# proc cloneFrom*(this: var Font, rhs: Font) =
+#     this.name = rhs.name
+#     this.size = rhs.size
+#     this.weight = rhs.weight
+#     this.italics = rhs.italics
+#     this.underLine = rhs.underLine
+#     this.strikeOut = rhs.strikeOut
+#     if rhs.handle != nil : this.createHandle()
+
+proc finalize(this: var Font) =
+    this.wtext.finalize()
+    if this.handle != nil:
+        # echo "Deleting my font handle"
+        DeleteObject(this.handle)
 
 # End of Font related area
 
@@ -166,3 +198,20 @@ macro handles*(evt: untyped, fn: untyped): untyped =
     result = new_code
 
 # macro name(arguments): return type =
+
+type 
+    Font1* = object
+        name*: string
+        size*: int32
+        italics*, underLine*, strikeOut*: bool
+        handle: HFONT
+
+
+proc `=copy`(dst: var Font1, src: Font1) =
+    dst.name = src.name
+    dst.size = src.size
+    # dst.weight = src.weight
+    dst.italics = src.italics
+    dst.underLine = src.underLine
+    dst.strikeOut = src.strikeOut
+    # if src.handle != nil : dst.createHandle()

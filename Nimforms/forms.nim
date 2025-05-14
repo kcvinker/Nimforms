@@ -187,8 +187,9 @@ proc setBkClrInternal(this: Form, hdc: HDC) : int32 =
     GetClientRect(this.mHandle, rct.unsafeAddr)
     if this.mFdMode == FormDrawMode.fdmFlat:
         this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
-    elif this.mFdMode == FormDrawMode.fdmGradient:
-        this.mBkBrush = createGradientBrush(hdc, rct, this.mGrad.c1, this.mGrad.c2, this.mGrad.rtl)
+    # elif this.mFdMode == FormDrawMode.fdmGradient:
+    #     createGradientBrush(this.mGrad, hdc, rct, gmDefault)
+    #     this.mBkBrush = this.mGrad.defBrush
 
 
     let ret = FillRect(hdc, rct.unsafeAddr, this.mBkBrush)
@@ -212,6 +213,7 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mXpos = 100
     result.mYpos = 100
     result.mFont = newFont("Tahoma", 11)
+    result.mHasFont = true
     result.mFormStyle = fsNormalWindow
     result.mFdMode = fdmNormal
     result.mFormPos = fpCenter

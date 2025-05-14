@@ -85,6 +85,7 @@ proc cmenuDtor(this: ContextMenu) =
             for key, menu in this.mMenus: menu.menuItemDtor()
             
     DestroyMenu(this.mHandle)
+    this.mFont.finalize()
     # echo "Context menu destroy worked"
 
 

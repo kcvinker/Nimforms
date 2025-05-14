@@ -167,7 +167,9 @@ proc mapParentPoints(this: Control) : RECT =
 proc destructor(this: Control) =
     if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
     if this.mCemnuUsed: this.mContextMenu.cmenuDtor()
-    # if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
+    if this.mHasFont: this.mFont.finalize()
+    if this.mHasText: this.mWtext.finalize()
+    
 
 proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
     return SendMessageW(this.mHandle, msg, cast[WPARAM](wpm), cast[LPARAM](lpm))

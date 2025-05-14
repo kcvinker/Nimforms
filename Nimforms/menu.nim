@@ -33,7 +33,7 @@
 ===================================================================================================]#
 var staticMenuID : uint32 = 100 # Global static menu id.
 
-proc newMenuBar*(parent: Form, menuFont: Font = nil ) : MenuBar {.discardable.} =
+proc newMenuBar*(parent: Form ) : MenuBar {.discardable.} =
     new(result)
     result.mHandle = CreateMenu()
     result.mFormPtr = parent
@@ -54,6 +54,7 @@ proc menuBarDtor(this: MenuBar) =
     DeleteObject(this.mMenuHotBgBrush)
     DeleteObject(this.mMenuFrameBrush)
     DeleteObject(this.mMenuGrayBrush )
+    this.mFont.finalize()
     # echo "MenuBar destroy worked"
 
 

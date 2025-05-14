@@ -74,6 +74,7 @@ proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75,
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK
     result.mStyle = NPSTYLE
@@ -253,26 +254,31 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     
     case msg
     of WM_DESTROY:
-        var this = cast[NumberPicker](refData)
-        this.destructor()
-        if this.mPen != nil: DeleteObject(this.mPen)
         RemoveWindowSubclass(hw, npWndProc, scID)
+        var this = cast[NumberPicker](refData)
+        if this.mPen != nil: DeleteObject(this.mPen)
+        this.destructor()
 
     of WM_LBUTTONDOWN:
         var this = cast[NumberPicker](refData)
         this.leftButtonDownHandler(msg, wpm, lpm)
+
     of WM_LBUTTONUP:
         var this = cast[NumberPicker](refData)
         this.leftButtonUpHandler(msg, wpm, lpm)
+
     of WM_RBUTTONDOWN:
         var this = cast[NumberPicker](refData)
         this.rightButtonDownHandler(msg, wpm, lpm)
+
     of WM_RBUTTONUP:
         var this = cast[NumberPicker](refData)
         this.rightButtonUpHandler(msg, wpm, lpm)
+
     of WM_MOUSEMOVE:
         var this = cast[NumberPicker](refData)
         this.mouseMoveHandler(msg, wpm, lpm)
+        
     of WM_CONTEXTMENU:
         var this = cast[NumberPicker](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)

@@ -282,6 +282,7 @@ const
     IMAGE_CURSOR = 2
     LR_LOADFROMFILE = 0x00000010
     LR_DEFAULTCOLOR = 0x00000000
+    SRCCOPY = 0x00CC0020
 
 # Structs
 type
@@ -812,6 +813,7 @@ proc LineTo(hdc: HDC, x: int32, y: int32): BOOL {.dll("gdi32", true).}
 proc TextOut(hdc: HDC, x: int32, y: int32, lpString: LPCWSTR, c: int32): BOOL 
                     {.stdcall, dynlib: "gdi32", importc: "TextOutW", discardable.}
 proc Rectangle(hdc: HDC, left: int32, top: int32, right: int32, bottom: int32): BOOL {.dll("gdi32", true).}
+proc BitBlt(hdc: HDC, x, y, cx, cy: int32, hdcSrc: HDC, x1, y1: int32, rop: DWORD): BOOL {.dll("gdi32", true).}
 # End of Gdi32-------------------------------------------------------------------------------------------
 
 # Misc dll functions {.dll("comctl32", false).}

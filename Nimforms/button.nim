@@ -88,8 +88,11 @@ proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10,
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
+    result.mHasText = true
     result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
     result.mText = (if txt == "": "Button_" & $btnCount else: txt)
+    result.mWtext = newWideString(result.mText)
     parent.mControls.add(result)
     btnCount += 1
     if evtFn != nil: result.onClick = evtFn
@@ -124,6 +127,7 @@ proc `backColor=`*(this: Button, clr: uint) =
 
 # Set necessery data for a gradient colored button.
 proc gradDrawSetData(this: var GradDraw, c1, c2: uint) =
+    this.isActive = true
     this.gcDef.c1 = newColor(c1)
     this.gcDef.c2 = newColor(c2)
     let hotAdj1 = (if this.gcDef.c1.isDark(): 1.5 else : 1.2)
@@ -132,6 +136,10 @@ proc gradDrawSetData(this: var GradDraw, c1, c2: uint) =
     this.gcHot.c2 = this.gcDef.c2.getChangedColor(hotAdj2)
     this.defPen = CreatePen(PS_SOLID, 1, this.gcDef.c1.getChangedColorRef(0.6))
     this.hotPen = CreatePen(PS_SOLID, 1, this.gcHot.c1.getChangedColorRef(0.3))
+    if this.defBrush != nil:
+         this.defBrush = nil
+    if this.hotBrush != nil:
+         this.hotBrush = nil
 
 # Set gradient colors for this button.
 proc setGradientColor*(this: Button, clr1, clr2: uint) =
@@ -151,7 +159,7 @@ proc paintFlatBtnRoundRect(dc: HDC, rc: RECT, hbr: HBRUSH, pen: HPEN): LRESULT =
 proc drawTextColor(this: Button, ncd: LPNMCUSTOMDRAW): LRESULT =
     SetTextColor(ncd.hdc, this.mForeColor.cref)
     SetBkMode(ncd.hdc, 1)
-    DrawTextW(ncd.hdc, this.mText.toWcharPtr, -1, ncd.rc.unsafeAddr, this.mTxtFlag )
+    DrawTextW(ncd.hdc, &this.mWtext, this.mWtext.strLen, ncd.rc.unsafeAddr, this.mTxtFlag )
     return CDRF_NOTIFYPOSTPAINT
 
 # Helper function dealing wm_notify message in a button's wndproc.
@@ -170,13 +178,13 @@ proc drawBackColor(this: Button, ncd: LPNMCUSTOMDRAW): LRESULT =
     return CDRF_DODEFAULT
 
 # Helper function for drawing a gradient color button.
-proc paintGradientRound(dc: HDC, rc: RECT, gc: GradColor, pen: HPEN): LRESULT =
-    var gBrush = createGradientBrush(dc, rc, gc.c1, gc.c2)
-    SelectObject(dc, pen)
-    SelectObject(dc, gBrush)
-    RoundRect(dc, rc.left, rc.top, rc.right, rc.bottom, 5, 5)
-    FillPath(dc)
-    DeleteObject(gBrush)
+proc paintGradientRound(nm: LPNMCUSTOMDRAW, gBrush: HBRUSH, pen: HPEN): LRESULT =
+    # var gBrush = createGradientBrush(dc, rc, gc.c1, gc.c2)
+    SelectObject(nm.hdc, pen)
+    SelectObject(nm.hdc, gBrush)
+    RoundRect(nm.hdc, nm.rc.left, nm.rc.top, nm.rc.right, nm.rc.bottom, 5, 5)
+    FillPath(nm.hdc)
+    # DeleteObject(gBrush)
     result = CDRF_DODEFAULT
 
 # Helper function dealing wm_notify message in a button's wndproc.
@@ -185,25 +193,40 @@ proc drawGradientBackColor(this: Button, ncd: LPNMCUSTOMDRAW): LRESULT =
     of CDDS_PREERASE: return  CDRF_NOTIFYPOSTERASE
     of CDDS_PREPAINT:
         if (ncd.uItemState and MOUSECLICKFLAG) == MOUSECLICKFLAG:
-            return paintGradientRound(ncd.hdc, ncd.rc, this.mGDraw.gcDef, this.mGDraw.hotPen)
+            if this.mGDraw.defBrush == nil:
+                this.mGDraw.createGradientBrush(ncd.hdc, ncd.rc, gmClicked)
+            return paintGradientRound(ncd, this.mGDraw.defBrush, this.mGDraw.hotPen)
         elif (ncd.uItemState and MOUSEOVERFLAG) == MOUSEOVERFLAG:
-            return paintGradientRound(ncd.hdc, ncd.rc, this.mGDraw.gcHot, this.mGDraw.hotPen)
+            if this.mGDraw.hotBrush == nil:
+                this.mGDraw.createGradientBrush(ncd.hdc, ncd.rc, gmFocused)
+            return paintGradientRound(ncd, this.mGDraw.hotBrush, this.mGDraw.hotPen)
         else:
-            return paintGradientRound(ncd.hdc, ncd.rc, this.mGDraw.gcDef, this.mGDraw.defPen)
+            if this.mGDraw.defBrush == nil:
+                this.mGDraw.createGradientBrush(ncd.hdc, ncd.rc, gmDefault)
+            return paintGradientRound(ncd, this.mGDraw.defBrush, this.mGDraw.defPen)
     else: discard
+
+proc flatDrawFinalize(this: var FlatDraw) =
+    DeleteObject(this.defBrush)
+    DeleteObject(this.hotBrush)
+    DeleteObject(this.defPen)
+    DeleteObject(this.hotPen)
+    echo "flat draw finished"
+
+proc gradDrowFinalize(this: var GradDraw) =
+    DeleteObject(this.defBrush)
+    DeleteObject(this.hotBrush)
+    DeleteObject(this.defPen)
+    DeleteObject(this.hotPen)
+    echo "grad draw finished"
 
 # Deleting certain resources for this button.
 proc btnDtor(this: Button) =
-    case this.mDrawMode
-    of 2, 3:
-        DeleteObject(this.mFDraw.defBrush)
-        DeleteObject(this.mFDraw.hotBrush)
-        DeleteObject(this.mFDraw.defPen)
-        DeleteObject(this.mFDraw.hotPen)
-    of 4, 5:
-        DeleteObject(this.mGDraw.defPen)
-        DeleteObject(this.mGDraw.hotPen)
-    else: discard
+    if this.mFDraw.isActive:
+        this.mFDraw.flatDrawFinalize()
+    
+    if this.mGDraw.isActive:
+        this.mGDraw.gradDrowFinalize() 
 
 
 

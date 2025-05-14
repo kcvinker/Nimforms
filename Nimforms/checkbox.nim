@@ -16,7 +16,7 @@
 # const
 
 var cbCount = 1
-# let cbClsName = toWcharPtr("Button")
+
 
 
 # Forward declaration
@@ -35,9 +35,12 @@ proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
     result.mWidth = w
     result.mHeight = h
     result.mText = text
+    result.mWtext = newWideString(result.mText)
     result.mFont = parent.mFont
+    result.mHasFont = true
+    result.mHasText = true
     result.mBackColor = parent.mBackColor
-    result.mWideText = text.toLPWSTR()
+    # result.mWideText = text.toLPWSTR()
     result.mAutoSize = true
     result.mForeColor = CLR_BLACK
     result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX
@@ -79,9 +82,10 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, cbWndProc, scID)
         var this = cast[CheckBox](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, cbWndProc, scID)
+        
     of WM_LBUTTONDOWN:
         var this = cast[CheckBox](refData)
         this.leftButtonDownHandler(msg, wpm, lpm)
@@ -126,7 +130,7 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             else:
                 nmcd.rc.right -= 18
             if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
-            DrawTextW(nmcd.hdc, this.mWideText, -1, nmcd.rc.addr, this.mTextStyle)
+            DrawTextW(nmcd.hdc, &this.mWtext, this.mWtext.strLen, nmcd.rc.addr, this.mTextStyle)
             return CDRF_SKIPDEFAULT
         else: discard
         return 0

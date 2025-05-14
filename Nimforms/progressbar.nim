@@ -57,6 +57,7 @@ proc progressBarCtor(parent: Form, x, y, w, h: int32): ProgressBar =
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = parent.mBackColor
     result.mForeColor = CLR_BLACK
     result.mStyle = WS_VISIBLE or WS_CHILD
@@ -167,9 +168,9 @@ proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, pbWndProc, scID)
         var this = cast[ProgressBar](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, pbWndProc, scID)
 
     of WM_LBUTTONDOWN:
         var this = cast[ProgressBar](refData)

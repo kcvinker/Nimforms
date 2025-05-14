@@ -57,6 +57,7 @@ proc newTextBox*(parent: Form, text: string = "", x: int32 = 10, y: int32 = 10, 
     result.mHeight = h
     result.mText = text
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = CLR_WHITE
     # result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
     result.mForeColor = CLR_BLACK
@@ -127,36 +128,46 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, tbWndProc, scID)
         var this = cast[TextBox](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, tbWndProc, scID)
+
     of WM_LBUTTONDOWN:
         var this = cast[TextBox](refData)
         this.leftButtonDownHandler(msg, wpm, lpm)
+
     of WM_LBUTTONUP:
         var this = cast[TextBox](refData)
         this.leftButtonUpHandler(msg, wpm, lpm)
+
     of WM_RBUTTONDOWN:
         var this = cast[TextBox](refData)
         this.rightButtonDownHandler(msg, wpm, lpm)
+
     of WM_RBUTTONUP:
         var this = cast[TextBox](refData)
         this.rightButtonUpHandler(msg, wpm, lpm)
+
     of WM_MOUSEMOVE:
         var this = cast[TextBox](refData)
         this.mouseMoveHandler(msg, wpm, lpm)
+
     of WM_MOUSELEAVE:
         var this = cast[TextBox](refData)
         this.mouseLeaveHandler()
+
     of WM_KEYDOWN:
         var this = cast[TextBox](refData)
         this.keyDownHandler(wpm)
+
     of WM_KEYUP:
         var this = cast[TextBox](refData)
         this.keyUpHandler(wpm)
+
     of WM_CHAR:
         var this = cast[TextBox](refData)
         this.keyPressHandler(wpm)
+        
     of WM_CONTEXTMENU:
         var this = cast[TextBox](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)

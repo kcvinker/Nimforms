@@ -94,7 +94,6 @@ proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar =
     result.mYpos = y
     result.mWidth = 10
     result.mHeight = 10
-    result.mFont = parent.mFont
     result.mStyle = WS_CHILD or WS_TABSTOP or WS_VISIBLE
     result.mViewMode = vmMonthView
     calCount += 1
@@ -167,9 +166,10 @@ proc calWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, calWndProc, scID)
         var this = cast[Calendar](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, calWndProc, scID)
+        
 
     of WM_LBUTTONDOWN:
         var this = cast[Calendar](refData)

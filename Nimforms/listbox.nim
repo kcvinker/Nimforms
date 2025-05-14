@@ -127,6 +127,7 @@ proc newListBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: 
     result.mWidth = w
     result.mHeight = h
     result.mFont = parent.mFont
+    result.mHasFont = true
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK
     result.mDummyIndex = -1
@@ -302,36 +303,46 @@ proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     
     case msg
     of WM_DESTROY:
+        RemoveWindowSubclass(hw, lbxWndProc, scID)
         var this = cast[ListBox](refData)
         this.destructor()
-        RemoveWindowSubclass(hw, lbxWndProc, scID)
+
     of WM_LBUTTONDOWN:
         var this = cast[ListBox](refData)
         this.leftButtonDownHandler(msg, wpm, lpm)
+
     of WM_LBUTTONUP:
         var this = cast[ListBox](refData)
         this.leftButtonUpHandler(msg, wpm, lpm)
+
     of WM_RBUTTONDOWN:
         var this = cast[ListBox](refData)
         this.rightButtonDownHandler(msg, wpm, lpm)
+
     of WM_RBUTTONUP:
         var this = cast[ListBox](refData)
         this.rightButtonUpHandler(msg, wpm, lpm)
+
     of WM_MOUSEMOVE:
         var this = cast[ListBox](refData)
         this.mouseMoveHandler(msg, wpm, lpm)
+
     of WM_MOUSELEAVE:
         var this = cast[ListBox](refData)
         this.mouseLeaveHandler()
+
     of WM_KEYDOWN:
         var this = cast[ListBox](refData)
         this.keyDownHandler(wpm)
+
     of WM_KEYUP:
         var this = cast[ListBox](refData)
         this.keyUpHandler(wpm)
+
     of WM_CHAR:
         var this = cast[ListBox](refData)
         this.keyPressHandler(wpm)
+        
     of WM_CONTEXTMENU:
         var this = cast[ListBox](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)

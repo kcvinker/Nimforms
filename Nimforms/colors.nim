@@ -32,6 +32,10 @@ proc makeHBRUSH(this: Color): HBRUSH = CreateSolidBrush(this.cref)
 
 proc clrRefFromRGB(red, green, blue: uint): COLORREF = cast[COLORREF]((blue shl 16) or (green shl 8) or red)
 
+proc makeCREF(r, g, b: float): COLORREF = 
+    cast[COLORREF]((uint(b) shl 16) or (uint(g) shl 8) or uint(r))
+    
+
 proc getHotBrush(this: Color, adj: float): HBRUSH =
     let clrRef = this.getChangedColorRef(adj)
     result = CreateSolidBrush(clrRef)
@@ -45,14 +49,22 @@ proc newFlotColor(clr: Color): FlotColor =
     result.green = float(clr.green)
     result.blue = float(clr.blue)
 
-proc createGradientBrush(dc: HDC, rct: RECT, cl1: Color, cl2: Color, isRtL: bool = false): HBRUSH =
-    var tBrush: HBRUSH
+proc createGradientBrush( this: var GradDraw, dc: HDC, rc: RECT, dmode: GdrawMode) =
+    var gc : GradColor
+    var isDef : bool = true
+    if dmode == gmDefault or dmode == gmClicked:
+        gc = this.gcDef 
+    else:        
+        gc = this.gcHot  
+        isDef = false       
+    
+    let isRtL: bool = false
     var memHDC: HDC = CreateCompatibleDC(dc)
-    var hBmp: HBITMAP = CreateCompatibleBitmap(dc, rct.right, rct.bottom)
-    let loopEnd: int32 = (if isRtL: rct.right else: rct.bottom)
+    var hBmp: HBITMAP = CreateCompatibleBitmap(dc, rc.right, rc.bottom)
+    let loopEnd: int32 = (if isRtL: rc.right else: rc.bottom)
     let flEnd = float(loopEnd)
-    let c1 = newFlotColor(cl1)
-    let c2 = newFlotColor(cl2)
+    let c1 = newFlotColor(gc.c1)
+    let c2 = newFlotColor(gc.c2)
     SelectObject(memHDC, hBmp)
     for i in 0..<loopEnd:
         var tRct: RECT
@@ -60,15 +72,19 @@ proc createGradientBrush(dc: HDC, rct: RECT, cl1: Color, cl2: Color, isRtL: bool
         r = c1.red + float(i) * (c2.red - c1.red) / flEnd
         g = c1.green + float(i) * (c2.green - c1.green) / flEnd
         b = c1.blue + float(i) * (c2.blue - c1.blue) / flEnd
-        tBrush = CreateSolidBrush(clrRefFromRGB(uint(r), uint(g), uint(b)))
+        var tBrush: HBRUSH = CreateSolidBrush(makeCREF(r, g, b))
         tRct.left = (if isRtL: i else: 0)
         tRct.top =  (if isRtL: 0 else: i )
-        tRct.right = (if isRtL: i + 1 else: rct.right)
+        tRct.right = (if isRtL: i + 1 else: rc.right)
         tRct.bottom = (if isRtL: int32(loopEnd) else: int32(i + 1))
         FillRect(memHDC, tRct.unsafeAddr, tBrush)
         DeleteObject(tBrush)
 
-    result = CreatePatternBrush(hBmp)
+    if isDef:
+        this.defBrush =  CreatePatternBrush(hBmp)
+    else:
+        this.hotBrush =  CreatePatternBrush(hBmp)
+
     DeleteObject(hBmp)
     DeleteDC(memHDC)
 
