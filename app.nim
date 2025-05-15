@@ -11,11 +11,11 @@ frm.createHandle(true)
 var ti = newTrayIcon("Nimforms tray icon!", "nficon.ico")
 
 # Now add a context menu to our tray icon.
-ti.addContextMenu(TrayMenuTrigger.tmtAnyClick, "Windows", "|", "Linux", "ReactOS")
+# ti.addContextMenu(TrayMenuTrigger.tmtAnyClick, "Windows", "|", "Linux", "ReactOS")
 
 # Add a click event handler for "Windows" menu.
-let winmenu = ti.contextMenu["Windows"]
-proc onWinmenuClick(c: MenuItem, e: EventArgs) {.handles: winmenu.onClick} = echo "Windows menu selected"
+# let winmenu = ti.contextMenu["Windows"]
+# proc onWinmenuClick(c: MenuItem, e: EventArgs) {.handles: winmenu.onClick} = echo "Windows menu selected"
 
 
 var mbar = frm.addMenubar("Windows", "Linux", "ReactOS")
@@ -33,12 +33,13 @@ btn.onClick = proc(c: Control, e: EventArgs) =
 var btn2 = newButton(frm, "Flat Color", btn->10)
 btn2.backColor = 0x83c5be
 
-btn2.onClick = proc(c: Control, e: EventArgs) = tmr.start() # Button click will start the timer 
+# btn2.onClick = proc(c: Control, e: EventArgs) = tmr.start() # Button click will start the timer 
 
 
 var btn3 = newButton(frm, "Gradient", btn2.right(10))
 btn3.setGradientColor(0xeeef20, 0x70e000)
 
+#----------------------
 var dtp = newDateTimePicker(frm, btn3.right(10))
 dtp.font = newFont("Tahoma", 14)
 dtp.foreColor = 0xe63946
@@ -48,7 +49,7 @@ cmb.addItems("Windows", "MacOS", "Linux", "ReactOS")
 cmb.selectedIndex = 0
 
 var gb = newGroupBox(frm, "GroupBox1", 10, btn>>20, 120, 150)
-# gb.backColor = 0xa8dadc
+gb.backColor = 0xa8dadc
 
 var lb = newLabel(frm, "Static Text", 20, gb.ypos + 30)
 lb.foreColor = 0x7b2cbf
@@ -62,8 +63,7 @@ lv.addRow("Win8", "Debian:", "Catalina")
 lv.addRow("Win10", "Fedora", " Big Sur")
 lv.addRow("Win11", "Ubuntu", "Monterey")
 
-var cmenu = lv.setContextMenu("Windows NT", "Linux", "|", "ReactOS")
-# lv.contextMenu.addSubMenu("Windows NT", "Windows 11000")
+
 
 var np = newNumberPicker(frm, 20, lb.bottom(40))
 np.decimalDigits = 2
@@ -92,18 +92,6 @@ tv.addTreeNodeWithChilds("Linux", "openSUSE Leap 15.3", "Debian 11", "Fedora 35"
 tv.addTreeNodeWithChilds("MacOS", "Mojave (10.14)", "Catalina (10.15)", " Big Sur (11.0)", "Monterey (12.0)")
 
 
-# var n1 = tv.addNode("Windows")
-# var n2 = tv.addNode("Linux")
-# tv.addChildNode("Win 7", n1) C:\Compilers\nim-2.0.0\dist\mingw64\bin\gcc.exe
-# tv.addChildNode("Uduntu", n2)
-# var w8 = newTreeNode("Win 8")
-# tv.nodes[0].addChildNode(w8)
-# w8.addChildNode("Win 8.1")
-
-
-# pb.showPercentage = true
-# pb.createHandle()
-
 var cal = newCalendar(frm, cmb.right(10), 10)
 
 
@@ -111,21 +99,16 @@ var cal = newCalendar(frm, cmb.right(10), 10)
 proc onTrackChange(c: Control, e: EventArgs) {.handles:tkb.onValueChanged.} =
     pgb.value = tkb.value
 
-# btn.onClick = btnClick
 
 proc flatBtnClick(c: Control, e: EventArgs) =
     # frm.backColor= 0xe63946
     frm.setGradientBackColor(0xe85d04, 0xffba08)
 btn2.onClick = flatBtnClick
 
-# var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
-let aw = cmenu["Windows NT"]
+var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
+let aw = cmenu["Add Work"]
 
 proc addWork(m: MenuItem, e: EventArgs) {.handles: aw.onClick} = echo "Add Work menu clicked"
-
-
-
-
 
 # echo "Program starts "
 frm.display()

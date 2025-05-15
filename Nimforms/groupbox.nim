@@ -74,22 +74,50 @@ proc createHandle*(this: GroupBox) =
         this.setSubclass(gbWndProc)
         this.setFontInternal()
         # this.doubleBufferFill()
+
+proc resetGdiObjects(this: GroupBox, brpn: bool) =
+    if brpn:
+        if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
+        if this.mPen != nil: DeleteObject(this.mPen)
+        this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
+        this.mPen = CreatePen(PS_SOLID, 2, this.mBackColor.cref)
+    #------------------------------------------------
+    if this.mHdc != nil: DeleteDC(this.mHdc)
+    if this.mBmp != nil: DeleteObject(this.mBmp)    
+    this.mDBFill = true
        
 # Overriding Control's property because, groupBox needs a different treatment
 proc `backColor=`*(this: GroupBox, clr: uint) =
     this.mBackColor = newColor(clr)
-    this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
-    this.mPen = CreatePen(PS_SOLID, 2, this.mBackColor.cref)
-    this.mDBFill = true
+    this.resetGdiObjects(true)
     this.checkRedraw()
 
 proc `text=`*(this: GroupBox, txt: string) =
     this.mText = txt
     this.mWtext.updateBuffer(txt)
     this.mGetWidth = true
-    if this.mIsCreated:
-        SetWindowTextW(this.mHandle, &this.mWtext);
+    if this.mIsCreated: SetWindowTextW(this.mHandle, &this.mWtext)
+    this.checkRedraw()
 
+proc `width=`*(this: GroupBox, value: int32) =
+    this.mWidth = value
+    this.resetGdiObjects(false)
+    if this.mIsCreated: this.ctlSetPos()
+
+proc `height=`*(this: GroupBox, value: int32) =
+    this.mHeight = value
+    this.resetGdiObjects(false)
+    if this.mIsCreated: this.ctlSetPos()
+
+proc `font=`*(this: GroupBox, value: Font) =
+    this.mFont = value 
+    this.mGetWidth = true
+    this.checkRedraw()
+
+proc changeFont*(this: GroupBox, fname: string, fsize: int32, fweight: FontWeight = FontWeight.fwNormal) =
+    var fnt = newFont(fname, fsize, fweight)
+    this.mFont = fnt 
+    this.mGetWidth = true
     this.checkRedraw()
 
 method autoCreate(this: GroupBox) = this.createHandle()
@@ -101,7 +129,7 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         RemoveWindowSubclass(hw, gbWndProc, scID)
         var this = cast[GroupBox](refData)
         if this.mPen != nil: DeleteObject(this.mPen)
-        DeleteObject(this.mHdc)
+        DeleteDC(this.mHdc)
         DeleteObject(this.mBmp)
 
         this.destructor()
@@ -147,21 +175,16 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             GetTextExtentPoint32(hdc, &this.mWtext, this.mWtext.strLen, size.unsafeAddr)
             this.mTextWidth = size.cx + 10
             this.mGetWidth = false  
-
+        #------------------------------
         if this.mDBFill:
             this.mHdc = CreateCompatibleDC(hdc)
             this.mBmp = CreateCompatibleBitmap(hdc, this.mWidth, this.mHeight)
             SelectObject(this.mHdc, this.mBmp)
             FillRect(this.mHdc, &this.mRect, this.mBkBrush)
             this.mDBFill = false
-
+        #------------------------------------
         BitBlt(hdc, 0, 0, this.mWidth, this.mHeight, this.mHdc, 0, 0, SRCCOPY)
         return 1
-        # if this.mDrawMode > 0:
-        #     var rc: RECT
-        #     GetClientRect(hw, rc.unsafeAddr)
-        #     FillRect(cast[HDC](wpm), rc.unsafeAddr, this.mBkBrush)
-        #     return 1
 
     of WM_PAINT:
         var this = cast[GroupBox](refData)
@@ -169,17 +192,6 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         let gfx = newGraphics(hw)
         gfx.drawHLine(this.mPen, 10, 9, this.mTextWidth)
         gfx.drawText(this, 12, 0)
-        # let yp: int32 = 9
-        # var hdc = GetDC(hw)
-        # SelectObject(hdc, this.mPen)
-        # MoveToEx(hdc, 10, yp, nil)
-        # LineTo(hdc, this.mTextWidth, yp)
-
-        # SetBkMode(hdc, 1)
-        # SelectObject(hdc, this.mFont.handle)
-        # SetTextColor(hdc, this.mForeColor.cref)
-        # TextOut(hdc, 10, 0, this.mText.toWcharPtr, int32(this.mText.len))
-        # ReleaseDC(hw, hdc)
         return ret
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)

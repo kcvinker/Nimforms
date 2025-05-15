@@ -55,7 +55,8 @@ var globalSubClassID : UINT_PTR = 1000
 proc getMappedRect(this: Control): RECT
 proc setFontInternal(this: Control)
 proc cmenuDtor(this: ContextMenu)
-
+proc ctlSetPos(this: Control) {.inline.}=
+    SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOZORDER)
 
 # Control class's methods====================================================
 
@@ -83,8 +84,8 @@ proc text*(this: Control): string {.inline.} = return this.mText
 
 proc `width=`*(this: Control, value: int32) {.inline.} =
     this.mWidth = value
-    if this.mIsCreated:
-        SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOZORDER)
+    if this.mIsCreated: this.ctlSetPos()
+        # SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOZORDER)
 
 proc width*(this: Control): int32 {.inline.} = return this.mWidth
 

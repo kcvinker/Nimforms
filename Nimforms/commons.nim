@@ -43,6 +43,7 @@ proc createHandle(this: var Font) # Foreard declaration
 proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
     
 
+# proc updateFont*(this: var Font, src: Font) =
 
 
 proc newFont*(fname: string, fsize: int32, 
@@ -82,6 +83,7 @@ proc createHandle(this: var Font) =
     this.handle = CreateFontIndirectW(lf.unsafeAddr)
 
 proc `=copy`*(dst: var Font, src: Font) =
+    if dst.handle != nil: DeleteObject(dst.handle)
     dst.name = src.name
     dst.size = src.size
     dst.weight = src.weight
@@ -203,15 +205,14 @@ type
     Font1* = object
         name*: string
         size*: int32
-        italics*, underLine*, strikeOut*: bool
         handle: HFONT
 
 
-proc `=copy`(dst: var Font1, src: Font1) =
-    dst.name = src.name
-    dst.size = src.size
-    # dst.weight = src.weight
-    dst.italics = src.italics
-    dst.underLine = src.underLine
-    dst.strikeOut = src.strikeOut
+# proc `=copy`(dst: var Font1, src: Font1) =
+#     dst.name = src.name
+#     dst.size = src.size
+#     # dst.weight = src.weight
+#     dst.italics = src.italics
+#     dst.underLine = src.underLine
+#     dst.strikeOut = src.strikeOut
     # if src.handle != nil : dst.createHandle()
