@@ -130,7 +130,7 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             else:
                 nmcd.rc.right -= 18
             if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
-            DrawTextW(nmcd.hdc, &this.mWtext, this.mWtext.strLen, nmcd.rc.addr, this.mTextStyle)
+            DrawTextW(nmcd.hdc, &this.mWtext, this.mWtext.wcLen, nmcd.rc.addr, this.mTextStyle)
             return CDRF_SKIPDEFAULT
         else: discard
         return 0

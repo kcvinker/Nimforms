@@ -12,6 +12,7 @@ type
     WideString* = object 
         mData : WArrayPtr
         mInputLen: int32 
+        mWcLen: int32
         mBytes: int
         mInputStr: cstring
 

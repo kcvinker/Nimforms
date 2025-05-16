@@ -30,4 +30,4 @@ proc drawText(this: Graphics, pc: Control, x, y: int32) =
     SetBkMode(this.mHdc, 1)
     SelectObject(this.mHdc, pc.mFont.handle)
     SetTextColor(this.mHdc, pc.mForeColor.cref)
-    TextOut(this.mHdc, x, y, pc.mWtext.cptr, pc.mWtext.strLen)
+    TextOut(this.mHdc, x, y, pc.mWtext.cptr, pc.mWtext.wcLen)

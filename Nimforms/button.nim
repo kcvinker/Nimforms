@@ -159,7 +159,7 @@ proc paintFlatBtnRoundRect(dc: HDC, rc: RECT, hbr: HBRUSH, pen: HPEN): LRESULT =
 proc drawTextColor(this: Button, ncd: LPNMCUSTOMDRAW): LRESULT =
     SetTextColor(ncd.hdc, this.mForeColor.cref)
     SetBkMode(ncd.hdc, 1)
-    DrawTextW(ncd.hdc, &this.mWtext, this.mWtext.strLen, ncd.rc.unsafeAddr, this.mTxtFlag )
+    DrawTextW(ncd.hdc, &this.mWtext, this.mWtext.wcLen, ncd.rc.unsafeAddr, this.mTxtFlag )
     return CDRF_NOTIFYPOSTPAINT
 
 # Helper function dealing wm_notify message in a button's wndproc.

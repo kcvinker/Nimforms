@@ -60,7 +60,7 @@ proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
 #     var hdc : HDC = GetDC(this.mHandle)
 #     var size : SIZE
 #     SelectObject(hdc, this.mFont.handle)
-#     GetTextExtentPoint32(hdc, &this.mWtext, this.mWtext.strLen, size.unsafeAddr)
+#     GetTextExtentPoint32(hdc, &this.mWtext, this.mWtext.wcLen, size.unsafeAddr)
 #     ReleaseDC(this.mHandle, hdc)
 #     this.mTextWidth = size.cx + 10
 
@@ -172,7 +172,7 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         if this.mGetWidth:
             var size : SIZE
             SelectObject(hdc, this.mFont.handle)
-            GetTextExtentPoint32(hdc, &this.mWtext, this.mWtext.strLen, size.unsafeAddr)
+            GetTextExtentPoint32(hdc, &this.mWtext, this.mWtext.wcLen, size.unsafeAddr)
             this.mTextWidth = size.cx + 10
             this.mGetWidth = false  
         #------------------------------
