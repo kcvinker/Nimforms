@@ -64,32 +64,13 @@ let frmClsName : array[16, uint16] = [0x4E, 0x69, 0x6D, 0x66, 0x6F, 0x72, 0x6D, 
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} # forward declaration
 
-# type    # A struct to hold essential information.
-#     AppData = object
-#         appStarted: bool
-#         loopStarted: bool
-#         screenWidth: int32
-#         screenHeight: int32
-#         formCount: int32
-#         mainHwnd: HWND
-#         isDateInit: bool
-#         iccEx: INITCOMMONCONTROLSEX
-#         scaleFactor: cint
 
-# var appData : AppData
 
 proc getSystemDPI() =
     var hdc: HDC = GetDC(nil)
     appdata.sysDPI = GetDeviceCaps(hdc, LOGPIXELSY)
     ReleaseDC(nil, hdc)     
     appdata.scaleF = float(appdata.sysDPI) / 96.0
-
-# proc getForm(k: HWND): Form {.inline.} =
-#     result = nil
-#     for obj in appData.forms:
-#         if obj.key == k: return obj.value
-
-
     
 
 proc registerWinClass(this: Form) =
@@ -221,6 +202,9 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mMinimizeBox = true
     result.mText = (if title == "": "Form_" & $appData.formCount else: title)
 
+# proc setFormFont(this: Form) =
+#     this.mFont.createPrimaryHandle()
+
 
 proc createHandle*(this: Form, create_childs: bool = false) =
     this.setFormStyles()
@@ -236,7 +220,8 @@ proc createHandle*(this: Form, create_childs: bool = false) =
         # appData.forms.add(FormMap(key: this.mHandle, value: this))
         this.mIsCreated = true
         SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
-        this.setFontInternal()
+        # this.setFontInternal()
+        this.mFont.createPrimaryHandle()
         # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
     else:
         echo "window creation error : ", GetLastError()
@@ -302,6 +287,12 @@ proc setGradientBackColor*(this: Form, clr1, clr2 : uint, rtl: bool = false) =
     if this.mIsCreated: InvalidateRect(this.mHandle, nil, 1)
 
 # Properties
+proc `font=`*(this: Form, value: Font) =
+    this.mFont = value
+    this.mAppFont = false
+    this.setUserFont()
+
+
 proc `backColor=`*(this: Form, value: uint) =
     this.mFdMode = fdmFlat
     this.mBackColor = newColor(value)

@@ -87,11 +87,12 @@ proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10,
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    result.mFont = parent.mFont
+    # result.mFont = parent.mFont
     result.mHasFont = true
     result.mHasText = true
     result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
     result.mText = (if txt == "": "Button_" & $btnCount else: txt)
+    result.cloneParentFont()
     result.mWtext = newWideString(result.mText)
     parent.mControls.add(result)
     btnCount += 1

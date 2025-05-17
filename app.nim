@@ -113,4 +113,3 @@ proc addWork(m: MenuItem, e: EventArgs) {.handles: aw.onClick} = echo "Add Work 
 # echo "Program starts "
 frm.display()
 
-

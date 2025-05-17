@@ -73,7 +73,8 @@ proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75,
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    result.mFont = parent.mFont
+    # result.mFont = parent.mFont
+    result.cloneParentFont()
     result.mHasFont = true
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK

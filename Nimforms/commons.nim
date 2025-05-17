@@ -26,97 +26,11 @@ const # These 4 constants are used by ListView
     GWLP_USERDATA = -21
 
 
-# Font related functions
-const
-    LOGPIXELSY = 90
-    DEFAULT_CHARSET = 1
-    OUT_STRING_PRECIS = 1
-    CLIP_DEFAULT_PRECIS = 0
-    DEFAULT_QUALITY = 0
-
 let CLR_WHITE = newColor(0xFFFFFF)
 let CLR_BLACK = newColor(0x000000)
 
-proc createHandle(this: var Font) # Foreard declaration
-
-
-proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
-    
-
-# proc updateFont*(this: var Font, src: Font) =
-
-
-proc newFont*(fname: string, fsize: int32, 
-                fweight: FontWeight = FontWeight.fwNormal,
-                italic: bool = false, underline: bool = false, 
-                strikeout: bool = false, autoc: bool = false) : Font =
-    # new(result)
-    if fname.len > 32 : raise newException(OSError, "Length of font name exceeds 32 characters")
-    result.name = fname
-    result.size = fsize
-    result.weight = fweight
-    result.italics = italic
-    result.underLine = underline
-    result.strikeOut = strikeout
-    result.wtext = newWideString(fname)
-    if autoc: result.createHandle()
-
-proc createHandle(this: var Font) =    
-    let scale = appData.scaleFactor / 100
-    let fsiz = int32(scale * float(this.size))   
-    let iHeight = -MulDiv(fsiz , appData.sysDPI, 72)
-    
-    # var fname = newWideCString(this.name)
-    var lf : LOGFONTW
-    lf.lfItalic = cast[BYTE](this.italics)
-    lf.lfUnderline = cast[BYTE](this.underLine)
-    for i in 0..this.wtext.mBytes:
-        lf.lfFaceName[i] = this.wtext.mData[i]
-
-    lf.lfHeight = iHeight
-    lf.lfWeight = cast[LONG](this.weight)
-    lf.lfCharSet = cast[BYTE](DEFAULT_CHARSET)
-    lf.lfOutPrecision = cast[BYTE](OUT_STRING_PRECIS)
-    lf.lfClipPrecision = cast[BYTE](CLIP_DEFAULT_PRECIS)
-    lf.lfQuality = cast[BYTE](DEFAULT_QUALITY)
-    lf.lfPitchAndFamily = 1
-    this.handle = CreateFontIndirectW(lf.unsafeAddr)
-
-proc `=copy`*(dst: var Font, src: Font) =
-    if dst.handle != nil: DeleteObject(dst.handle)
-    dst.name = src.name
-    dst.size = src.size
-    dst.weight = src.weight
-    dst.italics = src.italics
-    dst.underLine = src.underLine
-    dst.strikeOut = src.strikeOut
-    if dst.wtext.mBytes >= src.wtext.mBytes:
-        dst.wtext.copyFrom(src.wtext)
-    else:
-        dst.wtext.initWideString(src.wtext)
-    if src.handle != nil: 
-        # echo "going to create my own font handle"
-        dst.createHandle()
-
-
-# proc cloneFrom*(this: var Font, rhs: Font) =
-#     this.name = rhs.name
-#     this.size = rhs.size
-#     this.weight = rhs.weight
-#     this.italics = rhs.italics
-#     this.underLine = rhs.underLine
-#     this.strikeOut = rhs.strikeOut
-#     if rhs.handle != nil : this.createHandle()
-
-proc finalize(this: var Font) =
-    this.wtext.finalize()
-    if this.handle != nil:
-        # echo "Deleting my font handle"
-        DeleteObject(this.handle)
-
-# End of Font related area
-
 proc u16_to_i16(value: uint16): int16 = cast[int16]((value and 0xFFFF))
+proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
 
 # Some control needs to extract mouse position from lparam value.
 proc getMousePos(pt: ptr POINT, lpm: LPARAM) =

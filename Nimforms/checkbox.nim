@@ -36,11 +36,11 @@ proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
     result.mHeight = h
     result.mText = text
     result.mWtext = newWideString(result.mText)
-    result.mFont = parent.mFont
+    # result.mFont = parent.mFont
     result.mHasFont = true
     result.mHasText = true
     result.mBackColor = parent.mBackColor
-    # result.mWideText = text.toLPWSTR()
+    result.cloneParentFont()
     result.mAutoSize = true
     result.mForeColor = CLR_BLACK
     result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX

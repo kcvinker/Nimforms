@@ -163,7 +163,8 @@ proc listViewCtor(parent: Form, x, y, w, h: int32): ListView =
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    result.mFont = parent.mFont
+    # result.mFont = parent.mFont
+    result.cloneParentFont()
     result.mHasFont = true
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK

@@ -36,7 +36,7 @@ type
         weight*: FontWeight
         italics*, underLine*, strikeOut*: bool
         handle: HFONT
-        wtext: WideString
+        # wtext: WideString
 
     TextAlignment* {.pure.} = enum
         taLeft, taCenter, taRight
@@ -167,13 +167,13 @@ type
         mFormState: WindowState
         mFdMode: FormDrawMode
         mMaximizeBox, mMinimizeBox, mTopMost, mIsLoaded: bool
-        mIsMouseTracking, mCreateChilds: bool
+        mIsMouseTracking, mCreateChilds, mIsMenuUsed: bool
+        mAppFont : bool = true
         mMenuGrayBrush, mMenuDefBgBrush, mMenuHotBgBrush, mMenuFrameBrush : HBRUSH
         # mMenuFont : Font
         mMenuGrayCref : COLORREF
         mGrad : FormGrad
         mMenubar: MenuBar
-        mIsMenuUsed: bool
         mMenuItemDict : Table[uint32, MenuItem]
         mComboData: Table[HWND, HWND]
         mControls: seq[Control]
@@ -545,6 +545,7 @@ type
         hInstance: HINSTANCE
         isDateInit: bool
         iccEx: INITCOMMONCONTROLSEX
+        logfont: LOGFONTW
         scaleFactor: cint
         sysDPI: int32
         scaleF: float

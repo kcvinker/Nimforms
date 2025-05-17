@@ -108,7 +108,8 @@ proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h:
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    result.mFont = parent.mFont
+    # result.mFont = parent.mFont
+    result.cloneParentFont()
     result.mHasFont = true
     result.mSelIndex = -1
     result.mBackColor = CLR_WHITE

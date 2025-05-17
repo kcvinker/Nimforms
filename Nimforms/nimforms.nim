@@ -7,6 +7,7 @@ include typemodule
 include colors
 include widestring
 include graphics
+include font
 include commons # 'menu.nim' is included in this file.
 include events
 include controls # contextmenu.nim is included in this file.

@@ -168,7 +168,8 @@ proc treeViewCtor(parent: Form, x, y, w, h: int32): TreeView =
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    result.mFont = parent.mFont
+    # result.mFont = parent.mFont
+    result.cloneParentFont()
     result.mHasFont = true
     result.mStyle = TVSTYLE
     result.mExStyle = 0

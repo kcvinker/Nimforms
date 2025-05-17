@@ -32,7 +32,8 @@ proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w
     result.mWidth = w
     result.mHeight = h
     result.mText = text
-    result.mFont = parent.mFont
+    # result.mFont = parent.mFont
+    result.cloneParentFont()
     result.mHasFont = true
     result.mBackColor = parent.mBackColor
     result.mWideText = text.toLPWSTR()

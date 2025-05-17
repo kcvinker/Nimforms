@@ -53,12 +53,23 @@ var globalSubClassID : UINT_PTR = 1000
 
 #===================Forward Declarations===================================
 proc getMappedRect(this: Control): RECT
-proc setFontInternal(this: Control)
+proc setFontInternal(this: Control) {.inline.}
 proc cmenuDtor(this: ContextMenu)
 proc ctlSetPos(this: Control) {.inline.}=
     SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOZORDER)
 
 # Control class's methods====================================================
+proc cloneParentFont*(this: Control) =
+    this.mFont.name = this.mParent.mFont.name
+    this.mFont.size = this.mParent.mFont.size
+    this.mFont.weight = this.mParent.mFont.weight
+    this.mFont.italics = this.mParent.mFont.italics
+    this.mFont.underLine = this.mParent.mFont.underLine
+    this.mFont.strikeOut = this.mParent.mFont.strikeOut   
+    this.mFont.cloneParentFontHandle(nil)
+    
+
+
 
 proc right*(this: Control, value: int32): int32 = this.getMappedRect().right + value
 proc bottom*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
@@ -175,10 +186,18 @@ proc destructor(this: Control) =
 proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
     return SendMessageW(this.mHandle, msg, cast[WPARAM](wpm), cast[LPARAM](lpm))
 
-proc setFontInternal(this: Control) =
-    if this.mIsCreated:
-        if this.mFont.handle == nil: this.mFont.createHandle()
+proc setFontInternal(this: Control) {.inline.} =
+    if this.mIsCreated: 
         this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
+
+
+proc setUserFont(this: Control) {.inline.} =
+    if this.mFont.handle == nil:
+        this.mFont.createHandle()
+    if this.mIsCreated: 
+        this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
+        
+
 
 proc checkRedraw(this: Control) =
     if this.mIsCreated: InvalidateRect(this.mHandle, nil, 0)

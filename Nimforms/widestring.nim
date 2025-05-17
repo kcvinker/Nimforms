@@ -33,6 +33,12 @@ proc updateBuffer(this: var WideString, txt: string) =
         this.mWcLen = slen
         this.mData[slen] = cast[WCHAR](0)
 
+proc fillBuffer*(this: typedesc[WideString], buffer: ptr Utf16Char, txt: string) =
+    let inpstr = txt.cstring
+    let inplen = int32(len(txt))
+    let slen = MultiByteToWideChar(CP_UTF8, 0, inpstr[0].addr, inplen, nil, 0)
+    if slen > 0:
+        let x = MultiByteToWideChar(CP_UTF8, 0, inpstr[0].addr, inplen, buffer, slen)
 
 proc fillWstring(buffer: LPWSTR, txt: string) =
     let inpstr = txt.cstring
