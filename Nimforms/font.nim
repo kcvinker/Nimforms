@@ -22,7 +22,7 @@ proc newFont*(fname: string, fsize: int32,
                 italic: bool = false, underline: bool = false, 
                 strikeout: bool = false, autoc: bool = false) : Font =
     # new(result)
-    if fname.len > 32 : raise newException(OSError, "Length of font name exceeds 32 characters")
+    if fname.len > 31 : raise newException(OSError, "Length of font name exceeds 31 characters")
     result.name = fname
     result.size = fsize
     result.weight = fweight
@@ -36,15 +36,10 @@ proc createHandle(this: var Font) =
     let scale = appData.scaleFactor / 100
     let fsiz = int32(scale * float(this.size))   
     let iHeight = -MulDiv(fsiz , appData.sysDPI, 72)
-
     var lf : LOGFONTW
     WideString.fillBuffer(lf.lfFaceName[0].addr, this.name)
     lf.lfItalic = cast[BYTE](this.italics)
     lf.lfUnderline = cast[BYTE](this.underLine)
-
-    # for i in 0..this.wtext.mBytes:
-    #     lf.lfFaceName[i] = this.wtext.mData[i]
-
     lf.lfHeight = iHeight
     lf.lfWeight = cast[LONG](this.weight)
     lf.lfCharSet = cast[BYTE](DEFAULT_CHARSET)
@@ -55,13 +50,16 @@ proc createHandle(this: var Font) =
     this.handle = CreateFontIndirectW(lf.unsafeAddr)
 
 proc createPrimaryHandle(this: var Font) =
-    let scale = appData.scaleFactor / 100
-    let fsiz = int32(scale * float(this.size))   
-    let iHeight = -MulDiv(fsiz , appData.sysDPI, 72)
+    # echo "sf ", appData.scaleFactor
+    # let scale = int32(appData.scaleFactor / 100)
+    # let fsiz = scale * this.size   
+    # let iHeight1 = cast[float](-MulDiv(fsiz , appData.sysDPI, 72))
+    let iHeight = -16 # iHeight1 #* appData.scaleF
+    # echo "fsiz 2 - ", fsiz
     WideString.fillBuffer(appData.logfont.lfFaceName[0].addr, this.name)
     appData.logfont.lfItalic = cast[BYTE](this.italics)
     appData.logfont.lfUnderline = cast[BYTE](this.underLine)
-    appData.logfont.lfHeight = iHeight
+    appData.logfont.lfHeight = int32(iHeight) 
     appData.logfont.lfWeight = cast[LONG](this.weight)
     appData.logfont.lfCharSet = cast[BYTE](DEFAULT_CHARSET)
     appData.logfont.lfOutPrecision = cast[BYTE](OUT_STRING_PRECIS)
@@ -69,6 +67,7 @@ proc createPrimaryHandle(this: var Font) =
     appData.logfont.lfQuality = cast[BYTE](DEFAULT_QUALITY)
     appData.logfont.lfPitchAndFamily = 1
     this.handle = CreateFontIndirectW(appData.logfont.unsafeAddr)
+    echo "font height ", iHeight, ", sys dpi ", appData.sysDPI
 
 proc cloneParentFontHandle(this: var Font, parentHandle: HFONT) =
     if parentHandle == nil:
@@ -77,6 +76,7 @@ proc cloneParentFontHandle(this: var Font, parentHandle: HFONT) =
         var lf : LOGFONTW
         let x = GetObjectW(parentHandle, cast[int32](sizeof(lf)), cast[LPVOID](lf.addr))
         if x > 0 :
+            if this.handle != nil: DeleteObject(this.handle)
             this.handle = CreateFontIndirectW(lf.addr)
 
 proc `=copy`*(dst: var Font, src: Font) =
@@ -90,6 +90,7 @@ proc `=copy`*(dst: var Font, src: Font) =
     var lf : LOGFONTW
     let x = GetObjectW(src.handle, cast[int32](sizeof(lf)), cast[LPVOID](lf.addr))
     if x > 0: dst.handle = CreateFontIndirectW(lf.addr)
+    echo "dst name ", dst.name
     
     
         
@@ -103,3 +104,4 @@ proc finalize(this: var Font) =
         DeleteObject(this.handle)
 
 # End of Font related area
+

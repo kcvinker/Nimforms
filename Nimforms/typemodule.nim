@@ -268,14 +268,20 @@ type
         onValueChanged*, onCalendarOpened*, onCalendarClosed*: EventHandler
         onTextChanged*: DateTimeEventHandler
 
+    GroupBoxStyle* {.pure.} = enum 
+        gbsSystem, gbsClassic, gbsOverride
+
     GroupBox* = ref object of Control
         mTextWidth: int32
         mDBFill: bool
         mGetWidth: bool
+        mThemeOff: bool
         mPen: HPEN
         mRect: RECT
         mHdc: HDC
         mBmp: HBITMAP
+        mGBStyle: GroupBoxStyle
+        mControls: seq[Control]
 
     LabelBorder* {.pure.} = enum
         lbNone, lbSingle, lbSunken
@@ -557,5 +563,7 @@ proc appFinalize(this: AppData) =
     if this.trayHwnd != nil: DestroyWindow(this.trayHwnd)
     echo "Nimforms is exiting..."
 
-
+var ewca : array[1, WCHAR] # Empty Wchar Array
+ewca[0] = cast[WCHAR](0)
+let emptyWStrPtr = ewca[0].unsafeAddr
 

@@ -30,6 +30,7 @@ type
     wstring* = seq[WCHAR]
     HANDLE* = pointer
     HWND* = HANDLE
+    HTHEME = HANDLE
     HBITMAP* = HANDLE
     HFONT* = HANDLE
     HDC* = HANDLE
@@ -83,6 +84,7 @@ type
                             uIdSubclass: UINT_PTR, dwRefData: DWORD_PTR): LRESULT {.stdcall.}
 
     TIMERPROC = proc (hWnd: HWND, uID: UINT, uIDp: UINT_PTR, dw: DWORD) {.stdcall.}
+    DTT_CALLBACK_PROC = proc(lParam: LPARAM) {.stdcall.}
 
 # This macro takes a dll name and a bool to use 'discardable' pragma.
 macro dll(lib: static string, disc: static bool, x: untyped): untyped =
@@ -323,6 +325,17 @@ type
         right: LONG
         bottom: LONG
     LPRECT = ptr RECT
+
+    PAINTSTRUCT {.pure.} = object
+        hdc: HDC
+        fErase: BOOL
+        rcPaint: RECT
+        fRestore: BOOL
+        fIncUpdate: BOOL
+        rgbReserved: array[32, BYTE]
+
+    LPPAINTSTRUCT = ptr PAINTSTRUCT
+
 
     LOGFONTW {.pure.} = object
         lfHeight: LONG
@@ -707,6 +720,25 @@ type
         
     LPNOTIFYICONDATA = ptr NOTIFYICONDATA
 
+    DTTOPTS {.pure.} = object
+        dwSize*: DWORD
+        dwFlags*: DWORD
+        crText*: COLORREF
+        crBorder*: COLORREF
+        crShadow*: COLORREF
+        iTextShadowType*: int32
+        ptShadowOffset*: POINT
+        iBorderSize*: int32
+        iFontPropId*: int32
+        iColorPropId*: int32
+        iStateId*: int32
+        fApplyOverlay*: BOOL
+        iGlowSize*: int32
+        pfnDrawTextCallback*: DTT_CALLBACK_PROC
+        lParam*: LPARAM
+
+    LPDTTOPTS = ptr DTTOPTS
+
 
 
 # Kernel32 functions 
@@ -787,6 +819,9 @@ proc MapWindowPoints(hwndFrom: HWND, hwndTo: HWND, lpnt: LPPOINT, cpnt: UINT): I
 proc SetTimer(hwnd: HWND, nID: UINT_PTR, uEla: UINT, lpfn: TIMERPROC): UINT_PTR {.dll("user32", true).}
 proc KillTimer(hwnd: HWND, nID: UINT_PTR): BOOL {.dll("user32", true).}
 proc SetForegroundWindow(hwnd: HWND): BOOL {.dll("user32", true).}
+proc GetDpiForWindow(hwnd: HWND): UINT {.dll("user32", true).}
+proc BeginPaint(hwnd: HWND, lpPaint: LPPAINTSTRUCT): HDC {.dll("user32", true).}
+proc EndPaint(hwnd: HWND, lpPaint: LPPAINTSTRUCT): BOOL {.dll("user32", true).}
 # End of User32---------------------------------------------------------------------------------------------
 
 # Gdi32 functions {.dll("gdi32", true).}
@@ -829,6 +864,12 @@ proc wcslen(pstr: LPCWSTR) : csize_t {.cdecl, header: "<wchar.h>",importc.}
 proc sprintf(dest: cstring; format: cstring): cint {.importc, varargs, header: "stdio.h", discardable.}
 proc GetScaleFactorForDevice(disp: cint): cint {.importc, dynlib: "Shcore.dll".}
 proc Shell_NotifyIconW(dwMsg: DWORD, pNotify: LPNOTIFYICONDATA) : BOOL {.dll("shell32", true)}
+proc SetWindowTheme(hwnd: HWND, app, idList: LPCWSTR) : HRESULT {.dll("UxTheme", true)}
+proc OpenThemeData(hwnd: HWND, class: LPCWSTR) : HTHEME {.dll("UxTheme", true)}
+proc CloseThemeData(htheme: HTHEME) : HRESULT {.dll("UxTheme", true)}
+proc DrawThemeTextEx(htheme: HTHEME, hdc: HDC, pid, sid: int32, txt: LPCWSTR, 
+                        tc: int32, tflag: DWORD, prc: LPRECT, opts: LPDTTOPTS ) : HRESULT {.dll("UxTheme", true)}
+
 # End of Misc dll funcs------------------------------------------------------------------------------
 
 # COM functions

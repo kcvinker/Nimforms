@@ -19,10 +19,10 @@ const
     SS_NOTIFY = 0x00000100
     SS_SUNKEN = 0x00001000
     SWP_NOMOVE = 0x0002
-
+    SIZE_FLAG = SWP_NOMOVE #or SWP_NOZORDER #or SWP_NOACTIVATE
 var lbCount = 1
 # let lbClsName = toWcharPtr("Static")
-let lbClsName : array[8, uint16] = [0x53, 0x74, 0x61, 0x74, 0x69, 0x63, 0x6B, 0]
+let lbClsName : array[7, uint16] = [0x53, 0x74, 0x61, 0x74, 0x69, 0x63, 0]
 
 
 # Forward declaration
@@ -60,25 +60,30 @@ proc setLbStyle(this: Label) =
     if this.mMultiLine or this.mWidth > 0 or this.mHeight > 0: this.mAutoSize = false
     this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
 
+
 proc setAutoSize(this: Label, redraw: bool) =
     var hdc: HDC = GetDC(this.mHandle)
     var ss : SIZE
     SelectObject(hdc, this.mFont.handle)
     GetTextExtentPoint32(hdc, this.mText.toWcharPtr, int32(this.mText.len), ss.unsafeAddr)
     ReleaseDC(this.mHandle, hdc)
-    this.mWidth = ss.cx + 3
+    this.mWidth = ss.cx #+ 5
     this.mHeight = ss.cy
-    SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOMOVE)
+    SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SIZE_FLAG) #SWP_NOMOVE)
     if redraw: InvalidateRect(this.mHandle, nil, 1)
+    # echo "After autosize x : ", this.mXpos, ", y: ", this.mYpos #this.mXpos, this.mYpos
+    
 
 # Create Label's hwnd
 proc createHandle*(this: Label) =
     this.setLbStyle()
     this.createHandleInternal()
     if this.mHandle != nil:
+        echo "lb mh"
         this.setSubclass(lbWndProc)
         this.setFontInternal()
         if this.mAutoSize: this.setAutoSize(false)
+        echo "lbl hwnd ", cast[int](this.mHandle)
 
 method autoCreate(this: Label) = this.createHandle()
 
@@ -129,6 +134,8 @@ proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
     of MM_LABEL_COLOR:
         var this = cast[Label](refData)
+        echo "MMLABEL Color"
+        this.printControlRect()
         let hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
         SetBkColor(hdc, this.mBackColor.cref)

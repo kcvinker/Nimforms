@@ -160,6 +160,11 @@ proc getMappedRect(this: Control): RECT =
     MapWindowPoints(fhwnd, this.mParent.handle, cast[LPPOINT](rct.unsafeAddr), 2)
     result = rct
 
+proc printControlRect*(this: Control) =
+    var rct : RECT
+    GetClientRect(this.mHandle, rct.unsafeAddr)
+    echo "left: ", rct.left, ", top: ", rct.top, ", right: ", rct.right, ", bottom: ", rct.bottom
+
 proc mapParentPoints(this: Control) : RECT =
     var
         rc : RECT
@@ -282,6 +287,8 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
         # echo "creation finished ", this.mKind
         this.mIsCreated = true
         # this.setControlRect()
+    else:
+        echo "Error in creation of ", this.mKind, ", Err.No - ", GetLastError()
 
 # Only used CheckBox & RadioButton
 proc setIdealSize(this: Control) =

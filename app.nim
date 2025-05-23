@@ -52,7 +52,9 @@ var gb = newGroupBox(frm, "GroupBox1", 10, btn>>20, 120, 150)
 gb.backColor = 0xa8dadc
 
 var lb = newLabel(frm, "Static Text", 20, gb.ypos + 30)
-lb.foreColor = 0x7b2cbf
+lb.printControlRect()
+# lb.foreColor = 0x7b2cbf
+gb.addControls(lb)
 
 var lbx = newListBox(frm, gb.right(20), btn.bottom(20))
 lbx.addItems("Windows", "Linux", "MacOS", "ReactOS")
@@ -73,7 +75,12 @@ var np2 = newNumberPicker(frm, 20, np.bottom(10))
 np2.buttonLeft = true
 np2.backColor = 0xffbf69
 
-var gb2 = newGroupBox(frm, "Compiler Options", 10, gb.bottom(20), 180, 170)
+var gb2 = newGroupBox(frm, "Compiler Options", 10, gb.bottom(20), 180, 170, GroupBoxStyle.gbsOverride)
+# gb2.style = GroupBoxStyle.gbsOverride
+gb2.foreColor = 0xd90429
+
+gb2.changeFont("Trebuchet MS", 12)
+
 var cb = newCheckBox(frm, "Threads On", gb2.xpos + 20, gb2.ypos + 40)
 var cb2 = newCheckBox(frm, "Hints off", gb2.xpos + 20, cb.bottom(10))
 var rb = newRadioButton(frm, "Consoe App", gb2.xpos + 20, cb2.bottom(10))
@@ -109,6 +116,10 @@ var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
 let aw = cmenu["Add Work"]
 
 proc addWork(m: MenuItem, e: EventArgs) {.handles: aw.onClick} = echo "Add Work menu clicked"
+
+# var lb5 = newLabel(frm, "Testing", 22, 100)
+
+
 
 # echo "Program starts "
 frm.display()

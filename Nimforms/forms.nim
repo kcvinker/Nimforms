@@ -71,6 +71,7 @@ proc getSystemDPI() =
     appdata.sysDPI = GetDeviceCaps(hdc, LOGPIXELSY)
     ReleaseDC(nil, hdc)     
     appdata.scaleF = float(appdata.sysDPI) / 96.0
+    echo "scalf ", appData.scaleF
     
 
 proc registerWinClass(this: Form) =
@@ -80,6 +81,7 @@ proc registerWinClass(this: Form) =
     appData.scaleFactor = GetScaleFactorForDevice(0)
     appData.hInstance = GetModuleHandleW(nil)
     this.hInstance = appData.hInstance
+    
     getSystemDPI()
 
     this.mClassName = cast[LPCWSTR](frmClsName[0].addr) #toWcharPtr("Nimforms_Window")
@@ -217,12 +219,14 @@ proc createHandle*(this: Form, create_childs: bool = false) =
                                     this.mWidth, this.mHeight,
                                     nil, nil, this.hInstance, nil)
     if this.mHandle != nil:
+        appData.sysDPI = cast[int32](GetDpiForWindow(this.mHandle))
         # appData.forms.add(FormMap(key: this.mHandle, value: this))
         this.mIsCreated = true
         SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
         # this.setFontInternal()
         this.mFont.createPrimaryHandle()
         # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
+        echo "GetDpiForWindows ", GetDpiForWindow(this.mHandle)
     else:
         echo "window creation error : ", GetLastError()
     
