@@ -79,11 +79,11 @@ proc createHandle*(this: Label) =
     this.setLbStyle()
     this.createHandleInternal()
     if this.mHandle != nil:
-        echo "lb mh"
+        # echo "lb mh"
         this.setSubclass(lbWndProc)
         this.setFontInternal()
         if this.mAutoSize: this.setAutoSize(false)
-        echo "lbl hwnd ", cast[int](this.mHandle)
+        # echo "lbl hwnd ", cast[int](this.mHandle)
 
 method autoCreate(this: Label) = this.createHandle()
 
@@ -134,8 +134,8 @@ proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
     of MM_LABEL_COLOR:
         var this = cast[Label](refData)
-        echo "MMLABEL Color"
-        this.printControlRect()
+        # echo "MMLABEL Color"
+        # this.printControlRect()
         let hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
         SetBkColor(hdc, this.mBackColor.cref)

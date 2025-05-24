@@ -109,6 +109,19 @@ proc `backColor=`*(this: GroupBox, clr: uint) =
     this.resetGdiObjects(true)
     this.checkRedraw()
 
+proc setforeColor*(this: GroupBox, value: uint, style: GroupBoxStyle = GroupBoxStyle.gbsClassic) =
+    this.mForeColor = newColor(value)
+    this.mGBStyle = style
+    if this.mGBStyle == GroupBoxStyle.gbsClassic:
+        if not this.mThemeOff:
+            SetWindowTheme(this.mHandle, emptyWStrPtr, emptyWStrPtr)
+            this.mThemeOff = true
+        #-----------------		
+    if this.mGBStyle == GroupBoxStyle.gbsOverride:
+        this.mGetWidth = true
+        if this.mPen == nil: this.mPen = CreatePen(PS_SOLID, penwidth, this.mBackColor.cref)
+    #------------------------
+    this.checkRedraw()
 
 
 proc `text=`*(this: GroupBox, txt: string) =
@@ -139,7 +152,7 @@ proc `style=`*(this: GroupBox, value: GroupBoxStyle) =
     this.mGBStyle = value
     if value == GroupBoxStyle.gbsClassic:
         if not this.mThemeOff:
-            this.mGBStyle = GroupBoxStyle.gbsClassic
+            # this.mGBStyle = GroupBoxStyle.gbsClassic
             SetWindowTheme(this.mHandle, emptyWStrPtr, emptyWStrPtr)
             this.mThemeOff = true
         #--------------------------------

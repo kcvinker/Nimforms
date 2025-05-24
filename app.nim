@@ -75,9 +75,9 @@ var np2 = newNumberPicker(frm, 20, np.bottom(10))
 np2.buttonLeft = true
 np2.backColor = 0xffbf69
 
-var gb2 = newGroupBox(frm, "Compiler Options", 10, gb.bottom(20), 180, 170, GroupBoxStyle.gbsOverride)
+var gb2 = newGroupBox(frm, "Compiler Options", 10, gb.bottom(20), 180, 170) #, GroupBoxStyle.gbsOverride)
 # gb2.style = GroupBoxStyle.gbsOverride
-gb2.foreColor = 0xd90429
+gb2.setForeColor(0xd90429)
 
 gb2.changeFont("Trebuchet MS", 12)
 
