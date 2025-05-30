@@ -48,6 +48,7 @@ proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: i
     result.mWtext = newWideString(text)
     result.cloneParentFont()
     result.mHasFont = true
+    result.mHasText = true
     result.mDBFill = true
     result.mGetWidth = true
     result.mBackColor = parent.mBackColor

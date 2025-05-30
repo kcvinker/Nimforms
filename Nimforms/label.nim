@@ -40,9 +40,10 @@ proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int3
     result.mWidth = w
     result.mHeight = h
     result.mText = text
-    # result.mFont = parent.mFont
+    result.mWtext = newWideString(text)
     result.cloneParentFont()
     result.mHasFont = true
+    result.mHasText = true
     result.mBackColor = parent.mBackColor
     result.mForeColor = CLR_BLACK
     result.mAutoSize = true

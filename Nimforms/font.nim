@@ -90,7 +90,7 @@ proc `=copy`*(dst: var Font, src: Font) =
     var lf : LOGFONTW
     let x = GetObjectW(src.handle, cast[int32](sizeof(lf)), cast[LPVOID](lf.addr))
     if x > 0: dst.handle = CreateFontIndirectW(lf.addr)
-    echo "dst name ", dst.name
+    # echo "dst name ", dst.name
     
     
         

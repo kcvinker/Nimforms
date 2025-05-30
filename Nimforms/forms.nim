@@ -80,7 +80,9 @@ proc registerWinClass(this: Form) =
     appData.screenHeight = GetSystemMetrics(1)
     appData.scaleFactor = GetScaleFactorForDevice(0)
     appData.hInstance = GetModuleHandleW(nil)
+    appData.sendMsgBuffer = newWideString(64)
     this.hInstance = appData.hInstance
+
     
     getSystemDPI()
 

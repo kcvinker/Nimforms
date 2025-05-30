@@ -151,18 +151,16 @@ proc setLbxStyle(this: ListBox) =
 
 proc manageItems(this: ListBox) =
     for item in this.mItems:
-        this.sendMsg(LB_ADDSTRING, 0, item.toWcharPtr)
+        appData.sendMsgBuffer.updateBuffer(item)
+        this.sendMsg(LB_ADDSTRING, 0, &appData.sendMsgBuffer)
 
     if this.mDummyIndex > -1: this.sendMsg(LB_SETCURSEL, this.mDummyIndex, 0)
 
 proc getItemInternal(this: ListBox, index: int32) : string =
     let iLen = int32(this.sendMsg(LB_GETTEXTLEN, index, 0))
-    var buffer = new_wstring(iLen + 1)
-    this.sendMsg(LB_GETTEXT, index, &buffer)
-    result = buffer.toString
-    
-    
-
+    appData.sendMsgBuffer.ensureSize(iLen + 1)
+    this.sendMsg(LB_GETTEXT, index, &appData.sendMsgBuffer)
+    result = appData.sendMsgBuffer.toStr
 
 
 # Create ListBox's hwnd
@@ -181,7 +179,8 @@ proc indexOf*(this: ListBox, item: auto): int32 {.inline.} =
     result = -1
     if this.mIsCreated:
         let sitem : string = (if item is string: item else: $item)
-        result = int32(this.sendMsg(LB_FINDSTRINGEXACT, -1, sitem.toWcharPtr))
+        appData.sendMsgBuffer.updateBuffer(sitem)
+        result = int32(this.sendMsg(LB_FINDSTRINGEXACT, -1, &appData.sendMsgBuffer))
 
 proc selectAll*(this: ListBox) =
     if this.mIsCreated and this.mMultiSel: this.sendMsg(LB_SETSEL, 1, -1)
@@ -195,24 +194,29 @@ proc clearSelection*(this: ListBox) =
 
 proc addItem*(this: ListBox, item: auto) =
     let sitem : string = (if item is string: item else: $item)
-    if this.mIsCreated: this.sendMsg(LB_ADDSTRING, 0, sitem.toWcharPtr)
+    appData.sendMsgBuffer.updateBuffer(sitem)
+    if this.mIsCreated: this.sendMsg(LB_ADDSTRING, 0, &appData.sendMsgBuffer)
     this.mItems.add(sitem)
 
 proc addItems*(this: ListBox, args: varargs[string, `$`]) =
     for item in args:
-        if this.mIsCreated: this.sendMsg(LB_ADDSTRING, 0, item.toWcharPtr)
+        if this.mIsCreated: 
+            appData.sendMsgBuffer.updateBuffer(item)
+            this.sendMsg(LB_ADDSTRING, 0, &appData.sendMsgBuffer)
         this.mItems.add(item)
 
 proc insertItem*(this: ListBox, item: auto, index: int32) =
     if this.mIsCreated:
         let sitem : string = (if item is string: item else: $item)
-        this.sendMsg(LB_INSERTSTRING, index, sitem.toWcharPtr)
+        appData.sendMsgBuffer.updateBuffer(sitem)
+        this.sendMsg(LB_INSERTSTRING, index, &appData.sendMsgBuffer)
         this.mItems.insert(index, sitem)
 
 proc removeItem*(this: ListBox, item: auto) =
     if this.mIsCreated:
         let sitem : string = (if item is string: item else: $item)
-        let index = int32(this.sendMsg(LB_FINDSTRINGEXACT, -1, sitem.toWcharPtr))
+        appData.sendMsgBuffer.updateBuffer(sitem)
+        let index = int32(this.sendMsg(LB_FINDSTRINGEXACT, -1, &appData.sendMsgBuffer))
         if index != LB_ERR:
             this.sendMsg(LB_DELETESTRING, index, 0)
             this.mItems = filter(seq, proc(x: string): bool = x != sitem)
@@ -270,7 +274,8 @@ proc multiSelection*(this: ListBox): bool {.inline.} = this.mMultiSel
 proc `selectedItem=`*(this: ListBox, value: auto) =
     if this.mIsCreated and this.mItems.len > 0:
         let sitem : string = (if value is string: value else: $value)
-        let index = int32(this.sendMsg(LB_FINDSTRINGEXACT, -1, sitem.toWcharPtr))
+        appData.sendMsgBuffer.updateBuffer(sitem)
+        let index = int32(this.sendMsg(LB_FINDSTRINGEXACT, -1, &appData.sendMsgBuffer))
         if index != LB_ERR: this.sendMsg(LB_SETCURSEL, index, 0)
 
 proc selctedItem*(this: ListBox): string =

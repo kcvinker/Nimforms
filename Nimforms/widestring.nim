@@ -12,6 +12,12 @@ template `&`(this: WideString): ptr WCHAR = this.mData[0].addr
 proc strLen(this: WideString): int32 {.inline.} = this.mInputLen
 proc wcLen(this: WideString): int32 {.inline.} = this.mWcLen
 
+proc toStr(this: WideString) : string =
+    let slen = WideCharToMultiByte(CP_UTF8, 0, &this, this.mWcLen, nil, 0, nil, nil )
+    result = newStringOfCap(slen)
+    let x = WideCharToMultiByte(CP_UTF8, 0, &this, this.mWcLen, result[0].addr, slen, nil, nil )
+    
+
 # proc toWstrPtr(txt: string): LPWSTR =
 #     let inpstr = txt.cstring
 #     let slen = MultiByteToWideChar(CP_UTF8, 0, inpstr[0].addr, len(txt), nil, 0)
@@ -64,6 +70,11 @@ proc newWideString*(txt: string): WideString =
         result.convertToUTF16() 
     # echo "New Memory ",  cast[int](result.mData)
 
+proc newWideString*(nChars: int32): WideString =
+    result.mWcLen = nChars
+    result.mBytes = (nChars + 1) * 2   
+    result.mData = cast[WArrayPtr](alloc0(result.mBytes))
+
 
 proc newWideString*(src: WideString): WideString =
     result.mInputStr = src.mInputStr
@@ -88,7 +99,16 @@ proc copyFrom(this: var WideString, src: WideString ) =
     this.mInputLen = src.mInputLen
     copyMem(&this, &src, this.mBytes)
 
-proc finalize(this: var WideString) =
+proc ensureSize(this: var WideString, nChars: int32) =
+    if this.mWcLen <= nChars:
+        dealloc(this.mData)
+        this.mBytes = (nChars + 1) * 2         
+        this.mData = cast[WArrayPtr](alloc0(this.mBytes))
+        this.mWcLen = nChars
+
+
+
+proc finalize*(this: var WideString) =
     # echo "WidesString dtor started, mem ",  cast[int](this.mData)
     if this.mData != nil:
         dealloc(this.mData)

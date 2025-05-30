@@ -275,10 +275,11 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
     if not specialCtl:
         this.mCtlID = globalCtlID
         globalCtlID += 1
+    let txtPtr : LPCWSTR = (if this.mHasText: &this.mWtext else: nil) 
     # echo "creation started ", this.mKind
     this.mHandle = CreateWindowExW( this.mExStyle,
                                     this.mClassName,
-                                    toWcharPtr(this.mText),
+                                    txtPtr,
                                     this.mStyle, this.mXpos, this.mYpos,
                                     this.mWidth, this.mHeight,
                                     this.mParent.mHandle, cast[HMENU](this.mCtlID),

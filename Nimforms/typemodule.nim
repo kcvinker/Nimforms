@@ -12,7 +12,7 @@ type
     WideString* = object 
         mData : WArrayPtr
         mInputLen: int32 
-        mWcLen: int32
+        mWcLen*: int32
         mBytes: int
         mInputStr: cstring
 
@@ -555,13 +555,17 @@ type
         scaleFactor: cint
         sysDPI: int32
         scaleF: float
-        # forms: seq[FormMap]
+        sendMsgBuffer: WideString
+
+proc finalize*(this: var WideString) 
+proc appFinalize(this: var AppData) =
+    if this.trayHwnd != nil: DestroyWindow(this.trayHwnd)
+    this.sendMsgBuffer.finalize()
+    echo "Nimforms is exiting..."
 
 var appData : AppData # Global object to hold some app level info.
 
-proc appFinalize(this: AppData) =
-    if this.trayHwnd != nil: DestroyWindow(this.trayHwnd)
-    echo "Nimforms is exiting..."
+
 
 var ewca : array[1, WCHAR] # Empty Wchar Array
 ewca[0] = cast[WCHAR](0)

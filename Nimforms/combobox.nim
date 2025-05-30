@@ -142,22 +142,23 @@ proc getComboInfo(this: ComboBox) =
         SetWindowSubclass(cmbInfo.hwndItem, cmbEditWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
         globalSubClassID += 1
 
-proc getBiggerLength(this: ComboBox): int = 
+proc getBiggerLength(this: ComboBox): int32 = 
     var biggerItem = this.mitems[0]
     for item in this.mitems:
         if len(item) > len(biggerItem):
             biggerItem = item 
-    result = len(biggerItem)
+    result = int32(len(biggerItem))
 
 proc insertItemsInternal(this: ComboBox) =
     if this.mItems.len > 0:
-        let bytes = (this.getBiggerLength() + 1) * 2
-        var wptr = cast[WArrayPtr](alloc0(bytes))
+        let nChars = this.getBiggerLength()
+        # var wptr = cast[WArrayPtr](alloc0(bytes))
+        appData.sendMsgBuffer.ensureSize(nChars)
         for item in this.mItems: 
-            fillWstring(wptr[0].addr, item)
-            this.sendMsg(CB_ADDSTRING, 0, wptr[0].addr)
+            # fillWstring(wptr[0].addr, item)
+            appData.sendMsgBuffer.updateBuffer(item)
+            this.sendMsg(CB_ADDSTRING, 0, &appData.sendMsgBuffer)
         
-        dealloc(wptr)
     if this.mSelIndex > -1: this.sendMsg(CB_SETCURSEL, this.mSelIndex, 0)
 
 # Create ComboBox's hwnd
@@ -174,19 +175,23 @@ proc createHandle*(this: ComboBox) =
 method autoCreate(this: ComboBox) = this.createHandle()
 
 proc addItem*(this: ComboBox, item: auto) =
-    let sitem : string = (if item is string: item else: $item)
-    if this.mIsCreated: this.sendMsg(CB_ADDSTRING, 0, sitem.toWcharPtr)
+    let sitem : string = (if item is string: item else: $item)    
+    if this.mIsCreated: 
+        appData.sendMsgBuffer.updateBuffer(sitem)
+        this.sendMsg(CB_ADDSTRING, 0, &appData.sendMsgBuffer)
     this.mItems.add(sitem)
 
 proc addItems*(this: ComboBox, args: varargs[string, `$`]) =
     for item in args:
-        if this.mIsCreated: this.sendMsg(CB_ADDSTRING, 0, item.toWcharPtr)
+        if this.mIsCreated: 
+            appData.sendMsgBuffer.updateBuffer(item)
+            this.sendMsg(CB_ADDSTRING, 0, &appData.sendMsgBuffer)
         this.mItems.add(item)
 
 proc removeItem*(this: ComboBox, item: auto) =
     if this.mIsCreated:
         let sitem : string = (if item is string: item else: $item)
-        let index = int32(this.sendMsg(CB_FINDSTRINGEXACT, -1, sitem.toWcharPtr))
+        let index = int32(this.sendMsg(CB_FINDSTRINGEXACT, -1, &appData.sendMsgBuffer))
         if index != CB_ERR:
             this.sendMsg(CB_DELETESTRING, index, 0)
             this.mItems = filter(seq, proc(x: string): bool = x != sitem)
@@ -225,7 +230,8 @@ proc selectedIndex*(this: ComboBox): int32 =
 proc `selctedItem=`*(this: ComboBox, value: auto) =
     if this.mIsCreated and this.mItems.len > 0:
         let sitem : string = (if value is string: value else: $value)
-        let index = int32(this.sendMsg(CB_FINDSTRINGEXACT, -1, sitem.toWcharPtr))
+        appData.sendMsgBuffer.updateBuffer(sitem)
+        let index = int32(this.sendMsg(CB_FINDSTRINGEXACT, -1, &appData.sendMsgBuffer))
         if index != CB_ERR: this.sendMsg(CB_SETCURSEL, index, 0)
 
 proc selctedItem*(this: ComboBox): string =
@@ -233,11 +239,10 @@ proc selctedItem*(this: ComboBox): string =
         this.mSelIndex = int32(this.sendMsg(CB_GETCURSEL, 0, 0))
         if this.mSelIndex != CB_ERR:
             let iLen = int32(this.sendMsg(CB_GETLBTEXTLEN, this.mSelIndex, 0))
-            var buffer = new_wstring(iLen + 1)
-            this.sendMsg(CB_GETLBTEXT, this.mSelIndex, &buffer)
-            result = buffer.toString
-            
-            
+            appData.sendMsgBuffer.ensureSize(iLen + 1)
+            this.sendMsg(CB_GETLBTEXT, this.mSelIndex, &appData.sendMsgBuffer)
+            result = appData.sendMsgBuffer.toStr      
+        #end if
     else:
         result = ""
 

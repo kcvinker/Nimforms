@@ -67,7 +67,7 @@ lv.addRow("Win11", "Ubuntu", "Monterey")
 
 
 
-var np = newNumberPicker(frm, 20, lb.bottom(40))
+var np = newNumberPicker(frm, 20, lb.bottom(20))
 np.decimalDigits = 2
 np.step = 0.5
 
