@@ -88,7 +88,6 @@ proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10,
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    # result.mFont = parent.mFont
     result.cloneParentFont()
     result.mHasFont = true
     result.mBackColor = CLR_WHITE
@@ -145,8 +144,8 @@ proc createHandle*(this: DateTimePicker) =
     this.createHandleInternal()
     if this.mHandle != nil:
         this.setSubclass(dtpWndProc)
-        this.setFontInternal()
         this.setAutoSize()
+        this.setFontInternal()
         var st: SYSTEMTIME
         let res = this.sendMsg(DTM_GETSYSTEMTIME, 0, st.unsafeAddr)
         if res == 0: this.mValue = newDateAndTime(st)

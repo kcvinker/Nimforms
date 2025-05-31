@@ -362,9 +362,11 @@ type
 
     MenuItem* = ref object of MenuBase
         mIsCreated, mIsEnabled, mPopup, mFormMenu : bool
+        mTxtSizeReady: bool
         mId, mIndex : uint32
-        mWideText: LPCWSTR # For drawing make fast
+        mWideText: WideString 
         mBgColor, mFgColor: Color
+        mTxtSize : SIZE
         mParentHandle: HMENU
         mText : string
         mType : MenuType

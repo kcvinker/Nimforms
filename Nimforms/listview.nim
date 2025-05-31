@@ -307,6 +307,7 @@ proc addItemInternal(this: ListView, item: ListViewItem) =
     item.mIndex = this.mRowIndex
     item.mLvHandle = this.mHandle
     item.mColCount = this.mColumns.len
+    appData.sendMsgBuffer.updateBuffer(item.mText)
     var lvi: LVITEMW
     lvi.mask = LVIF_TEXT or LVIF_PARAM or LVIF_STATE
     if item.mImgIndex != -1: lvi.mask = lvi.mask or LVIF_IMAGE
@@ -315,17 +316,18 @@ proc addItemInternal(this: ListView, item: ListViewItem) =
     lvi.iItem = item.mIndex
     lvi.iSubItem = 0
     lvi.iImage = item.mImgIndex
-    lvi.pszText = item.mText.toLPWSTR()
-    lvi.cchTextMax = int32(item.mText.len)
+    lvi.pszText = &appData.sendMsgBuffer #item.mText.toLPWSTR()
+    lvi.cchTextMax = appData.sendMsgBuffer.mWcLen  #int32(item.mText.len)
     lvi.lParam = cast[LPARAM](cast[PVOID](item))
     this.sendMsg(LVM_INSERTITEMW, 0, lvi.unsafeAddr)
     this.mItems.add(item)
     this.mRowIndex += 1
 
 proc addSubItemInternal(this: ListView, subItmTxt: string, itemIndex: int32, subIndx: int32, imgIndex: int32 = -1) =
+    appData.sendMsgBuffer.updateBuffer(subItmTxt)
     var lw: LVITEMW
     lw.iSubItem = subIndx
-    lw.pszText = subItmTxt.toLPWSTR()
+    lw.pszText = &appData.sendMsgBuffer  #.toLPWSTR()
     lw.iImage = imgIndex
     this.sendMsg(LVM_SETITEMTEXTW, itemIndex, lw.unsafeAddr)
     this.mItems[itemIndex].mSubItems.add(subItmTxt)
@@ -464,9 +466,10 @@ proc addRow*(this: ListView, items: varargs[string, `$`]) : ListViewItem {.disca
 
 proc addSubItem*(this: ListViewItem, subitem: auto, subIndx: int32, imgIndex: int32 = -1) =
     let sitem : string = (if subitem is string: subitem else: $subitem)
+    appData.sendMsgBuffer.updateBuffer(sitem)
     var lw: LVITEMW
     lw.iSubItem = subIndx
-    lw.pszText = sitem.toLPWSTR()
+    lw.pszText = &appData.sendMsgBuffer  #.toLPWSTR()
     lw.iImage = imgIndex
     SendMessageW(this.mLvHandle, LVM_SETITEMTEXTW, WPARAM(this.mIndex), cast[LPARAM](lw.unsafeAddr))
     this.mSubItems.add(sitem)
@@ -475,9 +478,10 @@ proc addSubItems*(this: ListViewItem, subitems: varargs[string, `$`]) =
     if (subitems.len + 1) != this.mColCount: raise newException(Exception, "Column count is not matching to sub item count")
     for index, subitem in subitems:
         let sitem : string = (if subitem is string: subitem else: $subitem)
+        appData.sendMsgBuffer.updateBuffer(sitem)
         var lw: LVITEMW
         lw.iSubItem = int32(index + 1)
-        lw.pszText = sitem.toLPWSTR()
+        lw.pszText = &appData.sendMsgBuffer #sitem.toLPWSTR()
         lw.iImage = -1
         SendMessageW(this.mLvHandle, LVM_SETITEMTEXTW, WPARAM(this.mIndex), cast[LPARAM](lw.unsafeAddr))
         this.mSubItems.add(sitem)

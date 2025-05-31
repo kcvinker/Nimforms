@@ -57,6 +57,41 @@ proc menuBarDtor(this: MenuBar) =
     this.mFont.finalize()
     # echo "MenuBar destroy worked"
 
+proc handleWmDrawItem(this: MenuBar, lpm: LPARAM) : LRESULT =
+    var dis = cast[LPDRAWITEMSTRUCT](lpm)
+    var mi = cast[MenuItem](cast[PVOID](dis.itemData))
+    var txtClrRef : COLORREF = mi.mFgColor.cref
+
+    if dis.itemState == 320 or dis.itemState == 257:
+        # Mouse is over the menu. Check for enable state.
+        if mi.mIsEnabled:
+            let rcbot: int32 = (if mi.mType == mtBaseMenu: dis.rcItem.bottom else: dis.rcItem.bottom - 2)
+            let rctop: int32 = (if mi.mType == mtBaseMenu: dis.rcItem.top + 1 else: dis.rcItem.top + 2)
+            let rc = RECT(  left: dis.rcItem.left + 4,
+                            top: rctop,
+                            right: dis.rcItem.right,
+                            bottom: rcbot )
+            FillRect(dis.hDC, rc.unsafeAddr, this.mMenuHotBgBrush)
+            FrameRect(dis.hDC, rc.unsafeAddr, this.mMenuFrameBrush)
+            txtClrRef = 0x00000000
+        else:
+            FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenuGrayBrush)
+            txtClrRef = this.mMenuGrayCref
+    else:
+        # Default menu drawing.
+        FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenuDefBgBrush)
+        if not mi.mIsEnabled: txtClrRef = this.mMenuGrayCref
+
+    SetBkMode(dis.hDC, 1)
+    if mi.mType == mtBaseMenu:
+        dis.rcItem.left += 10
+    else:
+        dis.rcItem.left += 25
+    SelectObject(dis.hDC, this.mFont.handle)
+    SetTextColor(dis.hDC, txtClrRef)
+    DrawTextW(dis.hDC, &mi.mWideText, -1, dis.rcItem.unsafeAddr, DT_LEFT or DT_SINGLELINE or DT_VCENTER)
+    return 0
+
 
 proc newMenuItem*(txt: string, mtyp: MenuType, parentHmenu : HMENU, indexNum: uint32): MenuItem =
     new(result)
@@ -70,7 +105,7 @@ proc newMenuItem*(txt: string, mtyp: MenuType, parentHmenu : HMENU, indexNum: ui
         result.mIndex = indexNum
         result.mId = staticMenuID
         result.mText = txt
-        result.mWideText = toWcharPtr(result.mText)
+        result.mWideText = newWideString(result.mText)
         result.mType = mtyp
         result.mParentHandle = parentHmenu
         result.mBgColor = newColor(0xe9ecef)
@@ -79,6 +114,12 @@ proc newMenuItem*(txt: string, mtyp: MenuType, parentHmenu : HMENU, indexNum: ui
 
     staticMenuID += 1
 
+proc getTextSize(this: MenuItem, hw: HWND) =
+    var hdc = GetDC(hw)
+    GetTextExtentPoint32(hdc, &this.mWideText, this.mWideText.wcLen, 
+                            this.mTxtSize.unsafeAddr)
+    ReleaseDC(hw, hdc)
+    this.mTxtSizeReady = true
 
 proc menuItemDtor(this: MenuItem) =
     if len(this.mMenus) > 0:
@@ -87,13 +128,24 @@ proc menuItemDtor(this: MenuItem) =
     # echo "MenuItem destroy worked"
 
 
+proc handleWMMeasureItem(this: MenuItem, pmi: LPMEASUREITEMSTRUCT, hw: HWND) : LRESULT = 
+    if not this.mTxtSizeReady: this.getTextSize(hw)
+    if this.mType == mtBaseMenu:        
+        pmi.itemWidth = UINT(this.mTxtSize.cx) #+ 10
+        pmi.itemHeight = UINT(this.mTxtSize.cy)
+    else:
+        pmi.itemWidth = 140 #size.cx #+ 10
+        pmi.itemHeight = 25
+    return 1
+
+
 proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU) =
     var mii : MENUITEMINFOW
     mii.cbSize = cast[UINT](mii.sizeof)
     mii.fMask = MIIM_ID or MIIM_TYPE or MIIM_DATA or MIIM_SUBMENU or MIIM_STATE
     mii.fType = MF_OWNERDRAW
-    mii.dwTypeData = this.mText.toLPWSTR()
-    mii.cch = cast[UINT](len(this.mText))
+    mii.dwTypeData = &this.mWideText
+    mii.cch = cast[UINT](this.mWideText.wcLen)
     mii.dwItemData = cast[ULONG_PTR](cast[PVOID](this))
     mii.wID = cast[UINT](this.mId)
     mii.hSubMenu = if this.mPopup : this.mHandle else: nil

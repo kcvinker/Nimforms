@@ -99,7 +99,7 @@ tv.addTreeNodeWithChilds("Linux", "openSUSE Leap 15.3", "Debian 11", "Fedora 35"
 tv.addTreeNodeWithChilds("MacOS", "Mojave (10.14)", "Catalina (10.15)", " Big Sur (11.0)", "Monterey (12.0)")
 
 
-var cal = newCalendar(frm, cmb.right(10), 10)
+var cal = newCalendar(frm, cmb.right(25), 10)
 
 
 

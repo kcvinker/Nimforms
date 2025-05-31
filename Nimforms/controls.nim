@@ -192,6 +192,7 @@ proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discarda
     return SendMessageW(this.mHandle, msg, cast[WPARAM](wpm), cast[LPARAM](lpm))
 
 proc setFontInternal(this: Control) {.inline.} =
+    if this.mFont.handle == nil: this.mFont.createHandle()
     if this.mIsCreated: 
         this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
 

@@ -536,56 +536,14 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         if this.mFdMode != fdmNormal: return this.setBkClrInternal(cast[HDC](wpm))
 
     of WM_MEASUREITEM:
-        # var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        # echo "wm measure item msg"
         var pmi = cast[LPMEASUREITEMSTRUCT](lpm)
         var mi = cast[MenuItem](cast[PVOID](pmi.itemData))
-        if mi.mType == mtBaseMenu:
-            var hdc = GetDC(hw)
-            var size : SIZE
-            GetTextExtentPoint32(hdc, mi.mWideText, int32(len(mi.mText)), size.unsafeAddr)
-            ReleaseDC(hw, hdc)
-            pmi.itemWidth = UINT(size.cx) #+ 10
-            pmi.itemHeight = UINT(size.cy)
-        else:
-            pmi.itemWidth = 140 #size.cx #+ 10
-            pmi.itemHeight = 25
-        return 1
+        return mi.handleWMMeasureItem(pmi, hw)
 
     of WM_DRAWITEM:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        var dis = cast[LPDRAWITEMSTRUCT](lpm)
-        var mi = cast[MenuItem](cast[PVOID](dis.itemData))
-        var txtClrRef : COLORREF = mi.mFgColor.cref
-
-        if dis.itemState == 320 or dis.itemState == 257:
-            # Mouse is over the menu. Check for enable state.
-            if mi.mIsEnabled:
-                let rcbot: int32 = (if mi.mType == mtBaseMenu: dis.rcItem.bottom else: dis.rcItem.bottom - 2)
-                let rctop: int32 = (if mi.mType == mtBaseMenu: dis.rcItem.top + 1 else: dis.rcItem.top + 2)
-                let rc = RECT(  left: dis.rcItem.left + 4,
-                                top: rctop,
-                                right: dis.rcItem.right,
-                                bottom: rcbot )
-                FillRect(dis.hDC, rc.unsafeAddr, this.mMenubar.mMenuHotBgBrush)
-                FrameRect(dis.hDC, rc.unsafeAddr, this.mMenubar.mMenuFrameBrush)
-                txtClrRef = 0x00000000
-            else:
-                FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenubar.mMenuGrayBrush)
-                txtClrRef = this.mMenubar.mMenuGrayCref
-        else:
-            # Default menu drawing.
-            FillRect(dis.hDC, dis.rcItem.unsafeAddr, this.mMenubar.mMenuDefBgBrush)
-            if not mi.mIsEnabled: txtClrRef = this.mMenubar.mMenuGrayCref
-
-        SetBkMode(dis.hDC, 1)
-        if mi.mType == mtBaseMenu:
-            dis.rcItem.left += 10
-        else:
-            dis.rcItem.left += 25
-        SelectObject(dis.hDC, this.mMenubar.mFont.handle)
-        SetTextColor(dis.hDC, txtClrRef)
-        DrawTextW(dis.hDC, mi.mWideText, -1, dis.rcItem.unsafeAddr, DT_LEFT or DT_SINGLELINE or DT_VCENTER)
-        return 0
+        return this.mMenuBar.handleWmDrawItem(lpm)
 
     of WM_MENUSELECT:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
