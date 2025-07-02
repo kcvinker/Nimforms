@@ -549,7 +549,7 @@ type
         screenHeight: int32
         formCount: int32
         mainHwnd: HWND
-        trayHwnd: HWND
+        trayHwnds: seq[HWND]
         hInstance: HINSTANCE
         isDateInit: bool
         iccEx: INITCOMMONCONTROLSEX
@@ -561,7 +561,10 @@ type
 
 proc finalize*(this: var WideString) 
 proc appFinalize(this: var AppData) =
-    if this.trayHwnd != nil: DestroyWindow(this.trayHwnd)
+    if this.trayHwnds.len > 0: 
+        for hwnd in this.trayHwnds:
+            if IsWindow(hwnd) > 0: DestroyWindow(hwnd)
+
     this.sendMsgBuffer.finalize()
     echo "Nimforms is exiting..."
 

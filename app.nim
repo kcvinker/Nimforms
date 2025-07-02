@@ -89,8 +89,8 @@ rb2.foreColor = 0xff0054
 
 var tb = newTextBox(frm, "Enter text", gb2.right(20), gb.bottom(40))
 
-var tkb = newTrackBar(frm, gb2.right(20), tb.bottom(20), cdraw = true)
-
+var tkb = newTrackBar(frm, gb2.right(20), tb.bottom(20)) #, cdraw = true)
+tkb.ticColor = 0xFF0012
 var pgb = newProgressBar(frm, gb2.right(20), tkb.bottom(20), perc=true )
 
 var tv = newTreeView(frm, pgb.right(20), lv.bottom(20), h=200)

@@ -359,7 +359,10 @@ proc `ticPosition=`*(this: TrackBar, value: TicPosition) {.inline.} = this.mTicP
 proc ticPosition*(this: TrackBar): TicPosition {.inline.} = this.mTicPos
 
 proc `ticColor=`*(this: TrackBar, value: Color) {.inline.} = this.mTicColor = value
-proc `ticColor=`*(this: TrackBar, value: uint) {.inline.} = this.mTicColor = newColor(value)
+proc `ticColor=`*(this: TrackBar, value: uint) = 
+    this.mTicColor = newColor(value)
+    this.mCustDraw = true
+    this.checkRedraw()
 proc ticColor*(this: TrackBar): Color {.inline.} = this.mTicColor
 
 proc `channelColor=`*(this: TrackBar, value: Color) {.inline.} = this.mChanColor = value

@@ -103,6 +103,7 @@ proc newTrayIcon*(tooltip : string, iconpath : string = ""): TrayIcon =
 
 proc trayIconDtor(this: TrayIcon) =
     DestroyWindow(this.mMsgHwnd)
+    appData.trayHwnds.delete(appData.trayHwnds.find(this.mMsgHwnd))
 
 # Properties------------------------------------------
 
@@ -201,7 +202,7 @@ proc createTrayMsgWindow(this: TrayIcon) =
                                         HWND_MESSAGE, nil, appData.hInstance, nil)
     if this.mMsgHwnd != nil:
         SetWindowLongPtrW(this.mMsgHwnd, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
-        appData.trayHwnd = this.mMsgHwnd
+        appData.trayHwnds.add(this.mMsgHwnd)
     else:
         echo "Cannot create dummy window for tray icon, Error: ", GetLastError()
     
@@ -214,7 +215,7 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         Shell_NotifyIconW(NIM_DELETE, &this.mNid)
         if this.mhTrayIcon != nil: DestroyIcon(this.mhTrayIcon)
         if this.mCmenu != nil: this.mCmenu.cmenuDtor()
-        appData.trayHwnd = nil
+        echo "tray icon destroyed"
     
     of MM_TRAY_MSG:
         case lpm
