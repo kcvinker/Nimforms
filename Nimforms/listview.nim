@@ -135,6 +135,9 @@ const
     LVM_INSERTCOLUMNW = (LVM_FIRST + 97)
     LVM_SETITEMTEXTW = (LVM_FIRST + 116)
     LVN_ITEMCHANGED = (LVN_FIRST-1)
+    LVN_ITEMACTIVATE = (LVN_FIRST-14)
+    LVIS_SELECTED = 2
+    LVIS_STATEIMAGEMASK = 61440
 
 var lvCount = 1
 # let lvClsName = toWcharPtr("SysListView32")
@@ -366,6 +369,83 @@ proc headerCustomDraw(this: ListView, nmcd: LPNMCUSTOMDRAW): LRESULT =
     SetTextColor(nmcd.hdc, this.mHdrForeColor.cref)
     DrawTextW(nmcd.hdc, col.mWideText, int32(-1), nmcd.rc.unsafeAddr, col.mHdrTextFlag)
     result = CDRF_SKIPDEFAULT
+
+proc wmNotifyHandler(this: ListView, lpm: LPARAM): LRESULT =
+    let nmh = cast[LPNMHDR](lpm)
+    case nmh.code
+    of NM_CUSTOMDRAW_NM:
+        var lvcd = cast[LPNMLVCUSTOMDRAW](lpm)
+        case lvcd.nmcd.dwDrawStage
+        of CDDS_PREPAINT: return CDRF_NOTIFYITEMDRAW
+        of CDDS_ITEMPREPAINT:
+            lvcd.clrTextBk = this.mBackColor.cref
+            lvcd.clrText = this.mForeColor.cref
+            return CDRF_NEWFONT or CDRF_DODEFAULT
+        else: return CDRF_DODEFAULT
+
+    of LVN_ITEMCHANGED:
+        var nmlv = cast[LPNMLISTVIEW](lpm)
+        if (nmlv.uChanged and LVIF_STATE) > 0:
+            let nowSelected = (nmlv.uNewState and LVIS_SELECTED)
+            let wasSelected = (nmlv.uOldState and LVIS_SELECTED)
+            if nowSelected > 0 and wasSelected == 0:
+                var pitem: ListViewItem = this.mItems[nmlv.iItem]
+                if this.mMultiSel:
+                    this.mSelItems.add(pitem)
+                else:
+                    this.mSelItem = pitem
+
+                if this.onSelectionChanged != nil: 
+                    var lsea = LVSelChangeEventArgs(item: pitem, 
+                                                     index:nmlv. iItem, 
+                                                     isSelected: cast[bool](nowSelected))
+                    this.onSelectionChanged(this, lsea)
+            elif nowSelected == 0 and wasSelected > 0:
+                let sitem = this.mItems[nmlv.iItem]
+                if this.mMultiSel:
+                    this.mSelItems.delete(this.mSelItems.find(sitem))                                
+                    if this.onSelectionChanged != nil: 
+                        var lsea = LVSelChangeEventArgs(item: sitem, 
+                                                         index: nmlv.iItem, 
+                                                         isSelected: cast[bool](nowSelected))
+                        this.onSelectionChanged(this, lsea)
+
+            # ✅ Check for checkbox state change
+            let state_index = (nmlv.uNewState and LVIS_STATEIMAGEMASK) shr 12
+            let old_state_index = (nmlv.uOldState and LVIS_STATEIMAGEMASK) shr 12
+            if state_index != old_state_index: # Item checkbox changed
+                let is_checked = (state_index == 2)  # 2 = checked, 1 = unchecked
+                if this.mItems.len > 0:                               
+                    var sitem = this.mItems[nmlv.iItem]
+                    sitem.mChecked = is_checked  
+                    if this.onItemCheckChanged != nil:
+                        var licea = LVItemCheckEventArgs(item: sitem, 
+                                                         index: nmlv.iItem, 
+                                                         isChecked: cast[bool](is_checked))
+                        this.onItemCheckChanged(this, licea)
+
+    of NM_DBLCLK, NM_CLICK:
+        if (this.onItemClick != nil or this.onItemDoubleClick != nil) and this.mItems.len > 0:
+            var nmia = cast[LPNMITEMACTIVATE](lpm)
+            var sitem = this.mItems[nmia.iItem]
+            var lviea = LVItemEventArgs(item: sitem, index: nmia.iItem)
+            if this.onItemDoubleClick != nil: 
+                this.onItemDoubleClick(this, lviea)
+            elif this.onItemClick != nil: 
+                this.onItemClick(this, lviea)
+
+    of LVN_ITEMACTIVATE:
+        if this.onItemActivate != nil: 
+            this.onItemActivate(this, GEA)
+        
+
+    # of NM_HOVER:
+    #     if this.onItemHover != nil: this.onItemHover(this, newEventArgs())
+
+    # of LVN_BEGINLABELEDIT:
+    #     echo "591 ok"
+    else: discard
+    return CDRF_DODEFAULT
 
 proc destroyResources(this: ListView) =
     if this.mHdrHotBrush != nil: DeleteObject(this.mHdrHotBrush)
@@ -649,42 +729,7 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
     of MM_NOTIFY_REFLECT:
         var this = cast[ListView](refData)
-        let nmh = cast[LPNMHDR](lpm)
-        # echo "nmhdr code ", $nmh.code
-        case nmh.code
-        of NM_CUSTOMDRAW_NM:
-            var nmLvcd = cast[LPNMLVCUSTOMDRAW](lpm)
-            case nmLvcd.nmcd.dwDrawStage
-            of CDDS_PREPAINT: return CDRF_NOTIFYITEMDRAW
-            of CDDS_ITEMPREPAINT:
-                nmLvcd.clrTextBk = this.mBackColor.cref
-                return CDRF_NEWFONT or CDRF_DODEFAULT
-            else: discard
-
-        of LVN_ITEMCHANGED:
-            var nmlv = cast[LPNMLISTVIEW](lpm)
-            if nmlv.uNewState == 8192 or nmlv.uNewState == 4096:
-                this.mChecked = (if nmlv.uNewState == 8192: true else: false)
-                if this.onCheckedChanged != nil: this.onCheckedChanged(this, newEventArgs())
-            else:
-                if nmlv.uNewState == 3:
-                    this.mSelIndex = nmlv.iItem
-                    this.mSelSubIndex = nmlv.iSubItem
-                    if this.onSelectionChanged != nil: this.onSelectionChanged(this, newEventArgs())
-
-        # of NM_DBLCLK:
-        #     if this.onItemDoubleClicked != nil: this.onItemDoubleClicked(this, newEventArgs())
-
-        # of NM_CLICK:
-        #     let nmia = cast[LPNMITEMACTIVATE](lpm)
-        #     if this.onItemClicked != nil: this.onItemClicked(this, newEventArgs())
-
-        of NM_HOVER:
-            if this.onItemHover != nil: this.onItemHover(this, newEventArgs())
-
-        of LVN_BEGINLABELEDIT:
-            echo "591 ok"
-        else: discard
+        return this.wmNotifyHandler(lpm)
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

@@ -29,6 +29,7 @@ const # These 4 constants are used by ListView
 let CLR_WHITE = newColor(0xFFFFFF)
 let CLR_BLACK = newColor(0x000000)
 
+
 proc u16_to_i16(value: uint16): int16 = cast[int16]((value and 0xFFFF))
 proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
 

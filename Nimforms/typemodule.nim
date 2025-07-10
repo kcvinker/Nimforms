@@ -105,6 +105,21 @@ type
     TreeEventHandler* = proc(c: Control, e: TreeEventArgs)
     CreateFnHandler = proc(c: Control) {.nimcall.}
 
+    LVItemEventArgs* = ref object of EventArgs
+        item: ListViewItem
+        index: int32
+
+    LVSelChangeEventArgs* = ref object of LVItemEventArgs
+        isSelected: bool
+
+    LVItemCheckEventArgs* = ref object of LVItemEventArgs
+        isChecked: bool
+
+    LVItemClickEventHandler* = proc(c: Control, e: LVItemEventArgs)
+    LVSelChangeEventHandler* = proc(c: Control, e: LVSelChangeEventArgs)
+    LVCheckChangeEventHandler* = proc(c: Control, e: LVItemCheckEventArgs)
+
+
     # TimerTickHandler = proc(f: Form, e: EventArgs)
 
     Timer* = ref object
@@ -305,6 +320,7 @@ type
         mText: string
         mIndex, mImgIndex: int32
         mBackColor, mForeColor: Color
+        mChecked: bool
         mFont: Font
         mLvHandle: HWND
         mColCount: int
@@ -339,9 +355,13 @@ type
         mViewStyle: ListViewStyle
         mColumns: seq[ListViewColumn]
         mItems: seq[ListViewItem]
+        mSelItems: seq[ListViewItem]
+
         #Events
-        onCheckedChanged*, onSelectionChanged*, onItemDoubleClicked*: EventHandler
-        onItemClicked*, onItemHover*: EventHandler
+        onItemClick*, onItemDoubleClick*: LVItemClickEventHandler
+        onSelectionChanged*: LVSelChangeEventHandler
+        onItemCheckChanged*: LVCheckChangeEventHandler
+        onItemHover*, onItemActivate*: EventHandler
 
     MenuType* {.pure.} = enum
         mtBaseMenu, mtMenuItem, mtPopup, mtSeparator, mtMenubar, mtContextMenu, mtContextSep

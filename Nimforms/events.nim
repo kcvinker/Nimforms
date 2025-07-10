@@ -11,6 +11,7 @@ const
 
 
 proc newEventArgs(): EventArgs = new(result)
+var GEA = newEventArgs()
 
 proc getXFromLp(lp: LPARAM): int32 = cast[int32](LOWORD(lp))
 proc getYFromLp(lp: LPARAM): int32 = cast[int32](HIWORD(lp))
