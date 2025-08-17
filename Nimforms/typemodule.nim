@@ -320,7 +320,7 @@ type
         mText: string
         mIndex, mImgIndex: int32
         mBackColor, mForeColor: Color
-        mChecked: bool
+        mChecked, mBgdraw, mFgdraw: bool
         mFont: Font
         mLvHandle: HWND
         mColCount: int

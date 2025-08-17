@@ -243,6 +243,8 @@ proc newListViewItem*(text: string, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x
     result.mForeColor = newColor(fgColor)
     result.mIndex = -1
     result.mImgIndex = imgIndex
+    if bgColor != 0xFFFFFF: result.mBgdraw = true
+    if fgColor != 0x000000: result.mFgdraw = true
 
 proc setLVStyle(this: ListView) =
     case this.mViewStyle
@@ -378,8 +380,9 @@ proc wmNotifyHandler(this: ListView, lpm: LPARAM): LRESULT =
         case lvcd.nmcd.dwDrawStage
         of CDDS_PREPAINT: return CDRF_NOTIFYITEMDRAW
         of CDDS_ITEMPREPAINT:
-            lvcd.clrTextBk = this.mBackColor.cref
-            lvcd.clrText = this.mForeColor.cref
+            var pitem = this.mItems[lvcd.nmcd.dwItemSpec]
+            if pitem.mBgdraw: lvcd.clrTextBk = pitem.mBackColor.cref
+            if pitem.mFgdraw: lvcd.clrText = pitem.mForeColor.cref
             return CDRF_NEWFONT or CDRF_DODEFAULT
         else: return CDRF_DODEFAULT
 

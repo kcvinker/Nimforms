@@ -1,5 +1,5 @@
 
-import nimforms
+import Nimforms/nimforms
 
 
 var frm = newForm("Nimforms GUI Library", 900, 500)
