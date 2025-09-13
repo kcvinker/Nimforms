@@ -221,7 +221,7 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     of MM_TRAY_MSG:
         case lpm
         of NIN_BALLOONSHOW:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
+            var this: TrayIcon  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onBalloonShow != nil: this.onBalloonShow(this, newEventArgs())
 
         of NIN_BALLOONTIMEOUT:

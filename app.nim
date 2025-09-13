@@ -24,11 +24,11 @@ mbar.menus["Windows"].addItems("Windows 8", "Windows 10", "|", "Windows 11")
 mbar.menus["Windows"].menus["Windows 11"].addItem("My OS")
 
 #Let's add a timer control which ticks in each 800 ms.
-var tmr = frm.addTimer(800, proc(c: Control, e: EventArgs) = echo "Timer ticked...")
+var tmr = frm.addTimer(800, proc(c: RootRef, e: EventArgs) = echo "Timer ticked...")
 
 
 var btn = newButton(frm, "Normal")
-btn.onClick = proc(c: Control, e: EventArgs) = 
+btn.onClick = proc(c: RootRef, e: EventArgs) = 
                 ti.showBalloon("Nimform", "Hi from Nimforms", 3000) # Button click will show the balloon 
 
 var btn2 = newButton(frm, "Flat Color", btn->10)
@@ -104,11 +104,12 @@ var cal = newCalendar(frm, cmb.right(25), 10)
 
 
 
-proc onTrackChange(c: Control, e: EventArgs) {.handles:tkb.onValueChanged.} =
-    pgb.value = tkb.value
+proc onTrackChange(c: RootRef, e: EventArgs) {.handles:tkb.onValueChanged.} =
+    var t11 = cast[TrackBar](c) 
+    pgb.value = t11.value
 
 
-proc flatBtnClick(c: Control, e: EventArgs) =
+proc flatBtnClick(c: RootRef, e: EventArgs) =
     # frm.backColor= 0xe63946
     frm.setGradientBackColor(0xe85d04, 0xffba08)
 btn2.onClick = flatBtnClick
@@ -116,7 +117,7 @@ btn2.onClick = flatBtnClick
 var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
 let aw = cmenu["Add Work"]
 
-proc addWork(m: MenuItem, e: EventArgs) {.handles: aw.onClick} = echo "Add Work menu clicked"
+proc addWork(m: RootRef, e: EventArgs) {.handles: aw.onClick} = echo "Add Work menu clicked"
 
 # var lb5 = newLabel(frm, "Testing", 22, 100)
 

@@ -45,7 +45,7 @@ type
         handled*: bool
         cancelled*: bool
 
-    EventHandler* = proc(c: Control, e: EventArgs)
+    EventHandler* = proc(c: RootRef, e: EventArgs)
 
     ThreadMsgHandler* = proc(wpm: WPARAM, lpm: LPARAM)
 
@@ -92,7 +92,7 @@ type
 
     DateTimeEventHandler* = proc(c: Control, e: DateTimeEventArgs)
 
-    TrayIconEventHandler* = proc(c: TrayIcon, e: EventArgs)
+    # TrayIconEventHandler* = proc(c: TrayIcon, e: EventArgs)
 
     TreeViewAction* {.pure.} = enum
         tvaUnknown, tvaByKeyboard, tvaByMouse, tvaCollapse, tvaExpand
@@ -129,7 +129,7 @@ type
         mIsEnabled: bool
         mIdNum: UINT_PTR
 
-    Control* = ref object of RootObj # Base class for all controls
+    Control* = ref object of RootRef # Base class for all controls
         mKind: ControlType
         mClassName: LPCWSTR
         mName, mText: string
@@ -397,8 +397,9 @@ type
         mType : MenuType
         mFormHwnd : HWND
         mBar: MenuBar
+        mTag: RootRef
         # Events
-        onClick*, onPopup*, onCloseup*, onFocus* : MenuEventHandler
+        onClick*, onPopup*, onCloseup*, onFocus* : EventHandler
 
     ContextMenu* = ref object of MenuBase
         mWidth, mHeight : int32
@@ -411,7 +412,7 @@ type
         mDefBgBrush, mHotBgBrush, mBorderBrush, mGrayBrush : HBRUSH
         # Events
         onMenuShown*, onMenuClose* : EventHandler
-        onTrayMenuShown*, onTrayMenuClose*: TrayIconEventHandler
+        onTrayMenuShown*, onTrayMenuClose*: EventHandler
 
     NumberPicker* = ref object of Control
         mButtonLeft, mHasSeperator, mAutoRotate, mHideCaret: bool
@@ -509,7 +510,7 @@ type
     BalloonIcon* {.pure.} = enum
         biNone, biInfo, biWarning, biError, biCustom
 
-    TrayIcon* = ref object
+    TrayIcon* = ref object of RootRef
         mResetIcon, mCmenuUsed, mRetainIcon: bool 
         mTrig: uint8
         mMenuTrigger : TrayMenuTrigger
@@ -520,10 +521,10 @@ type
         userData: pointer
         mNid: NOTIFYICONDATA
 
-        onBalloonShow, onBalloonClose, onBalloonClick: TrayIconEventHandler 
-        onMouseMove, onLeftMouseDown, onLeftMouseUp: TrayIconEventHandler
-        onRightMouseDown, onRightMouseUp, onLeftClick: TrayIconEventHandler
-        onRightClick, onLeftDoubleClick: TrayIconEventHandler
+        onBalloonShow, onBalloonClose, onBalloonClick: EventHandler 
+        onMouseMove, onLeftMouseDown, onLeftMouseUp: EventHandler
+        onRightMouseDown, onRightMouseUp, onLeftClick: EventHandler
+        onRightClick, onLeftDoubleClick: EventHandler
 
 
     # NodeNotifyHandler = proc(tv: TreeView, parent: TreeNode, child: TreeNode, nop: NodeOps, pos: int32)

@@ -21,6 +21,7 @@
         Properties:
             foreColor   : Color
             enabled     : bool
+            tag         : RootRef # User can store any object here.
         Functions:
             addItem
 
@@ -299,3 +300,8 @@ proc font*(this: MenuItem): Font = this.mFont
 proc `font=`*(this: MenuItem, value: Font) =
     this.mFont = value
     if this.mType == mtBaseMenu: InvalidateRect(this.mHandle, nil, 0)
+
+proc `tag=`*(this: MenuItem, value: RootRef) =
+    this.mTag = value
+
+proc tag*(this: MenuItem): RootRef = this.mTag
