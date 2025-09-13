@@ -233,8 +233,9 @@ proc createHandle*(this: Form, create_childs: bool = false) =
         echo "window creation error : ", GetLastError()
     
 
-proc addMenubar*(this: Form, args: varargs[string, `$`]) : MenuBar =
+proc addMenubar*(this: Form, cdraw: bool, args: varargs[string, `$`]) : MenuBar =
     this.mMenubar = newMenuBar(this)
+    this.mMenubar.mCustDraw = cdraw
     if len(args) > 0:
         this.mMenubar.addItems(args)
 

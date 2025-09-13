@@ -169,9 +169,10 @@ proc showBalloon*(this: TrayIcon, title, message: string, # Balloon title & Ball
     this.mNid.uFlags = 0
 
 
-proc addContextMenu*(this: TrayIcon, trigger: TrayMenuTrigger, 
+proc addContextMenu*(this: TrayIcon, cdraw: bool, trigger: TrayMenuTrigger, 
                         menuNames: varargs[string, `$`]) : ContextMenu {.discardable.} =
     result = newContextMenu(this, menuNames)
+    result.mCustDraw = cdraw
     this.mCmenu = result 
     this.mCmenuUsed = true
     this.mMenuTrigger = trigger

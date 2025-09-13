@@ -138,12 +138,19 @@ proc handleWMMeasureItem(this: MenuItem, pmi: LPMEASUREITEMSTRUCT, hw: HWND) : L
         pmi.itemHeight = 25
     return 1
 
+proc getMenuState(this: MenuItem): uint32 =
+    if this.mState == MenuState.msUnchecked : 
+        result = 0 
+    else:
+        result = cast[uint32](this.mState)
+    
 
-proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU) =
+proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU, drawFlag: uint32) =
     var mii : MENUITEMINFOW
     mii.cbSize = cast[UINT](mii.sizeof)
     mii.fMask = MIIM_ID or MIIM_TYPE or MIIM_DATA or MIIM_SUBMENU or MIIM_STATE
-    mii.fType = MF_OWNERDRAW
+    mii.fType = drawFlag
+    mii.fState = this.getMenuState()
     mii.dwTypeData = &this.mWideText
     mii.cch = cast[UINT](this.mWideText.wcLen)
     mii.dwItemData = cast[ULONG_PTR](cast[PVOID](this))
@@ -154,16 +161,15 @@ proc insertMenuInternal(this: MenuItem, parentHmenu: HMENU) =
     # echo "insert menu : ", this.mText, ", popup : ", this.mPopup
 
 
-proc create(this: MenuItem) =
+proc create(this: MenuItem, drawFlag: uint32) =
     case this.mType
     of mtBaseMenu, mtPopup:
+        this.insertMenuInternal(this.mParentHandle, drawFlag)
         if len(this.mMenus) > 0:
-            for key, menu in this.mMenus: menu.create()
-
-        this.insertMenuInternal(this.mParentHandle)
+            for key, menu in this.mMenus: menu.create(drawFlag)        
 
     of mtMenuItem:
-        this.insertMenuInternal(this.mParentHandle)
+        this.insertMenuInternal(this.mParentHandle, drawFlag)
     of mtSeparator:
         AppendMenuW(this.mParentHandle, MF_SEPARATOR, 0, nil)
     else: discard
@@ -238,8 +244,22 @@ proc createHandle*(this: MenuBar) =
     this.mMenuHotBgBrush = newColor(0x90e0ef).makeHBRUSH()
     this.mMenuFrameBrush = newColor(0x0077b6).makeHBRUSH()
     if this.mFont.handle == nil: this.mFont.createHandle()
+    var drawFlag : uint32 = MF_STRING
     if len(this.mMenus) > 0:
-        for key, menu in this.mMenus: menu.create()
+        if this.mCustDraw: 
+            drawFlag = MF_OWNERDRAW
+            var hdcmem : HDC = CreateCompatibleDC(nil)            
+            let oldfont : HGDIOBJ = SelectObject(hdcmem, cast[HGDIOBJ](this.mFont.handle))
+            for key, menu in this.mMenus:
+                GetTextExtentPoint32(hdcmem, menu.mWideText.wptr, 
+                                     cast[int32](len(menu.mText)), 
+                                     menu.mTxtSize.unsafeAddr)
+                if menu.mType == MenuType.mtBaseMenu: 
+                    menu.mTxtSize.cx = (if menu.mTxtSize.cx < 100: 100 else: menu.mTxtSize.cx + 20)
+            
+            SelectObject(hdcmem, oldfont)
+            DeleteDC(hdcmem)
+        for key, menu in this.mMenus: menu.create(drawFlag)
 
     SetMenu(this.mFormPtr.mHandle, this.mHandle)
 

@@ -100,13 +100,14 @@ proc addMenuItem*(this: ContextMenu, parenttext: string, menutext: string): Menu
 
 
 # This proc will get called right before context menu showed
-proc cmenuInsertItem(this: MenuItem) =
+proc cmenuInsertItem(this: MenuItem, drawFlag: uint32) =
     if len(this.mMenus) > 0:
         for key, menu in this.mMenus:
-            menu.cmenuInsertItem()
+            menu.cmenuInsertItem(drawFlag)
+
     # echo "menu: ", this.mText, ", type: ", this.mType
     if this.mType == mtContextMenu:
-        this.insertMenuInternal(this.mParentHandle)
+        this.insertMenuInternal(this.mParentHandle, drawFlag)
     elif this.mType == mtContextSep:
         AppendMenuW(this.mParentHandle, MF_SEPARATOR, 0, nil)
 
@@ -114,8 +115,22 @@ proc cmenuInsertItem(this: MenuItem) =
 # This proc will get called right before context menu showed
 proc cmenuCreateHandle(this: ContextMenu) =
     if len(this.mMenus) > 0:
+        var drawFlag : uint32 = MF_STRING
+        if this.mCustDraw: 
+            drawFlag = MF_OWNERDRAW
+            var hdcmem : HDC = CreateCompatibleDC(nil)            
+            let oldfont : HGDIOBJ = SelectObject(hdcmem, cast[HGDIOBJ](this.mFont.handle))
+            for key, menu in this.mMenus:
+                GetTextExtentPoint32(hdcmem, menu.mWideText.wptr, 
+                                     cast[int32](len(menu.mText)), 
+                                     menu.mTxtSize.unsafeAddr)
+                if menu.mType == MenuType.mtBaseMenu: 
+                    menu.mTxtSize.cx = (if menu.mTxtSize.cx < 100: 100 else: menu.mTxtSize.cx + 20)
+            
+            SelectObject(hdcmem, oldfont)
+            DeleteDC(hdcmem)
         for key, menu in this.mMenus:
-            menu.cmenuInsertItem()
+            menu.cmenuInsertItem(drawFlag)
         #}
     #}
     this.mMenuInserted = true

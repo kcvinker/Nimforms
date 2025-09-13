@@ -366,6 +366,9 @@ type
     MenuType* {.pure.} = enum
         mtBaseMenu, mtMenuItem, mtPopup, mtSeparator, mtMenubar, mtContextMenu, mtContextSep
 
+    MenuState* {.pure.} = enum
+        msEnabled, msUnchecked,  msDisabled = 3, msChecked = 8, msHilite = 128
+
     MenuBase = ref object of RootObj
         mHandle: HMENU
         mFont: Font
@@ -374,6 +377,7 @@ type
 
     MenuBar* = ref object of MenuBase # Implemented in commons.nim
         mFormPtr : Form
+        mCustDraw: bool
         mMenuGrayCref: COLORREF
         mMenuDefBgBrush: HBRUSH
         mMenuHotBgBrush: HBRUSH
@@ -386,6 +390,7 @@ type
         mId, mIndex : uint32
         mWideText: WideString 
         mBgColor, mFgColor: Color
+        mState: MenuState
         mTxtSize : SIZE
         mParentHandle: HMENU
         mText : string
@@ -398,6 +403,7 @@ type
     ContextMenu* = ref object of MenuBase
         mWidth, mHeight : int32
         mRightClick, mMenuInserted, mTrayParent: bool
+        mCustDraw: bool
         mGrayCref : COLORREF
         mDummyHwnd : HWND
         mParent: Control
