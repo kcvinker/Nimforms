@@ -298,6 +298,7 @@ proc `enabled=`*(this: MenuItem, value: bool) =
 proc font*(this: MenuItem): Font = this.mFont
 
 proc `font=`*(this: MenuItem, value: Font) =
+    this.mFont.finalize()
     this.mFont = value
     if this.mType == mtBaseMenu: InvalidateRect(this.mHandle, nil, 0)
 

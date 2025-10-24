@@ -30,12 +30,18 @@ type
         fwLight = 300, fwNormal = 400, fwMedium = 500, fwSemiBold = 600, fwBold = 700,
         fwExtraBold = 800, fwUltraBold = 900
 
+    FontOwner {.pure.} = enum
+        foNone, foUser, foOwner
+
     Font* = object
-        name*: string
-        size*: int32
-        weight*: FontWeight
-        italics*, underLine*, strikeOut*: bool
+        mName*: string
+        mSize*: int32
+        mWeight*: FontWeight
+        mOwnership: FontOwner
+        mItalics*, mUnderLine*, mStrikeOut*: bool
         handle: HFONT
+        pHwnd: HWND
+        tag*: string
         # wtext: WideString
 
     TextAlignment* {.pure.} = enum
@@ -581,6 +587,7 @@ type
         isDateInit: bool
         iccEx: INITCOMMONCONTROLSEX
         logfont: LOGFONTW
+        defFont: Font
         scaleFactor: cint
         sysDPI: int32
         scaleF: float

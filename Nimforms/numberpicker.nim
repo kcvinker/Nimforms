@@ -301,6 +301,11 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             this.setValueInternal(nm.iDelta)
             if this.onValueChanged != nil: this.onValueChanged(this, newEventArgs())
 
+    of MM_FONT_CHANGED:
+        var this = cast[NumberPicker](refData)
+        this.updateFontInternal()
+        return 0
+
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)
 

@@ -42,6 +42,7 @@ btn3.setGradientColor(0xeeef20, 0x70e000)
 
 #----------------------
 var dtp = newDateTimePicker(frm, btn3.right(10))
+echo "dtp font change below"
 dtp.font = newFont("Tahoma", 14)
 dtp.foreColor = 0xe63946
 
@@ -111,7 +112,9 @@ proc onTrackChange(c: RootRef, e: EventArgs) {.handles:tkb.onValueChanged.} =
 
 proc flatBtnClick(c: RootRef, e: EventArgs) =
     # frm.backColor= 0xe63946
-    frm.setGradientBackColor(0xe85d04, 0xffba08)
+    # frm.setGradientBackColor(0xe85d04, 0xffba08)
+    # getFontData(btn.handle)
+    btn.font.printHwnd()
 btn2.onClick = flatBtnClick
 
 var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")

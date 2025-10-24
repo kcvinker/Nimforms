@@ -591,5 +591,10 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         else: discard
         return 0
 
+    of MM_FONT_CHANGED:
+        var this = cast[TreeView](refData)
+        this.updateFontInternal()
+        return 0
+
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

@@ -679,7 +679,10 @@ proc `foreColor=`*(this: ListViewItem, value: uint) {.inline.} = this.mForeColor
 proc `foreColor=`*(this: ListViewItem, value: Color) {.inline.} = this.mForeColor = value
 proc foreColor*(this: ListViewItem): Color {.inline.} = this.mForeColor
 
-proc `font=`*(this: ListViewItem, value: Font) {.inline.} = this.mFont = value
+proc `font=`*(this: ListViewItem, value: Font) {.inline.} = 
+    this.mFont.finalize()
+    this.mFont = value    
+
 proc font*(this: ListViewItem): Font {.inline.} = this.mFont
 
 
@@ -733,6 +736,11 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of MM_NOTIFY_REFLECT:
         var this = cast[ListView](refData)
         return this.wmNotifyHandler(lpm)
+
+    of MM_FONT_CHANGED:
+        var this = cast[ListView](refData)
+        this.updateFontInternal()
+        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

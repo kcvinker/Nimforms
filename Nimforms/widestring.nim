@@ -112,4 +112,4 @@ proc finalize*(this: var WideString) =
     # echo "WidesString dtor started, mem ",  cast[int](this.mData)
     if this.mData != nil:
         dealloc(this.mData)
-        echo "WidesString ", this.mInputStr, " deleted!"
+        # echo "WidesString ", this.mInputStr, " deleted!"

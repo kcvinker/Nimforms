@@ -86,8 +86,7 @@ proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10,
     result.mXpos = x
     result.mYpos = y
     result.mWidth = w
-    result.mHeight = h
-    # result.mFont = parent.mFont
+    result.mHeight = h    
     result.mHasFont = true
     result.mHasText = true
     result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
@@ -105,6 +104,7 @@ proc createHandle*(this: Button) =
     this.createHandleInternal()
     if this.mHandle != nil:
         this.setSubclass(btnWndProc)
+        echo "button font handle ", cast[uint](this.mFont.handle)
         this.setFontInternal()
 
 method autoCreate(this: Button) = this.createHandle()
@@ -285,6 +285,11 @@ proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM,
                 ret = this.drawTextColor(nmcd)
             else: discard
         return ret
+
+    of MM_FONT_CHANGED:
+        var this = cast[Button](refData)
+        this.updateFontInternal()
+        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

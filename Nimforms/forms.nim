@@ -71,7 +71,7 @@ proc getSystemDPI() =
     appdata.sysDPI = GetDeviceCaps(hdc, LOGPIXELSY)
     ReleaseDC(nil, hdc)     
     appdata.scaleF = float(appdata.sysDPI) / 96.0
-    echo "scalf ", appData.scaleF
+    # echo "scalf ", appData.scaleF
     
 
 proc registerWinClass(this: Form) =
@@ -82,10 +82,11 @@ proc registerWinClass(this: Form) =
     appData.hInstance = GetModuleHandleW(nil)
     appData.sendMsgBuffer = newWideString(64)
     this.hInstance = appData.hInstance
-
-    
     getSystemDPI()
 
+    appData.defFont = newFont("Tahoma", 11, autoc = true)
+    
+    
     this.mClassName = cast[LPCWSTR](frmClsName[0].addr) #toWcharPtr("Nimforms_Window")
     this.mBackColor = newColor(0xF0F0F0)
     echo "Appdata scale factor ", appData.scaleFactor
@@ -103,6 +104,7 @@ proc registerWinClass(this: Form) =
     wcex.lpszClassName = this.mClassName
     var ret = RegisterClassExW(wcex.addr)
     # echo "Register result ", ret
+    # echo "scale factor ", appData.defFont.mSize, ", dpi ", appData.sysDPI
 
 
 proc setFormStyles(this: Form) =
@@ -197,7 +199,7 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mHeight = adjDpi(height)
     result.mXpos = 100
     result.mYpos = 100
-    result.mFont = newFont("Tahoma", 11)
+    result.mFont = copyNewFont(appData.defFont)
     result.mHasFont = true
     result.mFormStyle = fsNormalWindow
     result.mFdMode = fdmNormal
@@ -205,6 +207,7 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mMaximizeBox = true
     result.mMinimizeBox = true
     result.mText = (if title == "": "Form_" & $appData.formCount else: title)
+    echo "form font size ", result.mFont.mSize
 
 # proc setFormFont(this: Form) =
 #     this.mFont.createPrimaryHandle()
@@ -225,8 +228,8 @@ proc createHandle*(this: Form, create_childs: bool = false) =
         # appData.forms.add(FormMap(key: this.mHandle, value: this))
         this.mIsCreated = true
         SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
-        # this.setFontInternal()
-        this.mFont.createPrimaryHandle()
+        this.setFontInternal()
+        
         # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
         echo "GetDpiForWindows ", GetDpiForWindow(this.mHandle)
     else:
@@ -293,11 +296,12 @@ proc setGradientBackColor*(this: Form, clr1, clr2 : uint, rtl: bool = false) =
     this.setGradientInfo(clr1, clr2, rtl )
     if this.mIsCreated: InvalidateRect(this.mHandle, nil, 1)
 
-# Properties
-proc `font=`*(this: Form, value: Font) =
-    this.mFont = value
-    this.mAppFont = false
-    this.setUserFont()
+# # Properties
+# proc `font=`*(this: Form, value: Font) =
+#     this.mFont.finalize()
+#     this.mFont = value
+#     this.mAppFont = false
+#     this.setUserFont()
 
 
 proc `backColor=`*(this: Form, value: uint) =
@@ -588,14 +592,15 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
                 discard
         else:
             let ctHwnd = cast[HWND](lpm)
-            return SendMessageW(ctHwnd, MM_CTL_COMMAND, wpm, lpm)
-        
-        
-            
+            return SendMessageW(ctHwnd, MM_CTL_COMMAND, wpm, lpm)            
 
     of WM_CONTEXTMENU:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
+    of MM_FONT_CHANGED:
+        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        this.updateFontInternal()
 
     else: return DefWindowProcW(hw, msg, wpm, lpm)
     return DefWindowProcW(hw, msg, wpm, lpm)

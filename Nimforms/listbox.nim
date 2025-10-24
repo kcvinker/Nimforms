@@ -376,5 +376,10 @@ proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
             if this.onSelectionCancelled != nil: this.onSelectionCancelled(this, newEventArgs())
         else: discard
 
+    of MM_FONT_CHANGED:
+        var this = cast[ListBox](refData)
+        this.updateFontInternal()
+        return 0
+
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

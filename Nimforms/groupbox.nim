@@ -143,6 +143,7 @@ proc `height=`*(this: GroupBox, value: int32) =
     if this.mIsCreated: this.ctlSetPos()
 
 proc `font=`*(this: GroupBox, value: Font) =
+    this.mFont.finalize()
     this.mFont = value 
     if this.mFont.handle == nil: this.mFont.createHandle()
     this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
@@ -264,12 +265,10 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             gfx.drawText(this, 12, 0)
             # gfx.drawThemeText(this)
 
-    #         return ret
-        # else:
-        #     var ps : PAINTSTRUCT
-        #     BeginPaint(hw, ps.unsafeAddr)
-        #     EndPaint(hw, ps.unsafeAddr)
-
+    of MM_FONT_CHANGED:
+        var this = cast[GroupBox](refData)
+        this.updateFontInternal()
+        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

@@ -187,5 +187,10 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         if ncode == EN_CHANGE:
             if this.onTextChanged != nil: this.onTextChanged(this, newEventArgs())
 
+    of MM_FONT_CHANGED:
+        var this = cast[TextBox](refData)
+        this.updateFontInternal()
+        return 0
+
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

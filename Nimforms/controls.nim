@@ -60,14 +60,16 @@ proc ctlSetPos(this: Control) {.inline.}=
 
 # Control class's methods====================================================
 proc cloneParentFont*(this: Control) =
-    this.mFont.name = this.mParent.mFont.name
-    this.mFont.size = this.mParent.mFont.size
-    this.mFont.weight = this.mParent.mFont.weight
-    this.mFont.italics = this.mParent.mFont.italics
-    this.mFont.underLine = this.mParent.mFont.underLine
-    this.mFont.strikeOut = this.mParent.mFont.strikeOut   
-    this.mFont.cloneParentFontHandle(nil)
-    
+    # this.mFont = copyNewFont(this.mParent.mFont)
+    this.mFont.mName = this.mParent.mFont.mName
+    this.mFont.mSize = this.mParent.mFont.mSize
+    this.mFont.mWeight = this.mParent.mFont.mWeight
+    this.mFont.mItalics = this.mParent.mFont.mItalics
+    this.mFont.mUnderLine = this.mParent.mFont.mUnderLine
+    this.mFont.mStrikeOut = this.mParent.mFont.mStrikeOut   
+    this.mFont.handle = this.mParent.mFont.handle
+    this.mFont.mOwnership = FontOwner.foUser
+    this.mFont.tag = this.mName
 
 
 
@@ -80,8 +82,11 @@ proc `>>`*(this: Control, value: int32): int32 = this.getMappedRect().bottom + v
 # Control class's properties==========================================
 proc handle*(this: Control): HWND = this.mHandle
 
+proc name*(this: Control): string {.inline.} = return this.mName
+
 proc `font=`*(this: Control, value: Font) {.inline.} =
-    this.mFont = value
+    this.mFont.finalize()
+    this.mFont = value    
     if this.mIsCreated: this.setFontInternal()
 
 proc font*(this: Control): Font {.inline.} = return this.mFont
@@ -184,16 +189,30 @@ proc mapParentPoints(this: Control) : RECT =
 proc destructor(this: Control) =
     if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
     if this.mCemnuUsed: this.mContextMenu.cmenuDtor()
-    if this.mHasFont: this.mFont.finalize()
-    if this.mHasText: this.mWtext.finalize()
+    if this.mHasFont: 
+        this.mFont.finalize()
+
+    if this.mHasText: 
+        this.mWtext.finalize()
     
 
 proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
     return SendMessageW(this.mHandle, msg, cast[WPARAM](wpm), cast[LPARAM](lpm))
 
 proc setFontInternal(this: Control) {.inline.} =
-    if this.mFont.handle == nil: this.mFont.createHandle()
-    if this.mIsCreated: 
+    if this.mFont.handle == nil: 
+        this.mFont.createHandle()
+    let x = this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
+    # echo "wm_setfont result ", x, " name: ", this.name
+
+proc updateFontInternal(this: Control) =
+    if this.mFont.handle != nil:
+        if this.mFont.mOwnership == FontOwner.foOwner:
+            DeleteObject(this.mFont.handle)
+        else:
+            this.mFont.handle = nil
+
+        this.mFont.createHandle()
         this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
 
 
@@ -276,8 +295,8 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
     if not specialCtl:
         this.mCtlID = globalCtlID
         globalCtlID += 1
-    let txtPtr : LPCWSTR = (if this.mHasText: &this.mWtext else: nil) 
-    # echo "creation started ", this.mKind
+
+    let txtPtr : LPCWSTR = (if this.mHasText: &this.mWtext else: nil)     
     this.mHandle = CreateWindowExW( this.mExStyle,
                                     this.mClassName,
                                     txtPtr,
@@ -285,10 +304,11 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
                                     this.mWidth, this.mHeight,
                                     this.mParent.mHandle, cast[HMENU](this.mCtlID),
                                     this.mParent.hInstance, nil)
-    if this.mHandle != nil:
-        # echo "creation finished ", this.mKind
+    if this.mHandle != nil:        
         this.mIsCreated = true
-        # this.setControlRect()
+        if this.mHasFont:
+            this.mFont.pHwnd = this.mHandle
+            # echo "ctrl: ", this.mName, ", hwnd: ", cast[int](this.mHandle)
     else:
         echo "Error in creation of ", this.mKind, ", Err.No - ", GetLastError()
 

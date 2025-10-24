@@ -197,7 +197,8 @@ proc fourDigitYear*(this: DateTimePicker): bool {.inline.} = this.m4DYear
 
 # Overriding Control's property to resize ourself.
 proc `font=`*(this: DateTimePicker, value: Font) =
-    this.mFont = value
+    this.mFont.finalize()
+    this.mFont = value    
     if this.mIsCreated:
         this.setFontInternal()
         this.setAutoSize()
@@ -263,14 +264,11 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
             if this.onCalendarClosed != nil: this.onCalendarClosed(this, newEventArgs())
         else: discard
         return 0
-    # of MM_LABEL_COLOR: # Message is arriving but no result
-    #     let hdc = cast[HDC](wpm)
-    #     SetTextColor(hdc, this.mForeColor.cref)
-    #     SetBkColor(hdc, this.mBackColor.cref)
-    #     return cast[LRESULT](this.mBkBrush)
-
-    # of LVM_SETBKCOLOR:
-    #     echo "LVM_SETBKCOLOR ", lpm
+    
+    of MM_FONT_CHANGED:
+        var this = cast[DateTimePicker](refData)
+        this.updateFontInternal()
+        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

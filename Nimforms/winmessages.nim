@@ -367,6 +367,7 @@ const
     MM_MENU_ADDED: UINT = MM_NUMBER + 13
     MM_THREAD_MSG: UINT = WM_USER + 5
     MM_TRAY_MSG: UINT = MM_NUMBER + 14
+    MM_FONT_CHANGED: UINT = MM_NUMBER + 15
 
 
 type # Key enum to represent all the keyboard keys
