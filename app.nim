@@ -111,10 +111,12 @@ proc onTrackChange(c: RootRef, e: EventArgs) {.handles:tkb.onValueChanged.} =
 
 
 proc flatBtnClick(c: RootRef, e: EventArgs) =
-    # frm.backColor= 0xe63946
-    # frm.setGradientBackColor(0xe85d04, 0xffba08)
-    # getFontData(btn.handle)
-    btn.font.printHwnd()
+    let fod = newFileOpenDialog("Select files", "", "PDF Files|*.pdf", true)
+    if fod.showDialog(frm.handle):
+        echo "Selected file(s): "
+        for f in fod.fileNames:
+            echo f
+        
 btn2.onClick = flatBtnClick
 
 var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")

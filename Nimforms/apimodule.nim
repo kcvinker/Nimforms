@@ -881,14 +881,16 @@ proc CoInitializeEx(pvReserved: LPVOID, dwCoInit: DWORD): HRESULT {.stdcall, dyn
 proc new_wstring(size: Natural): wstring {.inline.} = newSeq[WCHAR](size)
 
 proc toString(buf: wstring): string =
-    let blen = cast[int32](buf.len)
-    let iLen = WideCharToMultiByte(CP_UTF8, 0, buf[0].addr, blen, nil, 0, nil, nil)
+    # let blen = cast[int32](buf.len)
+    let iLen = WideCharToMultiByte(CP_UTF8, 0, buf[0].addr, -1, nil, 0, nil, nil)
     if iLen <= 0: return ""
-    var s: seq[char] = newSeq[char](iLen)
-    if WideCharToMultiByte(CP_UTF8, 0, buf[0].addr, blen, 
-                                s[0].addr, iLen, nil, nil) != iLen:            
-        return ""
-
+    var s: seq[char] = newSeq[char](iLen - 1)
+    # if f > 0:
+    #     echo "toString: buf len = ", buf.len, " iLen = ", iLen
+    let l2 = WideCharToMultiByte(CP_UTF8, 0, buf[0].addr, iLen - 1, 
+                                s[0].addr, iLen, nil, nil)           
+    
+    # echo "toString: l2 = ", l2
     result = s.join()
     
 

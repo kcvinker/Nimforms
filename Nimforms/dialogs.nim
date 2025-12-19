@@ -42,7 +42,7 @@
 
 const
     MAX_PATH = 260
-    MAX_PATH_NEW = 32768 + 256 * 100 + 1
+    MAX_PATH_NEW = 65535
     OFN_ALLOWMULTISELECT = 0x200
     OFN_PATHMUSTEXIST = 0x800
     OFN_FILEMUSTEXIST = 0x1000
@@ -79,25 +79,32 @@ proc SHBrowseForFolderW(lpbi: LPBROWSEINFOW): PIDLIST_ABSOLUTE {.stdcall, dynlib
 proc SHGetPathFromIDListW(pidl: PCIDLIST_ABSOLUTE, pszPath: LPWSTR): BOOL {.stdcall, dynlib: "shell32", importc.}
 proc CoTaskMemFree(pv: LPVOID): void {.stdcall, dynlib: "ole32", importc.}
 
-proc initDialogBase(this: DialogBase, ttl: string, initDir: string) =
+proc initDialogBase(this: DialogBase, ttl: string, initDir: string, typeFilter: string) =
     this.mTitle = ttl
-    this.mInitDir = initDir
-    # this.mFilter = if filter == "": "All Files" & "\0" & "*.*" & "\0" else: filter
+    this.mInitDir = initDir 
+    if typeFilter.len > 0:   
+        this.mFilter = typeFilter.replace("|", "\0")
+        this.mFilter.add("\0\0")
 
-proc newFileOpenDialog*(title: string = "Open file", initDir: string = "", multisel : bool = false): FileOpenDialog =
+proc newFileOpenDialog*(title: string = "Open file", 
+                        initDir: string = "", 
+                        typeFilter: string = "All files|*.*",
+                        multisel : bool = false): FileOpenDialog =
     new(result)
-    initDialogBase(result, title, initDir)
+    initDialogBase(result, title, initDir, typeFilter)
     # result.kind = DialogType.fileOpen
     result.mMultiSel = multisel
 
-proc newFileSaveDialog*(title: string = "Save As", initDir: string = ""): FileSaveDialog =
+proc newFileSaveDialog*(title: string = "Save As", 
+                        initDir: string = "",
+                        typeFilter: string = "All files|*.*"): FileSaveDialog =
     new(result)
-    initDialogBase(result, title, initDir)
+    initDialogBase(result, title, initDir, typeFilter)
     # result.kind = DialogType.fileSave
 
 proc newFolderBrowserDialog*(title: string = "Save As", initDir: string = ""): FolderBrowserDialog =
     new(result)
-    initDialogBase(result, title, initDir)
+    initDialogBase(result, title, initDir, "")
 
 # Getter functions
 proc selectedPath*(this: DialogBase): string = this.mSelPath
@@ -115,13 +122,20 @@ proc fileNames*(this: FileOpenDialog): seq[string] = this.mSelFiles
 # Setter functions
 proc `title=`*(this: DialogBase, value: string) = this.mTitle = value
 proc `initialFolder=`*(this: DialogBase, value: string) = this.mInitDir = value
-# proc `filter=`*(this: DialogBase, value: string) = this.mFilter = value
 proc `multiSelect=`*(this: FileOpenDialog, value: bool) = this.mMultiSel = value
 proc `showHiddenFiles=`*(this: FileOpenDialog, value: bool) = this.mShowHidden = value
 proc `newFolderButton=`*(this: FolderBrowserDialog, value: bool) = this.mNewFolBtn = value
 proc `showFiles=`*(this: FolderBrowserDialog, value: bool) = this.mShowFiles = value
 proc `allowAllFiles=`*(this: DialogBase, value: bool) = this.mAllowAllFiles = value
 
+# Set filter directly. You can use filter string in two ways.
+# 1. Multi description & multi extension.
+#       "Text Files|*.txt|PDF Files|*.pdf"
+# 2. Single description & multi extension.
+#       "Document Files|*.doc;*.docx"
+proc `filter=`*(this: DialogBase, value: string) = 
+    this.mFilter = value.replace("|", "\0")
+    this.mFilter.add("\0\0")
 
 
 
@@ -135,27 +149,34 @@ proc extractFileNames(this: FileOpenDialog, buff: wstring, startPos: int) =
             offset = i + 1
             this.mSelFiles.add(fmt"{dirPath}\{slice.toString}")
             if ord(buff[offset]) == 0: break
-    this.mSelPath = fmt("{this.mSelFiles[0]}")
+    this.mSelPath = this.mSelFiles[0] #fmt("{this.mSelFiles[0]}")
 
+# A helper template to initialize OPENFILENAMEW struct
+template initOfnStruct(this, ofn, buffer, hwnd, maxPath: untyped) =
+  ofn.hwndOwner = hwnd
+  ofn.lStructSize = cast[DWORD](sizeof(ofn))
+  ofn.lpstrFilter = this.mFilter.toLPWSTR()
+  ofn.lpstrFile = buffer[0].unsafeAddr
+  ofn.lpstrInitialDir =
+    (if this.mInitDir.len > 0: this.mInitDir.toLPWSTR() else: nil)
+  ofn.lpstrTitle = this.mTitle.toLPWSTR()
+  ofn.nMaxFile = maxPath
+  ofn.nMaxFileTitle = MAX_PATH
 
+proc containsNull(ws: wstring): int =
+    var i = 0
+    while i < ws.len:
+        if ord(ws[i]) == 0:
+            return i
+        inc i
+    result = i
 
+# D:\Dropbox\E-Books\cpumemory.pdf
 
-proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} =
-    if this.mFilter.len == 0:
-        this.mFilter = "All files\0*.*\0"
-    else:
-        if this.mAllowAllFiles:
-            this.mFilter = fmt("{this.mFilter}All files\0*.*\0")
+proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} =    
     var ofn: OPENFILENAMEW
-    var buffer: wstring = new_wstring(MAX_PATH_NEW)    
-    ofn.hwndOwner = hwnd
-    ofn.lStructSize = cast[DWORD](sizeof(ofn))
-    ofn.lpstrFilter = this.mFilter.toLPWSTR()
-    ofn.lpstrFile = &buffer   
-    ofn.lpstrInitialDir = (if len(this.mInitDir) > 0: this.mInitDir.toLPWSTR() else: nil)
-    ofn.lpstrTitle = this.mTitle.toLPWSTR()
-    ofn.nMaxFile = MAX_PATH_NEW
-    ofn.nMaxFileTitle = MAX_PATH
+    var buffer: wstring = if this.mMultiSel: new_wstring(MAX_PATH_NEW)  else: new_wstring(MAX_PATH)
+    initOfnStruct(this, ofn, buffer, hwnd, if this.mMultiSel: MAX_PATH_NEW else: MAX_PATH)      
     ofn.Flags = OFN_PATHMUSTEXIST or OFN_FILEMUSTEXIST
     if this.mMultiSel: ofn.Flags = ofn.Flags or OFN_ALLOWMULTISELECT or OFN_EXPLORER
     if this.mShowHidden: ofn.Flags = ofn.Flags or OFN_FORCESHOWHIDDEN
@@ -165,21 +186,17 @@ proc showDialog*(this: FileOpenDialog, hwnd: HWND = nil): bool {.discardable.} =
             this.extractFileNames(buffer, cast[int](ofn.nFileOffset))
             result = true
         else:
-           this.mSelPath = buffer.toString
-           result = true
+            let len = cast[int](ofn.nFileOffset)
+            # let ncpos = containsNull(buffer)
+            # echo "ncpos: ", ncpos
+            this.mSelPath = buffer.toString
+            result = true
 
 
 proc showDialog*(this: FileSaveDialog, hwnd: HWND = nil): bool =
     var ofn: OPENFILENAMEW
     var buffer: wstring = new_wstring(MAX_PATH)
-    ofn.hwndOwner = hwnd
-    ofn.lStructSize = cast[DWORD](sizeof(ofn))
-    ofn.lpstrFilter = this.mFilter.toLPWSTR()
-    ofn.lpstrFile = &buffer
-    ofn.lpstrInitialDir = (if len(this.mInitDir) > 0: this.mInitDir.toLPWSTR() else: nil)
-    ofn.lpstrTitle = this.mTitle.toLPWSTR()
-    ofn.nMaxFile = MAX_PATH
-    ofn.nMaxFileTitle = MAX_PATH
+    initOfnStruct(this, ofn, buffer, hwnd, MAX_PATH) 
     ofn.Flags = OFN_PATHMUSTEXIST or OFN_OVERWRITEPROMPT
     let ret = GetSaveFileNameW(ofn.unsafeAddr)
     if ret != 0:
