@@ -40,10 +40,8 @@ proc newFont*(fname: string, fsize: int32,
 proc createHandle(this: var Font) =  
     if this.handle != nil and this.mOwnership == FontOwner.foOwner:
         DeleteObject(this.handle) 
-
-    let scale1 = int32(appData.scaleFactor / 100)
-    let fsiz = scale1 * this.mSize  
-    let iHeight = (-MulDiv(fsiz , appData.sysDPI, 72))
+  
+    let iHeight = MulDiv(this.mSize, cast[int32](appData.sysDPI), 72)
     # echo fmt"iheight {iHeight}, size: {this.mSize}, fsiz: {fsiz}, {appData.scaleFactor}, dpi: {appData.sysDPI}"
     var lf : LOGFONTW
     WideString.fillBuffer(lf.lfFaceName[0].addr, this.mName)

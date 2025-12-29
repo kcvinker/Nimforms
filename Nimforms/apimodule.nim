@@ -65,6 +65,7 @@ type
     BYTE* = uint8
     SHORT* = int16
     USHORT* = uint16
+    DPI_AWARENESS_CONTEXT = HANDLE
 
     # These are created for com module
     LPCVOID* = pointer
@@ -753,6 +754,8 @@ proc MulDiv(nNumber: int32, nNumerator: int32, nDenominator: int32): int32 {.dll
 #-------------------------------------------------------------------------------------------------------
 
 # User32 functions
+proc SetProcessDpiAwarenessContext(P: DPI_AWARENESS_CONTEXT): BOOL {.dll("user32", true).}
+proc GetDpiForSystem(): UINT {.dll("user32", false).}
 proc MessageBoxW(hWnd: HWND, lpText: LPCWSTR, lpCaption: LPCWSTR, uType: UINT): INT {.dll("user32", true).} 
 proc LoadIconW(hInstance: HINSTANCE, lpIconName: LPCWSTR): HICON {.dll("user32", false).} 
 proc DestroyIcon(ico: HICON) : BOOL {.dll("user32", true)}

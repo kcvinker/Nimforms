@@ -2,7 +2,7 @@
 import Nimforms/nimforms
 
 
-var frm = newForm("Nimforms GUI Library", 900, 500)
+var frm = newForm("Nimforms GUI Library", 1000, 600)
 frm.onMouseUp = proc(c: Control, e: MouseEventArgs) = echo "X: " & $e.x & " Y: " & $e.y
 frm.createHandle(true)
 

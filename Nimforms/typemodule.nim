@@ -588,12 +588,11 @@ type
         iccEx: INITCOMMONCONTROLSEX
         logfont: LOGFONTW
         defFont: Font
-        scaleFactor: cint
-        sysDPI: int32
-        scaleF: float
+        sysDPI: uint32
         sendMsgBuffer: WideString
 
 proc finalize*(this: var WideString) 
+
 proc appFinalize(this: var AppData) =
     if this.trayHwnds.len > 0: 
         for hwnd in this.trayHwnds:

@@ -31,7 +31,7 @@ let CLR_BLACK = newColor(0x000000)
 
 
 proc u16_to_i16(value: uint16): int16 = cast[int16]((value and 0xFFFF))
-proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
+# proc adjDpi(x: int32) : int32 {.inline.} = int32(float(x) * appData.scaleF)
 
 # Some control needs to extract mouse position from lparam value.
 proc getMousePos(pt: ptr POINT, lpm: LPARAM) =

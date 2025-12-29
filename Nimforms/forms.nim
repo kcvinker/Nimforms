@@ -64,32 +64,31 @@ let frmClsName : array[16, uint16] = [0x4E, 0x69, 0x6D, 0x66, 0x6F, 0x72, 0x6D, 
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} # forward declaration
 
+const DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = cast[DPI_AWARENESS_CONTEXT](-2)
 
-
-proc getSystemDPI() =
-    var hdc: HDC = GetDC(nil)
-    appdata.sysDPI = GetDeviceCaps(hdc, LOGPIXELSY)
-    ReleaseDC(nil, hdc)     
-    appdata.scaleF = float(appdata.sysDPI) / 96.0
-    # echo "scalf ", appData.scaleF
+# proc getSystemDPI() =
+#     var hdc: HDC = GetDC(nil)
+#     appdata.sysDPI = GetDeviceCaps(hdc, LOGPIXELSY)
+#     ReleaseDC(nil, hdc)     
+#     appdata.scaleF = float(appdata.sysDPI) / 96.0
+#     # echo "scalf ", appData.scaleF
     
 
 proc registerWinClass(this: Form) =
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE)
     appData.appStarted = true
     appData.screenWidth = GetSystemMetrics(0)
     appData.screenHeight = GetSystemMetrics(1)
-    appData.scaleFactor = GetScaleFactorForDevice(0)
     appData.hInstance = GetModuleHandleW(nil)
     appData.sendMsgBuffer = newWideString(64)
     this.hInstance = appData.hInstance
-    getSystemDPI()
-
-    appData.defFont = newFont("Tahoma", 11, autoc = true)
+    appData.sysDPI = GetDpiForSystem()
+    appData.defFont = newFont("Tahoma", 12, autoc = true)
     
     
     this.mClassName = cast[LPCWSTR](frmClsName[0].addr) #toWcharPtr("Nimforms_Window")
     this.mBackColor = newColor(0xF0F0F0)
-    echo "Appdata scale factor ", appData.scaleFactor
+    
     var wcex : WNDCLASSEXW
     wcex.cbSize = cast[UINT](sizeof(wcex))
     wcex.style = CS_HREDRAW or CS_VREDRAW or CS_DBLCLKS
@@ -195,8 +194,8 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     appData.formCount += 1
     result.mFormID = appData.formCount
     result.mKind = ctForm
-    result.mWidth = adjDpi(width)
-    result.mHeight = adjDpi(height)
+    result.mWidth = width
+    result.mHeight = height
     result.mXpos = 100
     result.mYpos = 100
     result.mFont = copyNewFont(appData.defFont)
@@ -224,7 +223,7 @@ proc createHandle*(this: Form, create_childs: bool = false) =
                                     this.mWidth, this.mHeight,
                                     nil, nil, this.hInstance, nil)
     if this.mHandle != nil:
-        appData.sysDPI = cast[int32](GetDpiForWindow(this.mHandle))
+        
         # appData.forms.add(FormMap(key: this.mHandle, value: this))
         this.mIsCreated = true
         SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
