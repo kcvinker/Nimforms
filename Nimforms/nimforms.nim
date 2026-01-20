@@ -1,4 +1,6 @@
 # Import this module to start using Nimforms library
+# Copyright (c) 2026 kcvinker
+# SPDX-License-Identifier: MIT
 
 # Essential includes
 include apimodule

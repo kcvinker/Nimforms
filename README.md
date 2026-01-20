@@ -1,6 +1,9 @@
 # Nimforms
 A simple gui library for Nim programming language based on Windows API
 
+## License
+This project is licensed under the MIT License.
+
 ## Screenshots
 All controls
 ![image](nimforms_130824.jpg)
