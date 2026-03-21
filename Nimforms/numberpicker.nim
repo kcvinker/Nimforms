@@ -73,7 +73,6 @@ proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75,
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    # result.mFont = parent.mFont
     result.cloneParentFont()
     result.mHasFont = true
     result.mBackColor = CLR_WHITE
@@ -296,7 +295,7 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         let nm = cast[LPNMUPDOWN](lpm)
         if nm.hdr.code == UDN_DELTAPOS:
             let valStrz = getControlText(this.mBuddyHandle)
-            let valStr = valStrz[0..<valStrz.len - 1]
+            let valStr = valStrz[0..<valStrz.len]
             this.mValue = parseFloat(valStr)
             this.setValueInternal(nm.iDelta)
             if this.onValueChanged != nil: this.onValueChanged(this, newEventArgs())

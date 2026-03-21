@@ -66,13 +66,6 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
 
 const DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = cast[DPI_AWARENESS_CONTEXT](-2)
 
-# proc getSystemDPI() =
-#     var hdc: HDC = GetDC(nil)
-#     appdata.sysDPI = GetDeviceCaps(hdc, LOGPIXELSY)
-#     ReleaseDC(nil, hdc)     
-#     appdata.scaleF = float(appdata.sysDPI) / 96.0
-#     # echo "scalf ", appData.scaleF
-    
 
 proc registerWinClass(this: Form) =
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE)
@@ -83,8 +76,7 @@ proc registerWinClass(this: Form) =
     appData.sendMsgBuffer = newWideString(64)
     this.hInstance = appData.hInstance
     appData.sysDPI = GetDpiForSystem()
-    appData.defFont = newFont("Tahoma", 12, autoc = true)
-    
+    appData.defFont = newFont("Tahoma", 12, autoc = true)    
     
     this.mClassName = cast[LPCWSTR](frmClsName[0].addr) #toWcharPtr("Nimforms_Window")
     this.mBackColor = newColor(0xF0F0F0)

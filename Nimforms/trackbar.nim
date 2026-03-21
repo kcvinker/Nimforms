@@ -122,6 +122,8 @@ const UNKNOWN_MSG = cast[UINT](4294967280)
 # Forward declaration
 proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createHandle*(this: TrackBar)
+
+
 # TrackBar constructor
 proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
     new(result)
@@ -133,7 +135,6 @@ proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
     result.mYpos = y
     result.mWidth = w
     result.mHeight = h
-    # result.mFont = parent.mFont
     result.mBackColor = parent.mBackColor
     result.mForeColor = CLR_BLACK
     result.mStyle = WS_CHILD or WS_VISIBLE or TBS_AUTOTICKS
@@ -146,9 +147,9 @@ proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
     result.mMaxRange = 100
     result.mFrequency = 10
     result.mPageSize = 10
-    result.mTicPos = tpDownSide
-    result.mChanStyle = csClassic
-    result.mTrackChange = tcNone
+    result.mTicPos = TicPosition.tpDownSide
+    result.mChanStyle = ChannelStyle.csClassic
+    result.mTrackChange = TrackChange.tcNone
     result.mTicColor = newColor(0x3385ff)
     result.mChanColor = newColor(0xc2c2a3)
     result.mSelColor = newColor(0x99ff33)
@@ -157,9 +158,14 @@ proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
 
 
 
-proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, h: int32 = 45, cdraw: bool = false): TrackBar =
+proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, 
+                    h: int32 = 45, cdraw: bool = false, evtFn: EventHandler = nil, 
+                    vertical: bool = false): TrackBar =
+
     result = trackBarCtor(parent, x, y, w, h)
     result.mCustDraw = cdraw
+    result.mVertical = vertical
+    if evtFn != nil: result.onValueChanged = evtFn
     if parent.mCreateChilds: result.createHandle()
 
 
@@ -330,7 +336,10 @@ proc destroyResources(this: TrackBar) =
     this.destructor()
 
 
-
+proc prepareCustomDraw(this: TrackBar) =
+    this.mChanPen = CreatePen(PS_SOLID, 1, this.mChanColor.cref)
+    this.mTicPen = CreatePen(PS_SOLID, this.mTicWidth, this.mTicColor.cref)
+    this.calculateTics()
 
 # Create TrackBar's hwnd
 proc createHandle*(this: TrackBar) =
@@ -338,12 +347,8 @@ proc createHandle*(this: TrackBar) =
     this.createHandleInternal()
     if this.mHandle != nil:
         this.setSubclass(tkbWndProc)
-        # this.setFontInternal()
         this.sendInitialMessages()
-        if this.mCustDraw:
-            this.mChanPen = CreatePen(PS_SOLID, 1, this.mChanColor.cref)
-            this.mTicPen = CreatePen(PS_SOLID, this.mTicWidth, this.mTicColor.cref)
-            this.calculateTics()
+        if this.mCustDraw: this.prepareCustomDraw()            
         if this.mSelRange: this.mSelBrush = CreateSolidBrush(this.mSelColor.cref)
 
 method autoCreate(this: TrackBar) = this.createHandle()
@@ -362,7 +367,8 @@ proc `ticColor=`*(this: TrackBar, value: Color) {.inline.} = this.mTicColor = va
 proc `ticColor=`*(this: TrackBar, value: uint) = 
     this.mTicColor = newColor(value)
     this.mCustDraw = true
-    this.checkRedraw()
+    this.prepareCustomDraw()
+    this.checkRedraw() # Calling base class function.
 proc ticColor*(this: TrackBar): Color {.inline.} = this.mTicColor
 
 proc `channelColor=`*(this: TrackBar, value: Color) {.inline.} = this.mChanColor = value
