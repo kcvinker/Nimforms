@@ -5,7 +5,8 @@ import strutils, sequtils
 import std/strformat
 import macros
 
-    
+# {.emit: "#include <windows.h>".}
+# {.emit: "#include <objidl.h>".}
 
 # Windows API Data types
 type
@@ -740,6 +741,103 @@ type
 
     LPDTTOPTS = ptr DTTOPTS
 
+    DebugEventLevel {.pure.} = enum
+        DebugEventLevelFatal, DebugEventLevelWarning
+
+    Status {.pure.} = enum
+        okay = 0,
+        genericError = 1,
+        invalidParameter = 2,
+        outOfMemory = 3,
+        objectBusy = 4,
+        insufficientBuffer = 5,
+        notImplemented = 6,
+        win32Error = 7,
+        wrongState = 8,
+        aborted = 9,
+        fileNotFound = 10,
+        valueOverflow = 11,
+        accessDenied = 12,
+        unknownImageFormat = 13,
+        fontFamilyNotFound = 14,
+        fontStyleNotFound = 15,
+        notTrueTypeFont = 16,
+        unsupportedGdiplusVersion = 17,
+        gdiplusNotInitialized = 18,
+        propertyNotFound = 19,
+        propertyNotSupported = 20,
+        profileNotFound = 21
+
+    PixelFormat {.pure.} = enum
+        indexed01Bpp = 0x00030101,      ## 1 bpp, indexed
+        indexed04Bpp = 0x00030402,      ## 4 bpp, indexed
+        indexed08Bpp = 0x00030803,      ## 8 bpp, indexed
+        grayScale16Bpp = 0x00101004,    ## 16 bpp, grayscale
+        rgb16Bpp555 = 0x00021005,       ## 16 bpp -- 5 bits for each RGB
+        rgb16Bpp565 = 0x00021006,       ## 16 bpp -- 5 bits red, 6 bits green, and 5 bits blue
+        rgb16Bpp1555 = 0x00061007,      ## 16 bpp -- 1 bit for alpha and 5 bits for each RGB component
+        rgb24Bpp888 = 0x00021808,       ## 24 bpp -- 8 bits for each RGB
+        rgb32Bpp888 = 0x00022009,       ## 32 bpp -- 8 bits for each RGB. No alpha.
+        argb32Bpp8888 = 0x0026200A,     ## 32 bpp -- 8 bits for each RGB and alpha
+        pArgb32Bpp8888 = 0x000E200B,    ## 32 bpp -- 8 bits for each RGB and alpha, pre-multiplied
+        rgb48BppFFF = 0x0010300C,       ## 48 bpp -- 16 bits for each RGB
+        argb64FFFF = 0x0034400D,        ## 64 bpp -- 16 bits for each RGB and alpha
+        pArgb64FFFF = 0x001A400E        ## 64 bpp -- 16 bits for each RGB and alpha, pre-multiplied
+
+    PixelOffsetMode {.pure.} = enum
+        invalidMode = -1,
+        defaultMode,
+        highSpeed,
+        highQuality,
+        noMode,
+        halfMode
+
+    GpUnit {.pure.} = enum
+        unitWorld,
+        unitDisplay,
+        unitPixel, # = unitPixel,
+        unitPoint, # = unitPoint,
+        unitInch, # = unitInch,
+        unitDocument,
+        unitMillimeter
+
+    InterPolationMode {.pure.} = enum
+        invalidMode = -1,
+        defaultMode,
+        lowQuality,
+        highQuality,
+        biLinear,
+        biCubic,
+        nearestNeighbour,
+        highQualityBiLinear,
+        highQualityBiCubic
+
+    DEBUG_EVENT_PROC = proc(level: DebugEventLevel, message: cstring) {.stdcall.}
+    NOTIFICATION_HOOK_PROC = proc(token: ptr ULONG_PTR) : Status {.stdcall.}
+    NOTIFICATION_UNHOOK_PROC = proc(token: ptr ULONG_PTR) {.stdcall.}   
+    GpGraphics {.pure, final.} = object
+    GpImage {.pure, final.} = object
+    # GpImage = ptr GpImageObj
+    # GpGraphics = ptr GpGraphicsObj
+
+# Force inclusion of base windows and property ID headers
+
+# type
+#     GpImageObj* {.importc: "GpImage", header: "gdiplus_fix.h", incompleteStruct.} = object
+#     GpGraphicsObj* {.importc: "GpImage", header: "gdiplus_fix.h", incompleteStruct.} = object
+#     GpImage* = ptr GpImageObj
+#     GpGraphics* = ptr GpImageObj
+
+    GdiplusStartupInput {.pure, final.} = object
+        GdiplusVersion: uint32
+        DebugEventCallback: DEBUG_EVENT_PROC
+        SuppressBackgroundThread: BOOL
+        SuppressExternalCodecs: BOOL
+
+    GdiplusStartupOutput {.pure, final.} = object
+        NotificationHook: NOTIFICATION_HOOK_PROC  
+        NotificationUnhook: NOTIFICATION_UNHOOK_PROC
+
 
 
 # Kernel32 functions 
@@ -879,6 +977,45 @@ proc DrawThemeTextEx(htheme: HTHEME, hdc: HDC, pid, sid: int32, txt: LPCWSTR,
 # COM functions
 proc CoInitializeEx(pvReserved: LPVOID, dwCoInit: DWORD): HRESULT {.stdcall, dynlib: "ole32", importc.}
 
+# GDI+ functions.
+{.push importc, stdcall, dynlib: "Gdiplus.dll".}
+
+proc GdiplusStartup(token: ptr ULONG_PTR, input: ptr GdiplusStartupInput, 
+                        output: ptr GdiplusStartupOutput): Status
+proc GdiplusShutdown(token: ULONG_PTR)
+
+proc GdipCreateBitmapFromFile(file: LPCWSTR, pBitmap: ptr pointer): Status
+proc GdipCreateHBITMAPFromBitmap(pBitmap: pointer, pRetHbmp: ptr HBITMAP, argb: int32): Status
+proc GdipBitmapSetResolution(pBitmap: pointer, xdpi: int32, ydpi: int32): Status
+
+proc GdipLoadImageFromFile(file: LPCWSTR, image: ptr ptr GpImage): Status
+proc GdipGetImageWidth(img: pointer, width: ptr uint32): Status {.discardable.}
+proc GdipGetImageHeight(img: pointer, height: ptr uint32): Status {.discardable.}
+
+proc GdipCreateBitmapFromScan0(width, height, stride: int32, pf: PixelFormat, 
+                                    scan0: ptr byte, pBmp: ptr pointer): Status
+proc GdipGetImageGraphicsContext(image: pointer, graphics: ptr pointer): Status
+
+proc GdipSetInterpolationMode(graphics: pointer, ipMode: InterpolationMode): Status
+proc GdipSetPixelOffsetMode(graphics: pointer, pxoMode: PixelOffsetMode): Status
+
+proc GdipCreateImageAttributes(imageattr: ptr pointer): Status
+proc GdipDisposeImageAttributes(imageattr: pointer): Status
+
+proc GdipDeleteGraphics(graphics: pointer): Status {.discardable.}
+proc GdipDisposeImage(image: pointer): Status
+
+proc GdipDrawImageRect(graphics: ptr GpGraphics, image: ptr GpImage, 
+                            x, y, width, height: float32): Status
+
+proc GdipDrawImageRectRect(graphics: ptr GpGraphics, image: pointer, 
+                                dstx, dsty, dstwidth, dstheight: int32,
+                                srcx, srcy, srcwidth, srcheight: int32, 
+                                srcUnit: GpUnit, imageAttributes: pointer, 
+                                callback: pointer, callbackData: pointer): Status
+
+proc GdipCreateFromHDC(hdc: HDC, graphics: ptr ptr GpGraphics): Status
+{.pop.} 
 
 
 proc new_wstring(size: Natural): wstring {.inline.} = newSeq[WCHAR](size)

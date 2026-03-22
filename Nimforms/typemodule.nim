@@ -5,7 +5,7 @@ import tables
 type
     ControlType* {.pure.} = enum
         ctNone, ctButton, ctCalendar, ctCheckBox, ctComboBox, ctDateTimePicker, ctForm, ctGroupBox, ctLabel,
-        ctListBox, ctListView, ctNumberPicker, ctProgressBar, ctRadioButton, ctTextBox, ctTrackBar, ctTreeView
+        ctListBox, ctListView, ctNumberPicker, ctPictureBox, ctProgressBar, ctRadioButton, ctTextBox, ctTrackBar, ctTreeView
 
     WArrayPtr = ptr UncheckedArray[Utf16Char]
 
@@ -304,6 +304,16 @@ type
         mGBStyle: GroupBoxStyle
         mControls: seq[Control]
 
+    
+
+    
+
+    Image* = ref object
+        mImage : ptr GpImage
+        mWidth, mHeight : uint32
+
+
+
     LabelBorder* {.pure.} = enum
         lbNone, lbSingle, lbSunken
 
@@ -435,6 +445,23 @@ type
         mBuddyStr: string
         #Event
         onValueChanged*: EventHandler
+
+    PictureSizeMode* {.pure.} = enum
+        psmNormal,     # draw at original size
+        psmStretch,    # stretch to control size
+        psmAutoSize,   # resize control to fit the image
+        psmCenter,     # center the image
+        psmZoom 
+
+    PictureBox* = ref object of Control
+        mImage : Image
+        mSizeMode : PictureSizeMode
+        mRect : RECT 
+        mDestRect: RECT
+        mSize : SIZE 
+        mImgPath : string 
+
+
 
     ProgressBarState* {.pure.} = enum
         pbsNone, pbsNormal, pbsError, pbsPaused
@@ -578,13 +605,15 @@ type
     AppData = object
         appStarted: bool
         loopStarted: bool
+        isDateInit: bool
+        isGdipInit: bool
         screenWidth: int32
         screenHeight: int32
         formCount: int32
         mainHwnd: HWND
         trayHwnds: seq[HWND]
         hInstance: HINSTANCE
-        isDateInit: bool
+        gdipToken: ULONG_PTR
         iccEx: INITCOMMONCONTROLSEX
         logfont: LOGFONTW
         defFont: Font
@@ -599,6 +628,11 @@ proc appFinalize(this: var AppData) =
             if IsWindow(hwnd) > 0: DestroyWindow(hwnd)
 
     this.sendMsgBuffer.finalize()
+    if this.isGdipInit: 
+        GdiplusShutdown(this.gdipToken);
+        echo("GdiPlus shutdown successfully.")
+        this.isGdipInit = false
+
     echo "Nimforms is exiting..."
 
 var appData : AppData # Global object to hold some app level info.
@@ -608,4 +642,14 @@ var appData : AppData # Global object to hold some app level info.
 var ewca : array[1, WCHAR] # Empty Wchar Array
 ewca[0] = cast[WCHAR](0)
 let emptyWStrPtr = ewca[0].unsafeAddr
+
+proc initGdiPlus(this: var AppData) =
+    if this.isGdipInit: 
+        return
+    else:
+        var stInp = GdiplusStartupInput()
+        stInp.GdiplusVersion = 1
+        let res = GdiplusStartup(this.gdipToken.unsafeAddr, stInp.unsafeAddr, nil)
+        if res == Status.okay: this.isGdipInit = true 
+        echo "Gdip Init: ", res
 

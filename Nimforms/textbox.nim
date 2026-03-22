@@ -96,6 +96,7 @@ proc createHandle*(this: TextBox) =
     if this.mHandle != nil:
         this.setSubclass(tbWndProc)
         this.setFontInternal()
+        if this.mText.len > 0:  SetWindowTextW(this.mHandle, this.mText.toWcharPtr)
         if this.mCueBanner.len > 0: this.sendMsg(EM_SETCUEBANNER, 1, toWcharPtr(this.mCueBanner))
 
 method autoCreate(this: TextBox) = this.createHandle()

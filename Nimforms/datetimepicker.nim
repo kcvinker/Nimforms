@@ -216,21 +216,27 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     of WM_LBUTTONDOWN:
         var this = cast[DateTimePicker](refData)
         this.leftButtonDownHandler(msg, wpm, lpm)
+        
     of WM_LBUTTONUP:
         var this = cast[DateTimePicker](refData)
         this.leftButtonUpHandler(msg, wpm, lpm)
+
     of WM_RBUTTONDOWN:
         var this = cast[DateTimePicker](refData)
         this.rightButtonDownHandler(msg, wpm, lpm)
+
     of WM_RBUTTONUP:
         var this = cast[DateTimePicker](refData)
         this.rightButtonUpHandler(msg, wpm, lpm)
+
     of WM_MOUSEMOVE:
         var this = cast[DateTimePicker](refData)
         this.mouseMoveHandler(msg, wpm, lpm)
+
     of WM_MOUSELEAVE:
         var this = cast[DateTimePicker](refData)
         this.mouseLeaveHandler()
+
     of WM_CONTEXTMENU:
         var this = cast[DateTimePicker](refData)
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)

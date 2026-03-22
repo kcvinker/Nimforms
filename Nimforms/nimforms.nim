@@ -9,6 +9,7 @@ include typemodule
 include colors
 include widestring
 include graphics
+include image
 include font
 include commons # 'menu.nim' is included in this file.
 include events
@@ -26,6 +27,7 @@ include label
 include listbox
 include listview
 include numberpicker
+include picturebox
 include progressbar
 include radiobutton
 include textbox
