@@ -129,6 +129,7 @@ proc updateClientRect(this: PictureBox) =
     this.computeDestRect()
     if this.mHandle != nil: InvalidateRect(this.mHandle, nil, 1)
 
+# Calculate the rect for drawing PictureBox
 proc computeDestRect(this: PictureBox) =
     # Use the Control's Client Area size
     let cw = this.mWidth  # Use the width/height of the PictureBox control
@@ -140,7 +141,6 @@ proc computeDestRect(this: PictureBox) =
 
     let imgW = this.mImage.width.int32
     let imgH = this.mImage.height.int32
-
     case this.mSizeMode:
         of PictureSizeMode.psmNormal:
             this.mRect = RECT(left:0, top:0, right: imgW, bottom: imgH)       
@@ -171,7 +171,7 @@ proc computeDestRect(this: PictureBox) =
         of PictureSizeMode.psmAutoSize:
             this.mRect = RECT(left:0, top:0, right: imgW, bottom: imgH)
        
-
+# Adjust the size of PictureBox with the image size.
 proc adjustSizeToImage(this: PictureBox) =
     if (this.mImage == nil or this.mHandle == nil): return
     let sz = this.mImage.size
@@ -180,13 +180,14 @@ proc adjustSizeToImage(this: PictureBox) =
     if this.mHandle != nil: InvalidateRect(this.mHandle, nil, 1)
 
 
-
+# var cnt = 1
 proc pBoxWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
+    # echo "[", cnt, "] pbx msg: ", msg
+    # cnt += 1
     case msg
     of WM_DESTROY: 
         var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        if this.mImage != nil: this.mImage.finalize()
-        
+        if this.mImage != nil: this.mImage.finalize()        
 
     of WM_PAINT:
         var ps : PAINTSTRUCT
@@ -214,6 +215,51 @@ proc pBoxWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this != nil and this.mSizeMode != PictureSizeMode.psmAutoSize:
                 InvalidateRect(this.mHandle, nil, 1)
+
+    of WM_MOUSEMOVE:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        if not this.mIsMouseTracking:
+            this.mIsMouseTracking = true
+            trackMouseMove(hw)
+            if not this.mIsMouseEntered:
+                this.mIsMouseEntered = true
+                if this.onMouseEnter != nil:                    
+                    this.onMouseEnter(this, newEventArgs())
+                # echo "mouse entered"
+        if this.onMouseMove != nil: this.onMouseMove(this, newMouseEventArgs(msg, wpm, lpm))
+
+    of WM_MOUSEHOVER:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        if this.mIsMouseTracking: this.mIsMouseTracking = false
+        if this.onMouseHover != nil: this.onMouseHover(this, newMouseEventArgs(msg, wpm, lpm))
+
+    of WM_MOUSELEAVE:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        if this.mIsMouseTracking:
+            this.mIsMouseTracking = false
+            this.mIsMouseEntered = false
+        if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
+        # echo "mouse leave"
+
+    of WM_LBUTTONDOWN:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        this.leftButtonDownHandler(msg, wpm, lpm)
+        
+    of WM_LBUTTONUP:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        this.leftButtonUpHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONDOWN:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        this.rightButtonDownHandler(msg, wpm, lpm)
+
+    of WM_RBUTTONUP:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        this.rightButtonUpHandler(msg, wpm, lpm)
+
+    of WM_MOUSEWHEEL:
+        var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+        this.mouseWheelHandler(msg, wpm, lpm)
 
     else: return DefWindowProcW(hw, msg, wpm, lpm)
     return DefWindowProcW(hw, msg, wpm, lpm)

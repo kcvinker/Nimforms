@@ -454,6 +454,7 @@ type
         psmZoom 
 
     PictureBox* = ref object of Control
+        mIsMouseTracking : bool
         mImage : Image
         mSizeMode : PictureSizeMode
         mRect : RECT 

@@ -34,7 +34,7 @@ btn3.setGradientColor(0xeeef20, 0x70e000)
 # Now, create a DateTimePicker
 var dtp = newDateTimePicker(frm, btn3.right(10))
 dtp.font = newFont("Tahoma", 14) # Set a different font.
-
+dtp.backColor=0xe63946
 # Now, create a ComboBox and add some items.
 var cmb = newComboBox(frm, dtp.right(10), w=120)
 cmb.addItems("Windows", "MacOS", "Linux", "ReactOS")

@@ -140,9 +140,11 @@ proc setAutoSize(this: DateTimePicker) =
 
 # Create DateTimePicker's hwnd
 proc createHandle*(this: DateTimePicker) =
+    # this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
     this.setDTPStyles()
     this.createHandleInternal()
     if this.mHandle != nil:
+        # SetWindowTheme(this.mHandle, emptyWStrPtr, emptyWStrPtr)
         this.setSubclass(dtpWndProc)
         this.setAutoSize()
         this.setFontInternal()
@@ -244,6 +246,7 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     of MM_NOTIFY_REFLECT:
         var this = cast[DateTimePicker](refData)
         let nm = cast[LPNMHDR](lpm)
+        # echo "nm.code: ", nm.code
         case nm.code
         of DTN_USERSTRINGW:
             if this.onTextChanged != nil:
@@ -275,6 +278,17 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         var this = cast[DateTimePicker](refData)
         this.updateFontInternal()
         return 0
+
+    # of MM_EDIT_COLOR:
+    #     echo "of MM_EDIT_COLOR:"
+
+    # of MM_LABEL_COLOR:
+    #     echo "of MM_LABEL_COLOR:"
+    #     var this = cast[DateTimePicker](refData)
+    #     let hdc = cast[HDC](wpm)
+    #     if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
+    #     SetBkColor(hdc, this.mBackColor.cref)
+    #     return cast[LRESULT](this.mBkBrush)
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

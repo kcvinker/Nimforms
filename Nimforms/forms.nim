@@ -435,26 +435,31 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         # let b = getMonoTime()
         # echo "time for getting form : ", b - a
         this.leftButtonDownHandler(msg, wpm, lpm)
+
     of WM_LBUTTONUP:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.leftButtonUpHandler(msg, wpm, lpm)
+
     of WM_RBUTTONDOWN:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.rightButtonDownHandler(msg, wpm, lpm)
+
     of WM_RBUTTONUP:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.rightButtonUpHandler(msg, wpm, lpm)
+
     of WM_MOUSEWHEEL:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.mouseWheelHandler(msg, wpm, lpm)
+
     of WM_MOUSEMOVE:
         var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if not this.mIsMouseTracking:
             this.mIsMouseTracking = true
             trackMouseMove(hw)
             if not this.mIsMouseEntered:
-                if this.onMouseEnter != nil:
-                    this.mIsMouseEntered = true
+                this.mIsMouseEntered = true
+                if this.onMouseEnter != nil:                    
                     this.onMouseEnter(this, newEventArgs())
         if this.onMouseMove != nil: this.onMouseMove(this, newMouseEventArgs(msg, wpm, lpm))
 
