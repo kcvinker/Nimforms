@@ -197,8 +197,8 @@ proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem =
 proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
     var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
     case msg
-    of WM_DESTROY:
-        echo "Conetxt menu message-only window destroyed"
+    # of WM_DESTROY:
+    #     echo "Conetxt menu message-only window destroyed"
 
     of WM_MEASUREITEM:
         var pmi = cast[LPMEASUREITEMSTRUCT](lpm)

@@ -104,7 +104,7 @@ proc createHandle*(this: Button) =
     this.createHandleInternal()
     if this.mHandle != nil:
         this.setSubclass(btnWndProc)
-        echo "button font handle ", cast[uint](this.mFont.handle)
+        # echo "button font handle ", cast[uint](this.mFont.handle)
         this.setFontInternal()
 
 method autoCreate(this: Button) = this.createHandle()
@@ -212,14 +212,14 @@ proc flatDrawFinalize(this: var FlatDraw) =
     DeleteObject(this.hotBrush)
     DeleteObject(this.defPen)
     DeleteObject(this.hotPen)
-    echo "flat draw finished"
+    # echo "flat draw finished"
 
 proc gradDrowFinalize(this: var GradDraw) =
     DeleteObject(this.defBrush)
     DeleteObject(this.hotBrush)
     DeleteObject(this.defPen)
     DeleteObject(this.hotPen)
-    echo "grad draw finished"
+    # echo "grad draw finished"
 
 # Deleting certain resources for this button.
 proc btnDtor(this: Button) =

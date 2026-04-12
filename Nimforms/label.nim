@@ -117,7 +117,6 @@ proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
     of MM_LABEL_COLOR:
         # echo "MMLABEL Color"
-        # this.printControlRect()
         let hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
         SetBkColor(hdc, this.mBackColor.cref)

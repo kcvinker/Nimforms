@@ -49,7 +49,7 @@ gb.backColor = 0xa8dadc
 
 # Now, a Label.
 var lb = newLabel(frm, "Static Text", 20, gb.ypos + 30)
-lb.printControlRect()
+# lb.printControlRect()
 # lb.foreColor = 0x7b2cbf
 gb.addControls(lb)
 

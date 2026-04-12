@@ -216,7 +216,7 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         Shell_NotifyIconW(NIM_DELETE, &this.mNid)
         if this.mhTrayIcon != nil: DestroyIcon(this.mhTrayIcon)
         if this.mCmenu != nil: this.mCmenu.cmenuDtor()
-        echo "tray icon destroyed"
+        # echo "tray icon destroyed"
     
     of MM_TRAY_MSG:
         case lpm

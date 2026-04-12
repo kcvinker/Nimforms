@@ -108,7 +108,7 @@ proc setNPStyle(this: NumberPicker) =
     of taRight: this.mBuddyStyle = this.mBuddyStyle or ES_RIGHT
     this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
     this.mPen = CreatePen(PS_SOLID, 1, this.backColor.cref)
-    prct(this.mMyRect, POINT(x:0, y:0), false)
+    # prct(this.mMyRect, POINT(x:0, y:0), false)
 
 
 proc createBuddy(this: NumberPicker) =

@@ -484,7 +484,7 @@ proc addColumns*(this: ListView, colNames: seq[string], colWidths: seq[int]): se
 
 proc addColumns*(this: ListView, colCount: int, nameAndWidth: varargs[string, `$`]): seq[ListViewColumn] {.discardable.} =
     # Example usage - lv.addColumns(3, "Names", "Jobs", "Salaries", 100, 60, 110)
-    echo "line 386"
+    # echo "line 386"
     if nameAndWidth.len != (colCount * 2): raise newException(Exception, "Column namse are not equal to widths")
     for i in 0..<colCount:
         var col = newListViewColumn(nameAndWidth[i], int32(parseInt(nameAndWidth[i + colCount])))
@@ -492,7 +492,7 @@ proc addColumns*(this: ListView, colCount: int, nameAndWidth: varargs[string, `$
         result.add(col)
 
 proc addColumns*(this: ListView, colsAndWidths: tuple or object): seq[ListViewColumn] {.discardable.} =
-    echo "line 393"
+    # echo "line 393"
     var colnames : seq[string]
     var widths : seq[int]
     for f in fields(colsAndWidths):
@@ -514,7 +514,7 @@ proc addColumns(this: ListView, colAndWidth: OrderedTable[string, int32]) : seq[
         result.add(col)
 
 proc addColumns(this: ListView, colnames: varargs[string, `$`]) : seq[ListViewColumn] {.discardable.} =
-    echo "line 416"
+    # echo "line 416"
     let colAndWidth = this.getWidthOfColumnNames(colnames) # This will return a Table[string, int]
     result = this.addColumns(colAndWidth)
 

@@ -197,7 +197,7 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mMaximizeBox = true
     result.mMinimizeBox = true
     result.mText = (if title == "": "Form_" & $appData.formCount else: title)
-    echo "form font size ", result.mFont.mSize
+    # echo "form font size ", result.mFont.mSize
 
 # proc setFormFont(this: Form) =
 #     this.mFont.createPrimaryHandle()
@@ -221,7 +221,7 @@ proc createHandle*(this: Form, create_childs: bool = false) =
         this.setFontInternal()
         
         # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
-        echo "GetDpiForWindows ", GetDpiForWindow(this.mHandle)
+        # echo "GetDpiForWindows ", GetDpiForWindow(this.mHandle)
     else:
         echo "window creation error : ", GetLastError()
     

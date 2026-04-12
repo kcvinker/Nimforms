@@ -135,7 +135,8 @@ proc finalize(this: var Font) =
 # End of Font related area
 
 proc `=destroy`(obj: var Font) =
-  echo "Destroying Font with ctl : ", obj.tag
+    discard
+#   echo "Destroying Font with ctl : ", obj.tag
   # Perform any custom cleanup here
 
 proc getFontData*(obj: HWND) =

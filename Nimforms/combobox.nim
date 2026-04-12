@@ -151,6 +151,7 @@ proc getBiggerLength(this: ComboBox): int32 =
     for item in this.mitems:
         if len(item) > len(biggerItem):
             biggerItem = item 
+            
     result = int32(len(biggerItem))
 
 proc insertItemsInternal(this: ComboBox) =
@@ -183,6 +184,7 @@ proc addItem*(this: ComboBox, item: auto) =
     if this.mIsCreated: 
         appData.sendMsgBuffer.updateBuffer(sitem)
         this.sendMsg(CB_ADDSTRING, 0, &appData.sendMsgBuffer)
+
     this.mItems.add(sitem)
 
 proc addItems*(this: ComboBox, args: varargs[string, `$`]) =
@@ -190,6 +192,7 @@ proc addItems*(this: ComboBox, args: varargs[string, `$`]) =
         if this.mIsCreated: 
             appData.sendMsgBuffer.updateBuffer(item)
             this.sendMsg(CB_ADDSTRING, 0, &appData.sendMsgBuffer)
+
         this.mItems.add(item)
 
 proc removeItem*(this: ComboBox, item: auto) =
@@ -259,19 +262,6 @@ proc getComboMousePoints(): POINT =
     let y = int32(HIWORD(value))
     result = POINT(x:x, y:y)
 
-# proc getMousePoints(this: ComboBox) : POINT =
-#     var p : POINT
-    
-#     return p
-    
-
-# proc trackMouseHover(this: ComboBox) =
-#     let pt = this.getMousePoints()
-#     if PtInRect(&this.mSpRect, pt) > 0 :
-#         # We are inside the combo box rect. 
-#         this.mLastMpos = pt  
-#         this.mHoverTimer.tryReset()
-#         this.mHoverTriggered = false
 
 method `onMouseHover=`*(this: ComboBox, evtProc: EventHandler) =
     procCall `onMouseHover=`(cast[Control](this), evtProc)
