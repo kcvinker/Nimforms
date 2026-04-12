@@ -1,5 +1,8 @@
 Nimforms changelog
 
+Version 10.126 (12-Apr-2026)
+    Improved onClick event handling.
+
 Version 10.125 (12-Apr-2026)
     Removed unnecessary echos.
 

@@ -258,29 +258,31 @@ proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
     globalSubClassID += 1
 
 
-
+proc isMouseOnMe(this: Control, lpm: LPARAM) : bool {. inline .} =
+    let pt = POINT(x: getXFromLp(lpm), y: getYFromLP(lpm))
+    return PtInRect(&this.mcRect, pt) != 0
 
 
 
 
 
 # ===========================Event handlers for Control======================================================
-proc leftButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-    if this.onMouseDown != nil: this.onMouseDown(this, newMouseEventArgs(msg, wp, lp))
+# proc leftButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
+#     if this.onMouseDown != nil: this.onMouseDown(this, newMouseEventArgs(msg, wp, lp))
 
-proc leftButtonUpHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-    if this.onMouseUp != nil: this.onMouseUp(this, newMouseEventArgs(msg, wp, lp))
-    if this.onClick != nil: this.onClick(this, newEventArgs())
+# proc leftButtonUpHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
+#     if this.onMouseUp != nil: this.onMouseUp(this, newMouseEventArgs(msg, wp, lp))
+#     if this.onClick != nil: this.onClick(this, newEventArgs())
 
-proc rightButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-    if this.onRightMouseDown != nil: this.onRightMouseDown(this, newMouseEventArgs(msg, wp, lp))
+# proc rightButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
+#     if this.onRightMouseDown != nil: this.onRightMouseDown(this, newMouseEventArgs(msg, wp, lp))
 
-proc rightButtonUpHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-    if this.onRightMouseUp != nil: this.onRightMouseUp(this, newMouseEventArgs(msg, wp, lp))
-    if this.onRightClick != nil: this.onRightClick(this, newEventArgs())
+# proc rightButtonUpHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
+#     if this.onRightMouseUp != nil: this.onRightMouseUp(this, newMouseEventArgs(msg, wp, lp))
+#     if this.onRightClick != nil: this.onRightClick(this, newEventArgs())
 
-proc mouseWheelHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-    if this.onMouseWheel != nil: this.onMouseWheel(this, newMouseEventArgs(msg, wp, lp))
+# proc mouseWheelHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
+    
 
 
 proc keyDownHandler(this: Control, wp: WPARAM) =
@@ -331,6 +333,7 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
                                     this.mParent.hInstance, nil)
     if this.mHandle != nil:        
         this.mIsCreated = true
+        GetClientRect(this.mHandle, &this.mcRect)
         if this.mHasFont:
             this.mFont.pHwnd = this.mHandle
     else:
@@ -390,19 +393,38 @@ proc commonMsgHandler(this: Control, hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPAR
     result = MsgHandlerResult.mhrCallDefProc
     case msg
     of WM_LBUTTONDOWN:
-        this.leftButtonDownHandler(msg, wpm, lpm)
+        this.mLbDown = true
+        if this.onMouseDown != nil: 
+            this.onMouseDown(this, newMouseEventArgs(msg, wpm, lpm))
 
     of WM_LBUTTONUP:
-        this.leftButtonUpHandler(msg, wpm, lpm)
+        if this.onMouseUp != nil: 
+            this.onMouseUp(this, newMouseEventArgs(msg, wpm, lpm))
+    
+        if this.onClick != nil and this.mLbDown: 
+            if this.isMouseOnMe(lpm):
+                this.onClick(this, newEventArgs())
+
+        this.mLbDown = false
 
     of WM_RBUTTONDOWN:
-        this.rightButtonDownHandler(msg, wpm, lpm)
+        this.mRbDown = true
+        if this.onRightMouseDown != nil: 
+            this.onRightMouseDown(this, newMouseEventArgs(msg, wpm, lpm))
 
     of WM_RBUTTONUP:
-        this.rightButtonUpHandler(msg, wpm, lpm)
+        if this.onRightMouseUp != nil: 
+            this.onRightMouseUp(this, newMouseEventArgs(msg, wpm, lpm))
+
+        if this.onRightClick != nil and this.mRbDown: 
+            if this.isMouseOnMe(lpm):
+                this.onRightClick(this, newEventArgs())
+
+        this.mRbDown = false
 
     of WM_MOUSEWHEEL:
-        this.mouseWheelHandler(msg, wpm, lpm)
+        if this.onMouseWheel != nil: 
+            this.onMouseWheel(this, newMouseEventArgs(msg, wpm, lpm))
 
     of WM_MOUSEMOVE:
         return this.mouseMoveHandler(hw, msg, wpm, lpm)
