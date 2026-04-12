@@ -76,55 +76,28 @@ proc checked*(this: RadioButton): bool {.inline.} = this.mChecked
 
 
 proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    
+    var this = cast[RadioButton](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, rbWndProc, scID)
-        var this = cast[RadioButton](refData)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[RadioButton](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP:
-        var this = cast[RadioButton](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[RadioButton](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[RadioButton](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[RadioButton](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-
-    of WM_MOUSELEAVE:
-        var this = cast[RadioButton](refData)
-        this.mouseLeaveHandler()
-        
-    of WM_CONTEXTMENU:
-        var this = cast[RadioButton](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
     of MM_LABEL_COLOR:
-        var this = cast[RadioButton](refData)
         let hdc = cast[HDC](wpm)
         SetBkMode(hdc, 1)
         if (this.mDrawMode and 2) == 2: SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
     of MM_CTL_COMMAND:
-        var this = cast[RadioButton](refData)
         this.mChecked = bool(this.sendMsg(BM_GETCHECK, 0, 0))
         if this.onCheckedChanged != nil: this.onCheckedChanged(this, newEventArgs())
 
     of MM_NOTIFY_REFLECT:
-        var this = cast[RadioButton](refData)
         # We use this message only to change the fore color.
         let nmcd = cast[LPNMCUSTOMDRAW](lpm)
         case nmcd.dwDrawStage
@@ -140,11 +113,6 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             DrawTextW(nmcd.hdc, this.mWideText, -1, nmcd.rc.unsafeAddr, this.mTxtFlag)
             return CDRF_SKIPDEFAULT
         else: discard
-        return 0
-
-    of MM_FONT_CHANGED:
-        var this = cast[RadioButton](refData)
-        this.updateFontInternal()
         return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)

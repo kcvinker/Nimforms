@@ -104,48 +104,24 @@ proc borderStyle*(this: Label): LabelBorder {.inline.} = this.mBorder
 
 
 proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    
+    var this = cast[Label](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, lbWndProc, scID)
-        var this = cast[Label](refData)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[Label](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP:
-        var this = cast[Label](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN:
-        var this = cast[Label](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP:
-        var this = cast[Label](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE:
-        var this = cast[Label](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE:
-        var this = cast[Label](refData)
-        this.mouseLeaveHandler()
-    of WM_CONTEXTMENU:
-        var this = cast[Label](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
     of MM_LABEL_COLOR:
-        var this = cast[Label](refData)
         # echo "MMLABEL Color"
         # this.printControlRect()
         let hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
         SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
-
-    of MM_FONT_CHANGED:
-        var this = cast[Label](refData)
-        this.updateFontInternal()
-        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

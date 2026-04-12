@@ -166,37 +166,18 @@ proc showPercentage*(this: ProgressBar): bool {.inline.} = this.mShowPerc
 
 
 proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    
+    var this = cast[ProgressBar](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, pbWndProc, scID)
-        var this = cast[ProgressBar](refData)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[ProgressBar](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP:
-        var this = cast[ProgressBar](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN:
-        var this = cast[ProgressBar](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP:
-        var this = cast[ProgressBar](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE:
-        var this = cast[ProgressBar](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE:
-        var this = cast[ProgressBar](refData)
-        this.mouseLeaveHandler()
-    of WM_CONTEXTMENU:
-        var this = cast[ProgressBar](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
     of WM_PAINT:
-        var this = cast[ProgressBar](refData)
         if this.mShowPerc and this.mBarStyle == pbsBlock:
             discard DefSubclassProc(hw, msg, wpm, lpm)
             var ss: SIZE

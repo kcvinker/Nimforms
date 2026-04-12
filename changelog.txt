@@ -1,0 +1,8 @@
+Nimforms changelog
+
+Version 10.124 (12-Apr-2026)
+    Removed redundant code from window procedure functions.
+        Basic message handling for controls is now handled by a base class method.
+
+    Improved Mouse Enter/Hover/Leave events.
+        Fixed bugs in combo controls like ComboBox & NumberPicker

@@ -36,7 +36,7 @@ var dtp = newDateTimePicker(frm, btn3.right(10))
 dtp.font = newFont("Tahoma", 14) # Set a different font.
 dtp.backColor=0xe63946
 # Now, create a ComboBox and add some items.
-var cmb = newComboBox(frm, dtp.right(10), w=120)
+var cmb = newComboBox(frm, dtp.right(10), w=120, enableInput=true)
 cmb.addItems("Windows", "MacOS", "Linux", "ReactOS")
 cmb.selectedIndex = 0 # First item is selected
 
@@ -123,6 +123,15 @@ var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
 let aw = cmenu["Add Work"]
 
 proc addWork(m: RootRef, e: EventArgs) {.handles: aw.onClick} = echo "Add Work menu clicked"
+
+proc menter(c: RootRef, e: EventArgs) {.handles:np.onMouseEnter.} =
+    echo "mouse entered" 
+
+proc mleave(c: RootRef, e: EventArgs) {.handles:np.onMouseLeave.} =
+    echo "mouse left" 
+
+proc mhover(c: RootRef, e: EventArgs) {.handles:pbx.onMouseHover.} =
+    echo "pbx mouse hovered..." 
 
 # Finally, display the form.
 frm.display()

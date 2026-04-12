@@ -65,6 +65,7 @@ proc createHandle*(this: NumberPicker)
 # NumberPicker constructor
 proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27): NumberPicker =
     new(result)
+    result.mtid = 2
     result.mKind = ctNumberPicker
     result.mClassName = cast[LPCWSTR](npClsName[0].addr)
     result.mName = "NumberPicker_" & $npCount
@@ -105,9 +106,9 @@ proc setNPStyle(this: NumberPicker) =
     of taLeft: this.mBuddyStyle = this.mBuddyStyle or ES_LEFT
     of taCenter: this.mBuddyStyle = this.mBuddyStyle or ES_CENTER
     of taRight: this.mBuddyStyle = this.mBuddyStyle or ES_RIGHT
-    this.mMyRect = RECT(left: this.mXpos, top: this.mYpos, right: (this.mXpos - this.mWidth), bottom: (this.mYpos - this.mHeight))
     this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
     this.mPen = CreatePen(PS_SOLID, 1, this.backColor.cref)
+    prct(this.mMyRect, POINT(x:0, y:0), false)
 
 
 proc createBuddy(this: NumberPicker) =
@@ -144,10 +145,13 @@ proc postCreationTasks(this: NumberPicker) =
     GetClientRect(this.mBuddyHandle, this.mBuddyRect.unsafeAddr)
     GetClientRect(this.mHandle, this.mUpdRect.unsafeAddr)
     this.resizeBuddy()
-    this.mMyRect.right = this.mMyRect.left + this.mBuddyRect.right + this.mUpdRect.right
-    this.mMyRect.bottom = this.mMyRect.top + this.mBuddyRect.bottom
+    # this.mMyRect.right = this.mMyRect.left + this.mBuddyRect.right + this.mUpdRect.right
+    # this.mMyRect.bottom = this.mMyRect.top + this.mBuddyRect.bottom
     this.displayValue()
     if oldBuddy != nil: SendMessageW(oldBuddy, MM_BUDDY_RESIZE, 0, 0) # This is a hack
+    SetRect(&this.mMyRect, this.mXpos, this.mYpos, (this.mXpos + this.mWidth), (this.mYpos + this.mHeight))
+    UnionRect(&this.mSpRect, &this.mUpdRect, &this.mBuddyRect)
+
 
 proc setValueInternal(this: NumberPicker, delta: int32) =
     let newValue = this.mValue + (float(delta) * this.mStep)
@@ -162,12 +166,55 @@ proc setValueInternal(this: NumberPicker, delta: int32) =
         this.mValue = clamp(newValue, this.mMinRange, this.mMaxRange)
     this.displayValue()
 
-proc isMouseUponMe(this: NumberPicker): bool =
-    var pt: POINT
-    GetCursorPos(pt.unsafeAddr)
-    ScreenToClient(this.mParent.mHandle, pt.unsafeAddr)
-    let ret = PtInRect(this.mMyRect.unsafeAddr, pt)
-    result = bool(ret)
+
+    
+method `onMouseHover=`*(this: NumberPicker, evtProc: EventHandler) =
+    procCall `onMouseHover=`(cast[Control](this), evtProc)
+    this.mHoverTimer = newTimer(400, nil, this.mHandle)
+
+method mouseMoveHandler(this: NumberPicker, hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM) : MsgHandlerResult =
+    result = MsgHandlerResult.mhrCallDefProc      
+    if this.onMouseMove != nil:
+        var mea = newMouseEventArgs(msg, wpm, lpm)
+        this.onMouseMove(this, mea)
+
+    if mouseHoverEvent in this.mMouseEvents and not this.mHoverTriggered:
+        this.mLastMpos.x = cast[int32](LOWORD(lpm))
+        this.mLastMpos.y = cast[int32](HIWORD(lpm))
+        this.mHoverTimer.tryReset()
+        this.mHoverTriggered = true
+
+    if mouseEnterEvent in this.mMouseEvents and not this.mMouseEntered: 
+        this.mMouseEntered = true
+        this.mOnMouseEnter(this, newEventArgs())
+
+
+method mouseLeaveHandler(this: NumberPicker): MsgHandlerResult =
+    # tmeMLeave is handling onMouseEnter & onMouseLeave events.
+    # tmeMHover is handling onMouseHover event.
+    if tmeMLeave in this.mTmeFlags or tmeMHover in this.mTmeFlags: 
+        if this.mIsMouseTracking or this.mMouseEntered or this.mHoverTriggered:  
+            # It's tricky to implement mouse leave event in NumberPicker.
+            # We get mouse leave message from edit and arrow buttons.
+            # So we can't rely on just that message. So we are checking...
+            # if mouse is really upon our permeter or not. It is safe to convert
+            # all the mouse points relative to Form's coordinates.                 
+            var pt : POINT
+            GetCursorPos(&pt)
+            ScreenToClient(this.mParent.mHandle, &pt)      
+            let inside = cast[bool](PtInRect(&this.mMyRect, pt))     
+            if not inside:
+                this.mIsMouseTracking = false
+                this.mMouseEntered = false
+                if this.mHoverTriggered:
+                    this.mHoverTriggered = false
+                    this.mHoverTimer.stop()
+
+                if this.mOnMouseLeave != nil: this.mOnMouseLeave(this, newEventArgs())            
+
+    return MsgHandlerResult.mhrCallDefProc
+
+    
 
 # Create NumberPicker's hwnd
 proc createHandle*(this: NumberPicker) =
@@ -178,36 +225,12 @@ proc createHandle*(this: NumberPicker) =
         this.setFontInternal()
         this.createBuddy()
         this.postCreationTasks()
-        this.mcRect = this.mMyRect
-        # var pArr : array[4, POINT]
-        # pArr[0] = POINT(x : this.mMyRect.left, y: this.mMyRect.top)
-        # pArr[1] = POINT(x: this.mMyRect.right, y: this.mMyRect.top)
-        # pArr[2] = POINT(x: this.mMyRect.right, y: this.mMyRect.bottom)
-        # pArr[3] = POINT(x: this.mMyRect.left, y: this.mMyRect.bottom)
-        # var pnt : POINT = POINT(x : this.mUpdRect.right, y: this.mUpdRect.bottom)
-        # for i, p in pArr:
-        # MapWindowPoints(this.mBuddyHandle, this.mParent.mHandle, pnt.unsafeAddr, 1)
-        # echo "left ", this.mMyRect.left
-        # echo "top ", this.mMyRect.top
-        # echo "right ", (this.mMyRect.right - this.mMyRect.left) + (this.mUpdRect.right - this.mUpdRect.left)
-        # echo "bottom ", pnt.y
-        # for i, p in pArr:
-        #     echo "point ", i, " x: ", p.x, " y: ", p.y
-
-        # echo " my rect ", this.mMyRect
-        # echo " BuddyRect ", this.mBuddyRect
-        # echo " UpdRect ", this.mUpdRect
+        
 
 method autoCreate(this: NumberPicker) = this.createHandle()
 
 
 # Properties---------------------------------------------------------------------------
-
-# proc `value=`*(this: NumberPicker, fValue: float) =
-#     if this.mIsCreated:
-#         discard
-#     else:
-#         this.mValue = fValue
 
 proc `value=`*(this: NumberPicker, fValue: auto) = # Accepts int or float
     this.mValue = (if fValue is int: float(fValue) else: fValue)
@@ -249,49 +272,29 @@ proc textAlign*(this: NumberPicker): TextAlignment = this.mTxtPos
 # proc bottom*(this: NumberPicker): int32 = int32(this.mBuddyRect.bottom)
 
 
-
+var c1 = 1
 proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    
+    var this = cast[NumberPicker](refData)
+
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)    
+
     case msg
+    of WM_TIMER:
+        if this.mOnMouseHover != nil:
+            this.mHoverTimer.stop()
+            this.mOnMouseHover(this, newEventArgs())
+        return 0
+
     of WM_DESTROY:
         RemoveWindowSubclass(hw, npWndProc, scID)
-        var this = cast[NumberPicker](refData)
         if this.mPen != nil: DeleteObject(this.mPen)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[NumberPicker](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP:
-        var this = cast[NumberPicker](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[NumberPicker](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[NumberPicker](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[NumberPicker](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-        
-    of WM_CONTEXTMENU:
-        var this = cast[NumberPicker](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
-    of WM_MOUSELEAVE:
-        var this = cast[NumberPicker](refData)
-        if this.mTrackMouseLeave:
-            if not this.isMouseUponMe():
-                this.mIsMouseEntered = false
-                if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
-
     of MM_NOTIFY_REFLECT:
-        var this = cast[NumberPicker](refData)
         let nm = cast[LPNMUPDOWN](lpm)
         if nm.hdr.code == UDN_DELTAPOS:
             let valStrz = getControlText(this.mBuddyHandle)
@@ -300,28 +303,28 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             this.setValueInternal(nm.iDelta)
             if this.onValueChanged != nil: this.onValueChanged(this, newEventArgs())
 
-    of MM_FONT_CHANGED:
-        var this = cast[NumberPicker](refData)
-        this.updateFontInternal()
-        return 0
-
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)
 
 
 proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
    
+    var this = cast[NumberPicker](refData)
+
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
+    
     case msg
     of WM_DESTROY:
-        var this = cast[NumberPicker](refData)
         RemoveWindowSubclass(hw, npEditWndProc, scID)
 
     of MM_BUDDY_RESIZE: 
-        var this = cast[NumberPicker](refData)
         this.resizeBuddy()
 
     of WM_PAINT:
-        var this = cast[NumberPicker](refData)
         discard DefSubclassProc(hw, msg, wpm, lpm)
         var hdc : HDC = GetDC(hw)
         DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_SUNKENOUTER, this.mTopEdgeFlag)
@@ -333,57 +336,18 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
         return 1
 
     of MM_EDIT_COLOR:
-        var this = cast[NumberPicker](refData)
         var hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
         SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
-    of WM_KEYDOWN:
-        var this = cast[NumberPicker](refData)
-        this.mKeyPressed = true
-        this.keyDownHandler(wpm)
-
-    of WM_KEYUP:
-        var this = cast[NumberPicker](refData)
-        this.keyUpHandler(wpm)
-    of WM_CHAR:
-        var this = cast[NumberPicker](refData)
-        this.keyPressHandler(wpm)
     of EM_SETSEL:
-        var this = cast[NumberPicker](refData)
         return 1
-    of WM_MOUSEMOVE:
-        var this = cast[NumberPicker](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE:
-        var this = cast[NumberPicker](refData)
-        if this.mTrackMouseLeave:
-            if not this.isMouseUponMe():
-                this.mIsMouseEntered = false
-                if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
-
+  
     of MM_CTL_COMMAND:
-        var this = cast[NumberPicker](refData)
         let nCode = HIWORD(wpm)
         if nCode == EN_UPDATE:
             if this.mHideCaret: HideCaret(hw)
-
-    of WM_LBUTTONDOWN: 
-        var this = cast[NumberPicker](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP: 
-        var this = cast[NumberPicker](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN: 
-        var this = cast[NumberPicker](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP: 
-        var this = cast[NumberPicker](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

@@ -98,7 +98,8 @@ proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PT
 proc createHandle*(this: ComboBox)
 
 # ComboBox constructor
-proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h: int32 = 27): ComboBox =
+proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, 
+                    w: int32 = 140, h: int32 = 27, enableInput: bool = false): ComboBox =
     new(result)
     result.mKind = ctComboBox
     result.mClassName = cast[LPCWSTR](cmbClsName[0].addr)
@@ -111,6 +112,7 @@ proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 140, h:
     # result.mFont = parent.mFont
     result.cloneParentFont()
     result.mHasFont = true
+    result.mHasInput = enableInput
     result.mSelIndex = -1
     result.mBackColor = CLR_WHITE
     result.mForeColor = CLR_BLACK
@@ -141,6 +143,8 @@ proc getComboInfo(this: ComboBox) =
         this.mParent.mComboData[cmbInfo.hwndList] = cmbInfo.hwndCombo # Put the handle in parent's dic
         SetWindowSubclass(cmbInfo.hwndItem, cmbEditWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
         globalSubClassID += 1
+        SetRect(&this.mSpRect, 0, 0, this.mWidth, this.mHeight)
+
 
 proc getBiggerLength(this: ComboBox): int32 = 
     var biggerItem = this.mitems[0]
@@ -255,73 +259,79 @@ proc getComboMousePoints(): POINT =
     let y = int32(HIWORD(value))
     result = POINT(x:x, y:y)
 
-proc isMouseInCombo(hw: HWND): bool =
-    var rc: RECT
-    GetWindowRect(hw, rc.unsafeAddr)
-    var pts = getComboMousePoints()
-    result = bool(PtInRect(rc.unsafeAddr, pts))
+# proc getMousePoints(this: ComboBox) : POINT =
+#     var p : POINT
+    
+#     return p
+    
 
-proc mouseLeaveHandler(this: ComboBox): LRESULT =
-    if this.mHasInput:
-        if isMouseInCombo(this.mHandle):
-            return 1
-        else:
-            if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
-    else:
-        if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
-    return 0
+# proc trackMouseHover(this: ComboBox) =
+#     let pt = this.getMousePoints()
+#     if PtInRect(&this.mSpRect, pt) > 0 :
+#         # We are inside the combo box rect. 
+#         this.mLastMpos = pt  
+#         this.mHoverTimer.tryReset()
+#         this.mHoverTriggered = false
+
+method `onMouseHover=`*(this: ComboBox, evtProc: EventHandler) =
+    procCall `onMouseHover=`(cast[Control](this), evtProc)
+    this.mHoverTimer = newTimer(400, nil, this.mHandle)
+
+method mouseMoveHandler(this: ComboBox, hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM) : MsgHandlerResult =
+    result = MsgHandlerResult.mhrCallDefProc
+    if this.onMouseMove != nil:
+        var mea = newMouseEventArgs(msg, wpm, lpm)
+        this.onMouseMove(this, mea)
+
+    if mouseHoverEvent in this.mMouseEvents and not this.mHoverTriggered:
+        this.mLastMpos.x = cast[int32](LOWORD(lpm))
+        this.mLastMpos.y = cast[int32](HIWORD(lpm))
+        this.mHoverTimer.tryReset()
+        this.mHoverTriggered = true
+
+    if mouseEnterEvent in this.mMouseEvents and not this.mMouseEntered: 
+        this.mMouseEntered = true
+        this.mOnMouseEnter(this, newEventArgs())            
+
+
+method mouseLeaveHandler(this: ComboBox): MsgHandlerResult =
+    # tmeMLeave is handling onMouseEnter & onMouseLeave events.
+    # tmeMHover is handling onMouseHover event.
+    if tmeMLeave in this.mTmeFlags or tmeMHover in this.mTmeFlags: 
+        if this.mIsMouseTracking or this.mMouseEntered or this.mHoverTriggered:  
+            # SInce ComboBox is a comnination of edit and button, we need special
+            # care to implement mouse leave event. Edit is sitting inside combo's
+            # rect. So we get mouse leave message even when mouse is inside combo.
+            # So, we need to check if mouse is really inside our perimeter.                 
+            var pt : POINT
+            GetCursorPos(&pt)
+            ScreenToClient(this.mHandle, &pt)      
+            let inside = cast[bool](PtInRect(&this.mSpRect, pt))      
+            if not inside:
+                this.mIsMouseTracking = false
+                this.mMouseEntered = false
+                if this.mHoverTriggered:
+                    this.mHoverTriggered = false
+                    this.mHoverTimer.stop()
+
+                if this.mOnMouseLeave != nil: this.mOnMouseLeave(this, newEventArgs())            
+
+    return MsgHandlerResult.mhrCallDefProc
 
 
 proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
+    var this = cast[ComboBox](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, cmbWndProc, scID)
-        var this = cast[ComboBox](refData)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[ComboBox](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP:
-        var this = cast[ComboBox](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[ComboBox](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[ComboBox](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[ComboBox](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-
-    of WM_MOUSELEAVE:
-        var this = cast[ComboBox](refData)
-        return this.mouseLeaveHandler()
-
-    of WM_KEYDOWN:
-        var this = cast[ComboBox](refData)
-        this.keyDownHandler(wpm)
-
-    of WM_KEYUP:
-        var this = cast[ComboBox](refData)
-        this.keyUpHandler(wpm)
-
-    of WM_CHAR:
-        var this = cast[ComboBox](refData)
-        this.keyPressHandler(wpm)
-
-    of WM_CONTEXTMENU:
-        var this = cast[ComboBox](refData)
-        if this.mContextMenu != nil:
-            this.mContextMenu.showMenu(lpm)
-
-    of MM_CTL_COMMAND:
-        var this = cast[ComboBox](refData) 
+    of MM_CTL_COMMAND: 
         case HIWORD(wpm)
         of CBN_SELCHANGE:
             if this.onSelectionChanged != nil:
@@ -348,7 +358,6 @@ proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
             discard
 
     of MM_LABEL_COLOR:
-        var this = cast[ComboBox](refData)
         if this.mDrawMode > 0:
             let hdc = cast[HDC](wpm)
             if (this.mDrawMode and 1) == 1:
@@ -357,9 +366,10 @@ proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
                 SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
-    of MM_FONT_CHANGED:
-        var this = cast[ComboBox](refData)
-        this.updateFontInternal()
+    of WM_TIMER:
+        if this.mOnMouseHover != nil:
+            this.mHoverTimer.stop()
+            this.mOnMouseHover(this, newEventArgs())
         return 0
 
     else:
@@ -371,42 +381,17 @@ proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
 
 proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     var this = cast[ComboBox](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
+
     case msg
     of WM_DESTROY:
-        var this = cast[ComboBox](refData)
         RemoveWindowSubclass(hw, cmbEditWndProc, scID)
-    of WM_LBUTTONDOWN:
-        var this = cast[ComboBox](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP:
-        var this = cast[ComboBox](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN:
-        var this = cast[ComboBox](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP:
-        var this = cast[ComboBox](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE:
-        var this = cast[ComboBox](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE:
-        var this = cast[ComboBox](refData)
-        return this.mouseLeaveHandler()
-    of WM_KEYDOWN:
-        var this = cast[ComboBox](refData)
-        if this.hasInput:
-            this.keyDownHandler(wpm)
-    of WM_KEYUP:
-        var this = cast[ComboBox](refData)
-        if this.hasInput:
-            this.keyUpHandler(wpm)
-    of WM_CHAR:
-        var this = cast[ComboBox](refData)
-        if this.hasInput:
-            this.keyPressHandler(wpm)
+
     of MM_EDIT_COLOR:
-        var this = cast[ComboBox](refData)
         if this.mDrawMode > 0:
             let hdc = cast[HDC](wpm)
             if (this.mDrawMode and 1) == 1:

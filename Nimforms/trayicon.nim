@@ -210,9 +210,9 @@ proc createTrayMsgWindow(this: TrayIcon) =
 
 
 proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
+    var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
     case msg
     of WM_DESTROY:
-        var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
         Shell_NotifyIconW(NIM_DELETE, &this.mNid)
         if this.mhTrayIcon != nil: DestroyIcon(this.mhTrayIcon)
         if this.mCmenu != nil: this.mCmenu.cmenuDtor()
@@ -221,49 +221,40 @@ proc trayWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     of MM_TRAY_MSG:
         case lpm
         of NIN_BALLOONSHOW:
-            var this: TrayIcon  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onBalloonShow != nil: this.onBalloonShow(this, newEventArgs())
 
         of NIN_BALLOONTIMEOUT:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onBalloonClose != nil: this.onBalloonClose(this, newEventArgs())
             if this.mResetIcon: this.resetIconInternal()
 
         of NIN_BALLOONUSERCLICK:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onBalloonClick != nil: this.onBalloonClick(this, newEventArgs())
             if this.mResetIcon: this.resetIconInternal()
 
         of WM_LBUTTONDOWN:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onLeftMouseDown != nil: this.onLeftMouseDown(this, newEventArgs())
 
         of WM_LBUTTONUP:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onLeftMouseUp != nil: this.onLeftMouseUp(this, newEventArgs())
             if this.onLeftClick != nil: this.onLeftClick(this, newEventArgs())
             if this.mCmenuUsed and (this.mTrig and 1) == 1 : 
                 this.mCmenu.showMenu(0)
 
         of WM_LBUTTONDBLCLK:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onLeftDoubleClick != nil: this.onLeftDoubleClick(this, newEventArgs())
             if this.mCmenuUsed and (this.mTrig and 2) == 2:
                 this.mCmenu.showMenu(0)
 
         of WM_RBUTTONDOWN:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onRightMouseDown != nil: this.onRightMouseDown(this, newEventArgs())
 
         of WM_RBUTTONUP:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onRightMouseUp != nil: this.onRightMouseUp(this, newEventArgs())
             if this.onRightClick != nil: this.onRightClick(this, newEventArgs())
             if this.mCmenuUsed and (this.mTrig and 4) == 4:
                 this.mCmenu.showMenu(0)
 
         of WM_MOUSEMOVE:
-            var this  = cast[TrayIcon](GetWindowLongPtrW(hw, GWLP_USERDATA))
             if this.onMouseMove != nil: this.onMouseMove(this, newEventArgs())
 
         else: return DefWindowProcW(hw, msg, wpm, lpm)

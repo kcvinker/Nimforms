@@ -924,6 +924,8 @@ proc GetDpiForWindow(hwnd: HWND): UINT {.dll("user32", true).}
 proc BeginPaint(hwnd: HWND, lpPaint: LPPAINTSTRUCT): HDC {.dll("user32", true).}
 proc EndPaint(hwnd: HWND, lpPaint: LPPAINTSTRUCT): BOOL {.dll("user32", true).}
 proc IsWindow(hwnd: HWND): BOOL {.dll("user32", true).}
+proc SetRect(lprc: LPRECT, xLeft, yTop, xRight, yBottom: INT): BOOL {.dll("user32", true).}
+proc UnionRect(lprcDest, lprcSrc1, lprcSrc2: LPRECT): BOOL {.dll("user32", true).}
 # End of User32---------------------------------------------------------------------------------------------
 
 # Gdi32 functions {.dll("gdi32", true).}

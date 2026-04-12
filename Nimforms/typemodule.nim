@@ -125,6 +125,8 @@ type
     LVSelChangeEventHandler* = proc(c: Control, e: LVSelChangeEventArgs)
     LVCheckChangeEventHandler* = proc(c: Control, e: LVItemCheckEventArgs)
 
+    MsgHandlerResult {.pure.} = enum 
+        mhrReturnZero, mhrReturnOne, mhrCallDefProc, mhrContinue
 
     # TimerTickHandler = proc(f: Form, e: EventArgs)
 
@@ -135,28 +137,38 @@ type
         mIsEnabled: bool
         mIdNum: UINT_PTR
 
+    TMEFlags = enum  
+        tmeMHover = 1, tmeMLeave
+
+    MouseEventFlags = enum 
+        mouseEnterEvent = 1, mouseHoverEvent, mouseLeaveEvent
+
     Control* = ref object of RootRef # Base class for all controls
         mKind: ControlType
         mClassName: LPCWSTR
         mName, mText: string
+        mtid: int
         mHandle: HWND
         mBackColor: Color
         mForeColor: Color
+        mMouseEvents: set[MouseEventFlags]
+        mTmeFlags: set[TMEFlags]
         mContextMenu : ContextMenu
         mWidth, mHeight, mXpos, mYpos, mCtlID: int32
         mStyle, mExStyle: DWORD
         mDrawMode: uint32
-        mIsCreated, mLbDown, mRbDown, mIsMouseEntered: bool 
-        mHasFont, mHasText, mCemnuUsed: bool
+        mIsCreated, mLbDown, mRbDown, mMouseEntered: bool 
+        mHasFont, mHasText, mIsMouseTracking, mCemnuUsed: bool
+        mHoverFired: bool
         mBkBrush: HBRUSH
         mFont: Font
         mParent: Form
         mcRect: RECT
         mWtext: WideString
         #Events
-        onMouseEnter*, onClick*, onMouseLeave*, onRightClick*, onDoubleClick*: EventHandler
-        onLostFocus*, onGotFocus*: EventHandler
-        onMouseWheel*, onMouseHover*, onMouseMove*, onMouseDown*, onMouseUp*: MouseEventHandler
+        mOnMouseEnter*, onClick*, mOnMouseLeave*, onRightClick*, onDoubleClick*: EventHandler
+        onLostFocus*, onGotFocus*, mOnMouseHover*: EventHandler
+        onMouseWheel*, onMouseMove*, onMouseDown*, onMouseUp*: MouseEventHandler
         onRightMouseDown*, onRightMouseUp*: MouseEventHandler
         onKeyDown*, onKeyUp*: KeyEventHandler
         onKeyPress*: KeyPressEventHandler
@@ -188,7 +200,7 @@ type
         mFormState: WindowState
         mFdMode: FormDrawMode
         mMaximizeBox, mMinimizeBox, mTopMost, mIsLoaded: bool
-        mIsMouseTracking, mCreateChilds, mIsMenuUsed: bool
+        mCreateChilds, mIsMenuUsed: bool
         mAppFont : bool = true
         mMenuGrayBrush, mMenuDefBgBrush, mMenuHotBgBrush, mMenuFrameBrush : HBRUSH
         # mMenuFont : Font
@@ -269,6 +281,10 @@ type
     ComboBox* = ref object of Control
         mSelIndex, mOwnCtlID: int32
         mReEnabled, mHasInput: bool
+        mHoverTriggered: bool
+        mSpRect: RECT
+        mLastMpos: POINT
+        mHoverTimer: Timer
         mItems: seq[string]
         #Events
         onSelectionChanged*, onTextChanged*, onTextUpdated*: EventHandler
@@ -430,15 +446,19 @@ type
         onMenuShown*, onMenuClose* : EventHandler
         onTrayMenuShown*, onTrayMenuClose*: EventHandler
 
+
     NumberPicker* = ref object of Control
         mButtonLeft, mHasSeperator, mAutoRotate, mHideCaret: bool
         mValue, mMinRange, mMaxRange, mStep: float
         mTrackMLeave, mKeyPressed, mTrackMouseLeave, mIntStep: bool
+        mBuddyTracking, mHoverTriggered: bool
         mBuddyStyle, mBuddyExStyle, mTxtFlag: DWORD
         mDeciPrec, mBuddyCID, mLineX: int32
-        mBuddyRect, mUpdRect, mMyRect: RECT
+        mBuddyRect, mUpdRect, mMyRect, mSpRect: RECT
+        mLastMpos: POINT
         mTopEdgeFlag, mBotEdgeFlag: UINT
         mTxtPos: TextAlignment
+        mHoverTimer: Timer
         mBuddyHandle: HWND
         mPen: HPEN
         mBuddySCID: UINT_PTR
@@ -454,7 +474,6 @@ type
         psmZoom 
 
     PictureBox* = ref object of Control
-        mIsMouseTracking : bool
         mImage : Image
         mSizeMode : PictureSizeMode
         mRect : RECT 

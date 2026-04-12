@@ -306,62 +306,24 @@ proc hotItem*(this: ListBox): string =
 
 
 proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    
+    var this = cast[ListBox](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, lbxWndProc, scID)
-        var this = cast[ListBox](refData)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[ListBox](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP:
-        var this = cast[ListBox](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[ListBox](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[ListBox](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[ListBox](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-
-    of WM_MOUSELEAVE:
-        var this = cast[ListBox](refData)
-        this.mouseLeaveHandler()
-
-    of WM_KEYDOWN:
-        var this = cast[ListBox](refData)
-        this.keyDownHandler(wpm)
-
-    of WM_KEYUP:
-        var this = cast[ListBox](refData)
-        this.keyUpHandler(wpm)
-
-    of WM_CHAR:
-        var this = cast[ListBox](refData)
-        this.keyPressHandler(wpm)
-        
-    of WM_CONTEXTMENU:
-        var this = cast[ListBox](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
     of MM_LIST_COLOR:
-        var this = cast[ListBox](refData)
         let hdc = cast[HDC](wpm)
         if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
         SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
     of MM_CTL_COMMAND:
-        var this = cast[ListBox](refData)
         let ncode = HIWORD(wpm)
         case ncode
         of LBN_DBLCLK:
@@ -375,11 +337,6 @@ proc lbxWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         of LBN_SELCANCEL:
             if this.onSelectionCancelled != nil: this.onSelectionCancelled(this, newEventArgs())
         else: discard
-
-    of MM_FONT_CHANGED:
-        var this = cast[ListBox](refData)
-        this.updateFontInternal()
-        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

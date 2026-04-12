@@ -209,42 +209,18 @@ proc `font=`*(this: DateTimePicker, value: Font) =
 
 proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     # echo msg
+    var this = cast[DateTimePicker](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, dtpWndProc, scID)
-        var this = cast[DateTimePicker](refData)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[DateTimePicker](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-        
-    of WM_LBUTTONUP:
-        var this = cast[DateTimePicker](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[DateTimePicker](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[DateTimePicker](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[DateTimePicker](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-
-    of WM_MOUSELEAVE:
-        var this = cast[DateTimePicker](refData)
-        this.mouseLeaveHandler()
-
-    of WM_CONTEXTMENU:
-        var this = cast[DateTimePicker](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
     of MM_NOTIFY_REFLECT:
-        var this = cast[DateTimePicker](refData)
         let nm = cast[LPNMHDR](lpm)
         # echo "nm.code: ", nm.code
         case nm.code
@@ -272,11 +248,6 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
         of DTN_CLOSEUP:
             if this.onCalendarClosed != nil: this.onCalendarClosed(this, newEventArgs())
         else: discard
-        return 0
-    
-    of MM_FONT_CHANGED:
-        var this = cast[DateTimePicker](refData)
-        this.updateFontInternal()
         return 0
 
     # of MM_EDIT_COLOR:

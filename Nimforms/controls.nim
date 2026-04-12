@@ -43,6 +43,9 @@ const
     ES_RIGHT = 2
     EN_UPDATE = 0x0400
     EM_SETSEL = 0x00B1
+    TME_HOVER = 0x00000001
+    TME_LEAVE = 0x00000002
+    HOVER_DEFAULT = 0xFFFFFFFF'i32
 
 # Control class names
 let BtnClass : array[7, uint16] = [0x42, 0x75, 0x74, 0x74, 0x6F, 0x6E, 0]
@@ -147,6 +150,24 @@ proc `foreColor=`*(this: Control, value: uint) {.inline.} =
 
 proc foreColor*(this: Control): Color {.inline.} = return this.mForeColor
 
+proc `onMouseEnter=`*(this: Control, evtProc: EventHandler) =
+    this.mMouseEvents.incl(mouseEnterEvent)
+    this.mTmeFlags.incl(tmeMLeave)
+    this.mOnMouseEnter = evtProc
+
+proc `onMouseLeave=`*(this: Control, evtProc: EventHandler) =
+    this.mMouseEvents.incl(mouseLeaveEvent)
+    this.mTmeFlags.incl(tmeMLeave)
+    this.mOnMouseLeave = evtProc
+
+method `onMouseHover=`*(this: Control, evtProc: EventHandler) {. base .} =
+    this.mMouseEvents.incl(mouseHoverEvent)
+    this.mTmeFlags.incl(tmeMHover)
+    this.mTmeFlags.incl(tmeMLeave)
+    this.mOnMouseHover = evtProc
+
+
+
 # proc left*(this: Control): int32 = int32(this.mcRect.left)
 # proc top*(this: Control): int32 = int32(this.mcRect.top)
 
@@ -183,7 +204,6 @@ proc mapParentPoints(this: Control) : RECT =
                     right: (this.mXpos + this.mWidth), bottom: (this.mYpos + this.mHeight ))
 
     MapWindowPoints(firstHwnd, this.mParent.mHandle, cast[LPPOINT](rc.unsafeAddr), 2)
-    # echo rc.repr
     result = rc
 
 proc destructor(this: Control) =
@@ -203,7 +223,7 @@ proc setFontInternal(this: Control) {.inline.} =
     if this.mFont.handle == nil: 
         this.mFont.createHandle()
     let x = this.sendMsg(WM_SETFONT, this.mFont.handle, 1)
-    # echo "wm_setfont result ", x, " name: ", this.name
+
 
 proc updateFontInternal(this: Control) =
     if this.mFont.handle != nil:
@@ -262,16 +282,6 @@ proc rightButtonUpHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
 proc mouseWheelHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
     if this.onMouseWheel != nil: this.onMouseWheel(this, newMouseEventArgs(msg, wp, lp))
 
-proc mouseMoveHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-    if this.mIsMouseEntered:
-        if this.onMouseMove != nil: this.onMouseMove(this, newMouseEventArgs(msg, wp, lp))
-    else:
-        this.mIsMouseEntered = true
-        if this.onMouseEnter != nil: this.onMouseEnter(this, newEventArgs())
-
-proc mouseLeaveHandler(this: Control) =
-    this.mIsMouseEntered = false
-    if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
 
 proc keyDownHandler(this: Control, wp: WPARAM) =
     if this.onKeyDown != nil: this.onKeyDown(this, newKeyEventArgs(wp))
@@ -283,13 +293,28 @@ proc keyPressHandler(this: Control, wp: WPARAM) =
     if this.onKeyPress != nil: this.onKeyPress(this, newKeyPressEventArgs(wp))
 
 
+# Here we are including contextmenu module. Because, contextmenu should be available for all controls.
+include contextmenu
+
+# proc setContextMenuInternal(this: Control)
+
+proc contextMenu*(this: Control): ContextMenu = this.mContextMenu
+
+proc `contextMenu=`*(this: Control, value: ContextMenu) =
+    this.mContextMenu = value
+    this.mCemnuUsed = true
+
+proc setContextMenu*(parent: Control, menuNames: varargs[string, `$`]) : ContextMenu {.discardable.} =
+    result = newContextMenu(parent, menuNames)
+    parent.mContextMenu = result
+    parent.mCemnuUsed = true
+
 
 # Package level functions====================================================
 proc setControlRect(this: Control) =
     var lprct = this.mcRect.unsafeAddr
     GetClientRect(this.mHandle, lprct);
     MapWindowPoints(this.mHandle, this.mParent.mHandle, cast[LPPOINT](lprct), 2);
-    # echo this.mKind, " Set rect"
 
 proc createHandleInternal(this: Control, specialCtl: bool = false) =
     if not specialCtl:
@@ -308,7 +333,6 @@ proc createHandleInternal(this: Control, specialCtl: bool = false) =
         this.mIsCreated = true
         if this.mHasFont:
             this.mFont.pHwnd = this.mHandle
-            # echo "ctrl: ", this.mName, ", hwnd: ", cast[int](this.mHandle)
     else:
         echo "Error in creation of ", this.mKind, ", Err.No - ", GetLastError()
 
@@ -323,20 +347,90 @@ proc setIdealSize(this: Control) =
 method autoCreate(c: Control) {.base.} =
     quit "Childs are responsible for this"
 
+proc trackMouseMove(hw: HWND, flags: set[TMEFlags] = {}) : bool =
+    var tme: TRACKMOUSEEVENT
+    tme.cbSize = cast[DWORD](tme.sizeof)
+    tme.dwFlags = cast[DWORD](flags)
+    tme.dwHoverTime = HOVER_DEFAULT
+    tme.hwndTrack = hw
+    result = cast[bool](TrackMouseEventFunc(tme.unsafeAddr))
+
+method shouldTrackMouse(this: Control, hw: HWND) : bool {. base .} =
+    return not this.mIsMouseTracking
+
+method mouseMoveHandler(this: Control, hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM) : MsgHandlerResult {. base .} =
+    result = MsgHandlerResult.mhrCallDefProc
+    # if this.mtid == 2: print("mouse move")
+    if this.onMouseMove != nil:
+        var mea = newMouseEventArgs(msg, wpm, lpm)
+        this.onMouseMove(this, mea)
+    
+    if this.mTmeFlags != {}:
+        if not this.mIsMouseTracking:
+            this.mIsMouseTracking = (trackMouseMove(this.mHandle, this.mTmeFlags))  
+            if mouseEnterEvent in this.mMouseEvents and not this.mMouseEntered: 
+                this.mMouseEntered = true
+                this.mOnMouseEnter(this, newEventArgs())
+                result = MsgHandlerResult.mhrReturnZero
+
+        
+method mouseLeaveHandler(this: Control) : MsgHandlerResult {. base .} =
+    result = MsgHandlerResult.mhrCallDefProc
+    this.mMouseEntered = false
+
+    if this.mIsMouseTracking:               
+        this.mIsMouseTracking = false
+        if this.mOnMouseLeave != nil: 
+            this.mOnMouseLeave(this, newEventArgs())
+            result = MsgHandlerResult.mhrReturnZero
 
 
-# Here we are including contextmenu module. Because, contextmenu should be available for all controls.
-include contextmenu
 
-# proc setContextMenuInternal(this: Control)
+proc commonMsgHandler(this: Control, hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM) : MsgHandlerResult =
+    result = MsgHandlerResult.mhrCallDefProc
+    case msg
+    of WM_LBUTTONDOWN:
+        this.leftButtonDownHandler(msg, wpm, lpm)
 
-proc contextMenu*(this: Control): ContextMenu = this.mContextMenu
+    of WM_LBUTTONUP:
+        this.leftButtonUpHandler(msg, wpm, lpm)
 
-proc `contextMenu=`*(this: Control, value: ContextMenu) =
-    this.mContextMenu = value
-    this.mCemnuUsed = true
+    of WM_RBUTTONDOWN:
+        this.rightButtonDownHandler(msg, wpm, lpm)
 
-proc setContextMenu*(parent: Control, menuNames: varargs[string, `$`]) : ContextMenu {.discardable.} =
-    result = newContextMenu(parent, menuNames)
-    parent.mContextMenu = result
-    parent.mCemnuUsed = true
+    of WM_RBUTTONUP:
+        this.rightButtonUpHandler(msg, wpm, lpm)
+
+    of WM_MOUSEWHEEL:
+        this.mouseWheelHandler(msg, wpm, lpm)
+
+    of WM_MOUSEMOVE:
+        return this.mouseMoveHandler(hw, msg, wpm, lpm)
+
+    of WM_MOUSEHOVER:
+        if not this.mHoverFired and this.mOnMouseHover != nil:
+            this.mOnMouseHover(this, newMouseEventArgs(msg, wpm, lpm))
+
+    of WM_MOUSELEAVE:
+        return this.mouseLeaveHandler()
+    
+    of WM_CONTEXTMENU:
+        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
+
+    of MM_FONT_CHANGED:
+        this.updateFontInternal()
+        return MsgHandlerResult.mhrReturnZero
+
+    of WM_KEYDOWN:
+        this.keyDownHandler(wpm)
+
+    of WM_KEYUP:
+        this.keyUpHandler(wpm)
+
+    of WM_CHAR:
+        this.keyPressHandler(wpm)
+    else: return MsgHandlerResult.mhrContinue
+
+
+
+

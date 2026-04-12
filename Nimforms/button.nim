@@ -233,43 +233,20 @@ proc btnDtor(this: Button) =
 
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, 
                         scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =  
+
+    var this = cast[Button](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
-        var this = cast[Button](refData)
         this.btnDtor()
         this.destructor()
         RemoveWindowSubclass(hw, btnWndProc, scID)
 
-    of WM_LBUTTONDOWN:
-        var this = cast[Button](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP:
-        var this = cast[Button](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[Button](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[Button](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[Button](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-        
-    of WM_MOUSELEAVE:
-        var this = cast[Button](refData)
-        this.mouseLeaveHandler()
-        
-    of WM_CONTEXTMENU:
-        var this = cast[Button](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
     of MM_NOTIFY_REFLECT:
-        var this = cast[Button](refData)
         var ret : LRESULT= CDRF_DODEFAULT
         if this.mDrawMode > 0:
             var nmcd = cast[LPNMCUSTOMDRAW](lpm)
@@ -285,11 +262,6 @@ proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM,
                 ret = this.drawTextColor(nmcd)
             else: discard
         return ret
-
-    of MM_FONT_CHANGED:
-        var this = cast[Button](refData)
-        this.updateFontInternal()
-        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

@@ -195,19 +195,18 @@ proc getMenuItem(this: ContextMenu, idNum: uint32): MenuItem =
 
 
 proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
+    var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
     case msg
     of WM_DESTROY:
         echo "Conetxt menu message-only window destroyed"
 
     of WM_MEASUREITEM:
-        var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
         var pmi = cast[LPMEASUREITEMSTRUCT](lpm)
         pmi.itemWidth = UINT(this.mWidth)
         pmi.itemHeight = UINT(this.mHeight)
         return 1
 
     of WM_DRAWITEM:
-        var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
         var dis = cast[LPDRAWITEMSTRUCT](lpm)
         var mi = cast[MenuItem](cast[PVOID](dis.itemData))
         var txtClrRef : COLORREF = mi.mFgColor.cref
@@ -235,15 +234,12 @@ proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.std
         return 0
 
     of WM_ENTERMENULOOP:
-        var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onMenuShown != nil: this.onMenuShown(this.mParent, newEventArgs())
 
     of WM_EXITMENULOOP:
-        var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onMenuClose != nil: this.onMenuClose(this.mParent, newEventArgs())
 
     of WM_MENUSELECT:
-        var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
         let idNum = uint32(LOWORD(wpm))
         let hMenu = cast[HMENU](lpm)
         if hMenu != nil and idNum > 0:
@@ -252,7 +248,7 @@ proc cmenuWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.std
                 if menu.onFocus != nil: menu.onFocus(menu, newEventArgs())
 
     # of WM_COMMAND:
-    #     var this  = cast[ContextMenu](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    #  
     #     let idNum = uint32(LOWORD(wpm))
     #     if idNum > 0:
     #         var menu = this.getMenuItem(idNum)

@@ -42,7 +42,6 @@ proc createHandle(this: var Font) =
         DeleteObject(this.handle) 
   
     let iHeight = MulDiv(this.mSize, cast[int32](appData.sysDPI), 72)
-    # echo fmt"iheight {iHeight}, size: {this.mSize}, fsiz: {fsiz}, {appData.scaleFactor}, dpi: {appData.sysDPI}"
     var lf : LOGFONTW
     WideString.fillBuffer(lf.lfFaceName[0].addr, this.mName)
     lf.lfItalic = cast[BYTE](this.mItalics)
@@ -69,18 +68,6 @@ proc cloneParentFontHandle(this: var Font, parentHandle: HFONT) =
             if this.handle != nil: DeleteObject(this.handle)
             this.handle = CreateFontIndirectW(lf.addr)
 
-# proc `=copy`*(dst: Font, src: Font) =
-#     if dst.handle != nil: DeleteObject(dst.handle)
-#     dst.mName = src.mName
-#     dst.mSize = src.mSize
-#     dst.mWeight = src.mWeight
-#     dst.mItalics = src.mItalics
-#     dst.mUnderLine = src.mUnderLine
-#     dst.mStrikeOut = src.mStrikeOut
-#     var lf : LOGFONTW
-#     let x = GetObjectW(src.handle, cast[int32](sizeof(lf)), cast[LPVOID](lf.addr))
-#     if x > 0: dst.handle = CreateFontIndirectW(lf.addr)
-    # echo "dst name ", dst.name
 
 proc copyNewFont*( src: Font): Font =
     # new(result)
@@ -143,7 +130,7 @@ proc printHwnd*(this: Font) =
 proc finalize(this: var Font) =
     if this.handle != nil and this.mOwnership == FontOwner.foOwner:        
         DeleteObject(this.handle)
-        echo "Deleting font handle"
+        # echo "Deleting font handle"
 
 # End of Font related area
 
@@ -156,5 +143,5 @@ proc getFontData*(obj: HWND) =
     var lf: LOGFONTW
     let bytes = GetObjectW(obj, cast[int32](sizeof(lf)), cast[LPVOID](lf.addr))
     # let fontName = wcharArrayToString(lf.lfFaceName[0].unsafeAddr)
-    echo "Font name: ", cast[int](lf.lfFaceName[0]), cast[int](lf.lfFaceName[1])
+    # echo "Font name: ", cast[int](lf.lfFaceName[0]), cast[int](lf.lfFaceName[1])
 

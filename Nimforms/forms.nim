@@ -55,9 +55,8 @@ const
     SC_MINIMIZE = 0xF020
     SC_MAXIMIZE = 0xF030
     SC_RESTORE = 0xF120
-    TME_HOVER = 0x00000001
-    TME_LEAVE = 0x00000002
-    HOVER_DEFAULT = 0xFFFFFFFF'i32
+    
+    
 
 # Window class name : 'Nimforms_Window'
 let frmClsName : array[16, uint16] = [0x4E, 0x69, 0x6D, 0x66, 0x6F, 0x72, 0x6D, 0x73, 0x5F, 0x57, 0x69, 0x6E, 0x64, 0x6F, 0x77, 0]
@@ -255,7 +254,18 @@ proc timer_dtor(this: Timer) =
     if this.mIsEnabled:
         KillTimer(this.mParentHwnd, this.mIdNum)
 
+proc newTimer(interval: uint32, tickHandler: EventHandler, parentHwnd: HWND) : Timer =
+    new(result)
+    result.interval = interval
+    result.onTick = tickHandler
+    result.mParentHwnd = parentHwnd
+    result.mIdNum = cast[UINT_PTR](result)
 
+proc tryReset(this: Timer) =
+    if this.mIsEnabled:
+        KillTimer(this.mParentHwnd, this.mIdNum)
+    
+    SetTimer(this.mParentHwnd, this.mIdNum, this.interval, nil)
 
 
 # Private function
@@ -343,13 +353,6 @@ proc printPointProc(ctl: Control, e: MouseEventArgs) =
 
 proc printPoint*(this: Form) = this.onMouseUp = printPointProc
 
-proc trackMouseMove(hw: HWND) =
-    var tme: TRACKMOUSEEVENT
-    tme.cbSize = cast[DWORD](tme.sizeof)
-    tme.dwFlags = TME_HOVER or TME_LEAVE
-    tme.dwHoverTime = HOVER_DEFAULT
-    tme.hwndTrack = hw
-    TrackMouseEventFunc(tme.unsafeAddr)
 
 proc form_timer_handler(this: Form, wpm: WPARAM) =
     let key = cast[UINT_PTR](wpm)
@@ -373,32 +376,33 @@ proc form_dtor(this: Form, hw: HWND) =
 
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
+    var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefWindowProcW(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
+
     case msg
     of WM_DESTROY: 
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.form_dtor(hw)
 
     of WM_TIMER: 
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.form_timer_handler(wpm)
 
     of MM_THREAD_MSG:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onThreadMsg != nil: this.onThreadMsg(wpm, lpm)
 
     of WM_CLOSE:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onClosing != nil: this.onClosing(this, newEventArgs())
 
     of WM_SHOWWINDOW:
         # echo "wm show window"
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if not this.mIsLoaded:
             this.mIsLoaded = true
             if this.onLoad != nil: this.onLoad(this, newEventArgs())
 
     of WM_ACTIVATEAPP:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if (this.onActivate != nil) or (this.onDeActivate != nil):
             var ea = newEventArgs()
             let flag = cast[bool](wpm)
@@ -409,7 +413,6 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
                 if this.onActivate != nil: this.onActivate(this, ea)
 
     of WM_SYSCOMMAND :
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         let uMsg = cast[UINT](wpm and 0xFFF0)
         case uMsg
         of SC_MINIMIZE:
@@ -421,62 +424,36 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         else: discard
 
     of WM_HSCROLL: 
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         return SendMessageW(cast[HWND](lpm), MM_HSCROLL, wpm, lpm)
 
     of WM_VSCROLL: 
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         return SendMessageW(cast[HWND](lpm), MM_VSCROLL, wpm, lpm)
 
-    of WM_LBUTTONDOWN:
-        # let a = getMonoTime()
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        # var this = getForm(hw)
-        # let b = getMonoTime()
-        # echo "time for getting form : ", b - a
-        this.leftButtonDownHandler(msg, wpm, lpm)
 
-    of WM_LBUTTONUP:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        this.leftButtonUpHandler(msg, wpm, lpm)
+    # of WM_MOUSEMOVE:
+    #     var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    #     if not this.mIsMouseTracking:
+    #         this.mIsMouseTracking = true
+    #         trackMouseMove(hw)
+    #         if not this.mIsMouseEntered:
+    #             this.mIsMouseEntered = true
+    #             if this.onMouseEnter != nil:                    
+    #                 this.onMouseEnter(this, newEventArgs())
+    #     if this.onMouseMove != nil: this.onMouseMove(this, newMouseEventArgs(msg, wpm, lpm))
 
-    of WM_RBUTTONDOWN:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        this.rightButtonDownHandler(msg, wpm, lpm)
+    # of WM_MOUSEHOVER:
+    #     var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    #     if this.mIsMouseTracking: this.mIsMouseTracking = false
+    #     if this.onMouseHover != nil: this.onMouseHover(this, newMouseEventArgs(msg, wpm, lpm))
 
-    of WM_RBUTTONUP:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEWHEEL:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        this.mouseWheelHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        if not this.mIsMouseTracking:
-            this.mIsMouseTracking = true
-            trackMouseMove(hw)
-            if not this.mIsMouseEntered:
-                this.mIsMouseEntered = true
-                if this.onMouseEnter != nil:                    
-                    this.onMouseEnter(this, newEventArgs())
-        if this.onMouseMove != nil: this.onMouseMove(this, newMouseEventArgs(msg, wpm, lpm))
-
-    of WM_MOUSEHOVER:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        if this.mIsMouseTracking: this.mIsMouseTracking = false
-        if this.onMouseHover != nil: this.onMouseHover(this, newMouseEventArgs(msg, wpm, lpm))
-
-    of WM_MOUSELEAVE:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
-        if this.mIsMouseTracking:
-            this.mIsMouseTracking = false
-            this.mIsMouseEntered = false
-        if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
+    # of WM_MOUSELEAVE:
+    #     var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    #     if this.mIsMouseTracking:
+    #         this.mIsMouseTracking = false
+    #         this.mIsMouseEntered = false
+    #     if this.onMouseLeave != nil: this.onMouseLeave(this, newEventArgs())
 
     of WM_SIZING:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         var sea = newSizeEventArgs(msg, lpm)
         this.mWidth = sea.mWinRect.right - sea.mWinRect.left
         this.mHeight = sea.mWinRect.bottom - sea.mWinRect.top
@@ -486,20 +463,17 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         return 0
 
     of WM_SIZE:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onSized != nil:
             this.onSized(this, newSizeEventArgs(msg, lpm))
             return 1
 
     of WM_MOVE:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.mXpos = getXFromLp(lpm)
         this.mYpos = getYFromLp(lpm)
         if this.onMoved != nil: this.onMoved(this, newEventArgs())
         return 0
 
     of WM_MOVING:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         var rct = cast[LPRECT](lpm)
         this.mXpos = rct.left
         this.mYpos = rct.top
@@ -509,15 +483,12 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         return 0
 
     of WM_KEYUP, WM_SYSKEYUP:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onKeyUp != nil: this.onKeyUp(this, newKeyEventArgs(wpm))
 
     of WM_KEYDOWN, WM_SYSKEYDOWN:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onKeyDown != nil: this.onKeyDown(this, newKeyEventArgs(wpm))
 
     of  WM_CHAR:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.onKeyPress != nil: this.onKeyPress(this, newKeyPressEventArgs(wpm))
 
     of WM_NOTIFY:
@@ -533,7 +504,6 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         return SendMessageW(ctHwnd, MM_LABEL_COLOR, wpm, lpm)
 
     of WM_ERASEBKGND:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.mFdMode != fdmNormal: return this.setBkClrInternal(cast[HDC](wpm))
 
     of WM_MEASUREITEM:
@@ -543,11 +513,9 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         return mi.handleWMMeasureItem(pmi, hw)
 
     of WM_DRAWITEM:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         return this.mMenuBar.handleWmDrawItem(lpm)
 
     of WM_MENUSELECT:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         var pmenu = this.getMenuFromHmenu(cast[HMENU](lpm))
         let mid = uint32(LOWORD(wpm)) # Could be an id of a child menu or index of a child menu
         let hwwpm = HIWORD(wpm)
@@ -563,17 +531,14 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             if menu != nil and menu.onFocus != nil : menu.onFocus(menu, newEventArgs())
 
     of WM_INITMENUPOPUP:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         var menu = this.getMenuFromHmenu(cast[HMENU](wpm))
         if menu != nil and menu.onPopup != nil: menu.onPopup(menu, newEventArgs())
 
     of WM_UNINITMENUPOPUP:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         var menu = this.getMenuFromHmenu(cast[HMENU](wpm))
         if menu != nil and menu.onCloseup != nil : menu.onCloseup(menu, newEventArgs())
 
     of WM_COMMAND:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         # echo "HIWORD(wpm) ", HIWORD(wpm), ", Lparam ", lpm, ", LOWORD(wpm) ", LOWORD(wpm)
         let hwpm = HIWORD(wpm)
         if hwpm == 0 and lpm == 0:
@@ -591,11 +556,9 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             return SendMessageW(ctHwnd, MM_CTL_COMMAND, wpm, lpm)            
 
     of WM_CONTEXTMENU:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of MM_FONT_CHANGED:
-        var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
         this.updateFontInternal()
 
     else: return DefWindowProcW(hw, msg, wpm, lpm)

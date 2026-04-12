@@ -127,55 +127,18 @@ proc readOnly*(this: TextBox): bool = this.mReadOnly
 
 
 proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    
+    var this = cast[TextBox](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, tbWndProc, scID)
-        var this = cast[TextBox](refData)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[TextBox](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP:
-        var this = cast[TextBox](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[TextBox](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[TextBox](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[TextBox](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-
-    of WM_MOUSELEAVE:
-        var this = cast[TextBox](refData)
-        this.mouseLeaveHandler()
-
-    of WM_KEYDOWN:
-        var this = cast[TextBox](refData)
-        this.keyDownHandler(wpm)
-
-    of WM_KEYUP:
-        var this = cast[TextBox](refData)
-        this.keyUpHandler(wpm)
-
-    of WM_CHAR:
-        var this = cast[TextBox](refData)
-        this.keyPressHandler(wpm)
-        
-    of WM_CONTEXTMENU:
-        var this = cast[TextBox](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
-
     of MM_EDIT_COLOR:
-        var this = cast[TextBox](refData)
         if this.mDrawMode > 0:
             let hdc = cast[HDC](wpm)
             if (this.mDrawMode and 1) == 1: SetTextColor(hdc, this.mForeColor.cref)
@@ -183,15 +146,9 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         return cast[LRESULT](this.mBkBrush)
 
     of MM_CTL_COMMAND:
-        var this = cast[TextBox](refData)
         let ncode = HIWORD(wpm)
         if ncode == EN_CHANGE:
             if this.onTextChanged != nil: this.onTextChanged(this, newEventArgs())
-
-    of MM_FONT_CHANGED:
-        var this = cast[TextBox](refData)
-        this.updateFontInternal()
-        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

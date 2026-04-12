@@ -180,52 +180,27 @@ method autoCreate(this: GroupBox) = this.createHandle()
 
 proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     # echo msg
+    var this = cast[GroupBox](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, gbWndProc, scID)
-        var this = cast[GroupBox](refData)
         if this.mPen != nil: DeleteObject(this.mPen)
         if this.mHdc != nil:  DeleteDC(this.mHdc)
         if this.mBmp != nil: DeleteObject(this.mBmp)
         this.destructor()
 
-    of WM_LBUTTONDOWN:
-        var this = cast[GroupBox](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-
-    of WM_LBUTTONUP:
-        var this = cast[GroupBox](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONDOWN:
-        var this = cast[GroupBox](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-
-    of WM_RBUTTONUP:
-        var this = cast[GroupBox](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-
-    of WM_MOUSEMOVE:
-        var this = cast[GroupBox](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-
-    of WM_MOUSELEAVE:
-        var this = cast[GroupBox](refData)
-        this.mouseLeaveHandler()
-
     of WM_GETTEXTLENGTH:
-        var this = cast[GroupBox](refData)
         if this.mGBStyle == GroupBoxStyle.gbsOverride:
             return 0
         # else:
         #     return DefSubclassProc(hw, msg, wpm, lpm)
-    
-    of WM_CONTEXTMENU:
-        var this = cast[GroupBox](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of WM_ERASEBKGND:
-        var this = cast[GroupBox](refData)
         let hdc = cast[HDC](wpm)
         if this.mGetWidth:
             var size : SIZE
@@ -246,7 +221,6 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
        
 
     of MM_LABEL_COLOR:
-        var this = cast[GroupBox](refData)
         if this.mGBStyle == GroupBoxStyle.gbsClassic:
             var hdc = cast[HDC](wpm)
             SetBkMode(hdc, 1)
@@ -257,18 +231,12 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 
 
     of WM_PAINT:
-        var this = cast[GroupBox](refData)
         if this.mGBStyle == GroupBoxStyle.gbsOverride:
             let ret = DefSubclassProc(hw, msg, wpm, lpm)
             let gfx = newGraphics(hw)
             gfx.drawHLine(this.mPen, 10, 10, this.mTextWidth)
             gfx.drawText(this, 12, 0)
             # gfx.drawThemeText(this)
-
-    of MM_FONT_CHANGED:
-        var this = cast[GroupBox](refData)
-        this.updateFontInternal()
-        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

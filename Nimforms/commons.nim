@@ -4,6 +4,7 @@
 # Window style combinations
 # import macros
 # import std/tables
+import std/options
 let
     fixedSingleExStyle : DWORD = WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR or WS_EX_WINDOWEDGE or WS_EX_CONTROLPARENT or WS_EX_APPWINDOW
     fixedSingleStyle : DWORD = WS_OVERLAPPED or WS_TABSTOP or WS_MAXIMIZEBOX or WS_MINIMIZEBOX or WS_GROUP or WS_SYSMENU or WS_DLGFRAME or WS_BORDER or WS_CAPTION or WS_CLIPCHILDREN or WS_CLIPSIBLINGS
@@ -63,8 +64,22 @@ proc registerMessageWindowClass(clsName: LPCWSTR, pFunc: WNDPROC) =
     wc.hInstance = appData.hInstance
     wc.lpszClassName = clsName
     RegisterClassExW(wc.addr)
+    
 
+var cn1 = 1
+proc prct(rc: RECT, pt: POINT, ins: bool) =
+    echo "[", cn1, "] [", rc.left, ", ", rc.top, ", ", rc.right, ", ", rc.bottom, "], [", pt.x, ", ", pt.y, "], ", ins
+    cn1 += 1
+    
+    
+var x1: int = 1
+proc print(msg: string) =
+    echo "[", x1, "]  ", msg, " -- "
+    x1 += 1
 
+proc print[T](msg: string, obj: T) =
+    echo "[", x1, "]  ", msg, " -- ", $obj
+    x1 += 1
 #==========MENU FILE INCLUDE==============================================
 include menu
 #=========================================================================

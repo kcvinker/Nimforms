@@ -79,48 +79,27 @@ proc checked*(this: CheckBox): bool = this.mChecked
 
 
 proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
-    
+    var this = cast[CheckBox](refData)
+    let res = this.commonMsgHandler(hw, msg, wpm, lpm)
+    if res == MsgHandlerResult.mhrCallDefProc:
+        return DefSubclassProc(hw, msg, wpm, lpm)
+    elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
+        return cast[LRESULT](res)
     case msg
     of WM_DESTROY:
         RemoveWindowSubclass(hw, cbWndProc, scID)
-        var this = cast[CheckBox](refData)
         this.destructor()
-        
-    of WM_LBUTTONDOWN:
-        var this = cast[CheckBox](refData)
-        this.leftButtonDownHandler(msg, wpm, lpm)
-    of WM_LBUTTONUP:
-        var this = cast[CheckBox](refData)
-        this.leftButtonUpHandler(msg, wpm, lpm)
-    of WM_RBUTTONDOWN:
-        var this = cast[CheckBox](refData)
-        this.rightButtonDownHandler(msg, wpm, lpm)
-    of WM_RBUTTONUP:
-        var this = cast[CheckBox](refData)
-        this.rightButtonUpHandler(msg, wpm, lpm)
-    of WM_MOUSEMOVE:
-        var this = cast[CheckBox](refData)
-        this.mouseMoveHandler(msg, wpm, lpm)
-    of WM_MOUSELEAVE:
-        var this = cast[CheckBox](refData)
-        this.mouseLeaveHandler()
-    of WM_CONTEXTMENU:
-        var this = cast[CheckBox](refData)
-        if this.mContextMenu != nil: this.mContextMenu.showMenu(lpm)
 
     of MM_LABEL_COLOR:
-        var this = cast[CheckBox](refData)
         let hdc = cast[HDC](wpm)
         SetBkColor(hdc, this.mBackColor.cref)
         return cast[LRESULT](this.mBkBrush)
 
     of MM_CTL_COMMAND:
-        var this = cast[CheckBox](refData)
         this.mChecked = bool(this.sendMsg(BM_GETCHECK, 0, 0))
         if this.onCheckedChanged != nil: this.onCheckedChanged(this, newEventArgs())
 
     of MM_NOTIFY_REFLECT:
-        var this = cast[CheckBox](refData)
         let nmcd = cast[LPNMCUSTOMDRAW](lpm)
         case nmcd.dwDrawStage
         of CDDS_PREERASE: return CDRF_NOTIFYPOSTERASE
@@ -133,11 +112,6 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             DrawTextW(nmcd.hdc, &this.mWtext, this.mWtext.wcLen, nmcd.rc.addr, this.mTextStyle)
             return CDRF_SKIPDEFAULT
         else: discard
-        return 0
-
-    of MM_FONT_CHANGED:
-        var this = cast[CheckBox](refData)
-        this.updateFontInternal()
         return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
