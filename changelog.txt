@@ -1,12 +1,13 @@
 Nimforms changelog
 
-Version 10.126 (12-Apr-2026)
+
+Version 1.0.126 (12-Apr-2026)
     Improved onClick event handling.
 
-Version 10.125 (12-Apr-2026)
+Version 1.0.125 (12-Apr-2026)
     Removed unnecessary echos.
 
-Version 10.124 (12-Apr-2026)
+Version 1.0.124 (12-Apr-2026)
     Removed redundant code from window procedure functions.
         Basic message handling for controls is now handled by a base class method.
 
