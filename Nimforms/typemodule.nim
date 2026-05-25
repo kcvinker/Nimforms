@@ -3,11 +3,20 @@ import tables
 # import nimpy
 
 type
-    ControlType* {.pure.} = enum
+    ControlType* = enum
         ctNone, ctButton, ctCalendar, ctCheckBox, ctComboBox, ctDateTimePicker, ctForm, ctGroupBox, ctLabel,
         ctListBox, ctListView, ctNumberPicker, ctPictureBox, ctProgressBar, ctRadioButton, ctTextBox, ctTrackBar, ctTreeView
 
     WArrayPtr = ptr UncheckedArray[Utf16Char]
+
+    BackColorMode = enum
+        bcmNone, bcmInherit, bcmWhite
+
+    ControlTypeInfo {.packed.} = object
+        backColorMode: BackColorMode
+        blackFGC: bool
+        isTextable: bool
+        hasFont: bool
 
     WideString* = object 
         mData : WArrayPtr
@@ -15,6 +24,14 @@ type
         mWcLen*: int32
         mBytes: int
         mInputStr: cstring
+
+    ControlMeta = object
+        prefix: string
+        clsName: ptr Utf16Char
+        value: char
+        info: ControlTypeInfo
+        wstyle: DWORD
+        wexStyle: DWORD
 
     Graphics = object 
         mHdc: HDC
@@ -58,6 +75,8 @@ type
     ContextMenuEventHandler* = proc(c: ContextMenu, e: EventArgs)
 
     MenuEventHandler* = proc(m: MenuItem, e: EventArgs)
+
+    CreateHandleHandler = proc(c: Control)
 
     MouseButtons* {.pure.} = enum
         mbNone, mbLeft = 10_48_576, mbRight = 20_97_152, mbMiddle = 41_94_304,
@@ -162,9 +181,11 @@ type
         mHoverFired: bool
         mBkBrush: HBRUSH
         mFont: Font
-        mParent: Form
+        mParent: Control   
+        mOwnerForm: Form
         mcRect: RECT
         mWtext: WideString
+        mCreateHwndProc: CreateHandleHandler
         #Events
         mOnMouseEnter*, onClick*, mOnMouseLeave*, onRightClick*, onDoubleClick*: EventHandler
         onLostFocus*, onGotFocus*, mOnMouseHover*: EventHandler
@@ -200,7 +221,7 @@ type
         mFormState: WindowState
         mFdMode: FormDrawMode
         mMaximizeBox, mMinimizeBox, mTopMost, mIsLoaded: bool
-        mCreateChilds, mIsMenuUsed: bool
+        mIsMenuUsed, mEnablePrintPoint: bool
         mAppFont : bool = true
         mMenuGrayBrush, mMenuDefBgBrush, mMenuHotBgBrush, mMenuFrameBrush : HBRUSH
         # mMenuFont : Font
@@ -373,7 +394,7 @@ type
 
     ListView* = ref object of Control
         mSelIndex, mSelSubIndex, mHdrHeight: int32
-        mColIndex, mRowIndex, mItemIndex, mLayoutCount: int32
+        mColIndexCounter, mRowIndex, mItemIndexCounter, mLayoutCount: int32
         mEditLabel, mHideSel, mMultiSel, mHasCheckBox, mFullRowSel: bool
         mShowGrid, mOneClickActivate, mHotTrackSel, mNoHeader: bool
         mHdrClickable, mCheckBoxLast, mChecked, mChangeHdrHeight: bool
@@ -454,13 +475,14 @@ type
         mBuddyTracking, mHoverTriggered: bool
         mBuddyStyle, mBuddyExStyle, mTxtFlag: DWORD
         mDeciPrec, mBuddyCID, mLineX: int32
-        mBuddyRect, mUpdRect, mMyRect, mSpRect: RECT
+        mBuddyRect, mUpdRect, mMyRect, mSpRect, mTbwrc: RECT
         mLastMpos: POINT
+        mBorderPts: array[4, POINT]
         mTopEdgeFlag, mBotEdgeFlag: UINT
         mTxtPos: TextAlignment
         mHoverTimer: Timer
         mBuddyHandle: HWND
-        mPen: HPEN
+        mBorderPen: HPEN
         mBuddySCID: UINT_PTR
         mBuddyStr: string
         #Event
@@ -579,21 +601,25 @@ type
         onRightMouseDown, onRightMouseUp, onLeftClick: EventHandler
         onRightClick, onLeftDoubleClick: EventHandler
 
+    NodeOps {.pure.} = enum
+        noAddNode, noInsertNode, noAddChild, noInsertChild
 
     # NodeNotifyHandler = proc(tv: TreeView, parent: TreeNode, child: TreeNode, nop: NodeOps, pos: int32)
     TreeNode* = ref object
-        mImgIndex, mSelImgIndex, mChildCount, mIndex, mNodeCount, mNodeID: int32
-        mChecked, mIsCreated: bool
+        mImgIndex, mSelImgIndex, mChildCount, mIndex, mNodeID: int32
+        mInsertPos: int32
+        mNodeOp: NodeOps
+        mChecked, mIsCreated, mIsRoot, mInList: bool
         mForeColor, mBackColor: Color
         mHandle: HTREEITEM
+        mInsertAfter: HTREEITEM
         mTreeHandle: HWND
         mParentNode: TreeNode
         mText: string
         # mNotifyHandler: NodeNotifyHandler
         mNodes: seq[TreeNode]
 
-    NodeOps {.pure.} = enum
-        noAddNode, noInsertNode, noAddChild, noInsertChild
+    
 
     NodeNotify = ref object # Send data from a node to treeview
         node: TreeNode
@@ -617,9 +643,6 @@ type
         onAfterSelected, onBeforeExpanded, onAfterExpanded: TreeEventHandler
         onBeforeCollapsed, onAfterCollapsed: TreeEventHandler
 
-    # FormMap = object 
-    #     key: HWND
-    #     value: Form 
 
 
     AppData = object
@@ -673,3 +696,113 @@ proc initGdiPlus(this: var AppData) =
         if res == Status.okay: this.isGdipInit = true 
         echo "Gdip Init: ", res
 
+
+let ControlData* : array[ControlType, ControlMeta] = [
+    ctNone: ControlMeta(
+        prefix: "None_", clsName: nil, value: '\0',
+        info: ControlTypeInfo(backColorMode: bcmNone, blackFGC: false, isTextable: false, hasFont: false),
+        wstyle: 0, wexStyle: 0
+    ),
+
+    ctButton: ControlMeta(
+        prefix: "Button_", clsName: WCNBUTTON, value: '\1',
+        info: ControlTypeInfo(backColorMode: bcmNone, blackFGC: false, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_BUTTON, wexStyle: 0
+    ),
+
+    ctCalendar: ControlMeta(
+        prefix: "Calendar_", clsName: WCNCALENDAR, value: '\2',
+        info: ControlTypeInfo(backColorMode: bcmNone, blackFGC: false, isTextable: false, hasFont: false),
+        wstyle: WSTYLE_CALENDAR, wexStyle: 0
+    ),
+
+    ctCheckBox: ControlMeta(
+        prefix: "CheckBox_", clsName: WCNBUTTON, value: '\3',
+        info: ControlTypeInfo(backColorMode: bcmInherit, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_CHECK_BOX, wexStyle: WXSTYLE_CHECK_BOX
+    ),
+
+    ctComboBox: ControlMeta(
+        prefix: "ComboBox_", clsName: WCNCOMBO, value: '\4',
+        info: ControlTypeInfo(backColorMode: bcmWhite, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_COMBO_BOX, wexStyle: WXSTYLE_COMBO_BOX
+    ),
+
+    ctDateTimePicker: ControlMeta(
+        prefix: "DateTimePicker_", clsName: WCNDTP, value: '\5',
+        info: ControlTypeInfo(backColorMode: bcmWhite, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_DTP, wexStyle: WXSTYLE_DTP
+    ),
+
+    ctForm: ControlMeta(
+        prefix: "Form_", clsName: WCNFORM, value: '\6',
+        info: ControlTypeInfo(backColorMode: bcmNone, blackFGC: false, isTextable: false, hasFont: false),
+        wstyle: 0, wexStyle: 0
+    ),
+
+    ctGroupBox: ControlMeta(
+        prefix: "GroupBox_", clsName: WCNBUTTON, value: '\7',
+        info: ControlTypeInfo(backColorMode: bcmInherit, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_GB, wexStyle: WS_EX_CONTROLPARENT
+    ),
+
+    ctLabel: ControlMeta(
+        prefix: "Label_", clsName: WCNSTATIC, value: '\8',
+        info: ControlTypeInfo(backColorMode: bcmInherit, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_LABEL, wexStyle: 0
+    ),
+
+    ctListBox: ControlMeta(
+        prefix: "ListBox_", clsName: WCNLISTBOX, value: '\9', # Adjusted sequence counter
+        info: ControlTypeInfo(backColorMode: bcmWhite, blackFGC: true, isTextable: false, hasFont: true),
+        wstyle: WSTYLE_LIST_BOX, wexStyle: 0
+    ),
+
+    ctListView: ControlMeta(
+        prefix: "ListView_", clsName: WCNLISTVIEW, value: '\10',
+        info: ControlTypeInfo(backColorMode: bcmWhite, blackFGC: true, isTextable: false, hasFont: true),
+        wstyle: WSTYLE_LIST_VIEW, wexStyle: 0
+    ),
+
+    ctNumberPicker: ControlMeta(
+        prefix: "NumberPicker_", clsName: WCNNUMPICK, value: '\11',
+        info: ControlTypeInfo(backColorMode: bcmWhite, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_NUM_PICK, wexStyle: 0
+    ),
+
+    ctPictureBox: ControlMeta(
+        prefix: "PictureBox_", clsName: WCNPICTUREBOX, value: '\12',
+        info: ControlTypeInfo(backColorMode: bcmNone, blackFGC: false, isTextable: false, hasFont: false),
+        wstyle: COMM_CTRL_STYLES, wexStyle: 0
+    ),
+
+    ctProgressBar: ControlMeta(
+        prefix: "ProgressBar_", clsName: WCNPROGRESSBAR, value: '\13',
+        info: ControlTypeInfo(backColorMode: bcmNone, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_PGB, wexStyle: WS_EX_STATICEDGE
+    ),
+
+    ctRadioButton: ControlMeta(
+        prefix: "RadioButton_", clsName: WCNBUTTON, value: '\14',
+        info: ControlTypeInfo(backColorMode: bcmInherit, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_RADIO, wexStyle: 0
+    ),
+
+    ctTextBox: ControlMeta(
+        prefix: "TextBox_", clsName: WCNEDIT, value: '\15',
+        info: ControlTypeInfo(backColorMode: bcmWhite, blackFGC: true, isTextable: true, hasFont: true),
+        wstyle: WSTYLE_TB, wexStyle: WXSTYLE_TB
+    ),
+
+    ctTrackBar: ControlMeta(
+        prefix: "TrackBar_", clsName: WCNTRACKBAR, value: '\16',
+        info: ControlTypeInfo(backColorMode: bcmInherit, blackFGC: false, isTextable: false, hasFont: false),
+        wstyle: WSTYLE_TKBAR, wexStyle: 0
+    ),
+
+    ctTreeView: ControlMeta(
+        prefix: "TreeView_", clsName: WCNTREEVIEW, value: '\17',
+        info: ControlTypeInfo(backColorMode: bcmWhite, blackFGC: true, isTextable: false, hasFont: true),
+        wstyle: WSTYLE_TV, wexStyle: 0
+    )
+]

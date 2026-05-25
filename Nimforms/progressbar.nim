@@ -22,20 +22,7 @@
 ==========================================================================================================]#
 
 # Constants
-const
-    PBS_SMOOTH = 0x01
-    PBS_VERTICAL = 0x04
-    PBS_MARQUEE = 0x08
-    PBST_NORMAL = 0x0001
-    PBST_ERROR = 0x0002
-    PBST_PAUSED = 0x0003
-    PBM_SETPOS = (WM_USER+2)
-    PBM_SETSTEP = (WM_USER+4)
-    PBM_STEPIT = (WM_USER+5)
-    PBM_SETRANGE32 = (WM_USER+6)
-    PBM_GETPOS = (WM_USER+8)
-    PBM_SETMARQUEE = (WM_USER+10)
-    PBM_SETSTATE  = (WM_USER+16)
+
 
 var pbCount = 1
 # let pgbClsName = toWcharPtr("msctls_progress32")
@@ -44,40 +31,26 @@ let pgbClsName : array[18, uint16] = [0x6D, 0x73, 0x63, 0x74, 0x6C, 0x73, 0x5F, 
 
 # Forward declaration
 proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: ProgressBar)
+proc createPbHandle(ctl: Control)
 # ProgressBar constructor
-proc progressBarCtor(parent: Form, x, y, w, h: int32): ProgressBar =
+proc progressBarCtor(parent: Control, x, y, w, h: int32): ProgressBar =
     new(result)
     result.mKind = ctProgressBar
-    result.mClassName = cast[LPCWSTR](pgbClsName[0].addr)
-    result.mName = "ProgressBar_" & $pbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    # result.mFont = parent.mFont
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mBackColor = parent.mBackColor
-    result.mForeColor = CLR_BLACK
-    result.mStyle = WS_VISIBLE or WS_CHILD
-    result.mExStyle = 0
+    controlBaseInit(result, parent, x, y, w, h, pbCount)
     result.mMinValue = 0
     result.mMaxValue = 100
     result.mStep = 1
     result.mBarState = pbsNormal
     result.mBarStyle = pbsBlock
     result.mMarqueeSpeed = 30
-    pbCount += 1
-    parent.mControls.add(result)
+    result.mCreateHwndProc = createPbHandle
 
 
 
-proc newProgressBar*(parent: Form, x, y: int32, w: int32 = 200, h: int32 = 25, autoc = false, perc = false): ProgressBar =
+proc newProgressBar*(parent: Control, x, y: int32, w: int32 = 200, h: int32 = 25, autoc = false, perc = false): ProgressBar =
     result = progressBarCtor(parent, x, y, w, h)
     result.mShowPerc = perc
-    if parent.mCreateChilds: result.createHandle()
+    
 
 
 proc setPbStyle(this: ProgressBar) =
@@ -87,16 +60,17 @@ proc setPbStyle(this: ProgressBar) =
 
 
 # Create ProgressBar's hwnd
-proc createHandle*(this: ProgressBar) =
+proc createPbHandle(ctl: Control) =
+    var this = cast[ProgressBar](ctl)
     this.setPbStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(pbWndProc)
         this.setFontInternal()
         this.sendMsg(PBM_SETRANGE32, this.mMinValue, this.mMaxValue)
         this.sendMsg(PBM_SETSTEP, this.mStep, 0)
 
-method autoCreate(this: ProgressBar) = this.createHandle()
+# method autoCreate(this: ProgressBar) = this.createHandle()
 
 # Increment progress bar value by step value
 proc increment*(this: ProgressBar) =
@@ -173,9 +147,9 @@ proc pbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, pbWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of WM_PAINT:
         if this.mShowPerc and this.mBarStyle == pbsBlock:

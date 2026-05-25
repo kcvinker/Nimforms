@@ -1,5 +1,23 @@
 Nimforms changelog
 
+Version 1.1.126 (25-May-2026)
+    Lazy control handle creation has been implemented:
+        Previously, users needed to call the createHandle function for Forms and controls. We have removed this redundancy, which solved many design issues and brought more convenience. We can now reduce the number of parameters for constructors. We can now use struct members like properties. So createHandle function just 
+        vanished.
+
+    GroupBox is now parent to other controls.
+        Previously, GroupBox was not a parent for other controls. Now, Form & GroupBox can be parents to 
+        other controls.
+
+    Improved NumberPicker drawing.
+        Previously, NumberPicker's buddy edit border drawing was a workaround. It was unnecessarily complex.
+        And it ended up causing unnecessary glitches in the buddy edit.
+        Now, the NumberPicker's buddy edit borders are drawn perfectly by handling the WM_NCCALCSIZE and WM_NCPAINT messages.
+
+    Class names are creating in C with emit pragma.
+    Controls now have a metadata which contains control specific info.
+
+
 
 Version 1.0.126 (12-Apr-2026)
     Improved onClick event handling.

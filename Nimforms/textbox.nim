@@ -20,18 +20,7 @@
             onTextChanged
 =========================================================================================================]#
 # Constants
-const
-    ECM_FIRST = 0x1500
-    ES_AUTOHSCROLL = 128
-    ES_MULTILINE = 4
-    ES_WANTRETURN = 4096
-    ES_NOHIDESEL = 256
-    ES_READONLY = 0x800
-    ES_LOWERCASE = 16
-    ES_UPPERCASE = 8
-    ES_PASSWORD = 32
-    EM_SETCUEBANNER = ECM_FIRST + 1
-    EN_CHANGE = 0x0300
+
 
 var tbCount = 1
 # let tbClsName = toWcharPtr("Edit")
@@ -43,30 +32,14 @@ let TBEXSTYLE: DWORD = WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_CLIENTEDGE or WS_
 
 # Forward declaration
 proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: TextBox)
+proc createTbHandle(ctl: Control)
 # TextBox constructor
-proc newTextBox*(parent: Form, text: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 120, h: int32 = 27): TextBox =
+proc newTextBox*(parent: Control, text: string = "", x: int32 = 10, y: int32 = 10, w: int32 = 120, h: int32 = 27): TextBox =
     new(result)
     result.mKind = ctTextBox
-    result.mClassName = cast[LPCWSTR](tbClsName[0].addr)
-    result.mName = "TextBox_" & $tbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.mText = text
-    # result.mFont = parent.mFont
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mBackColor = CLR_WHITE
-    # result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
-    result.mForeColor = CLR_BLACK
-    result.mStyle = TBSTYLE
-    result.mExStyle = TBEXSTYLE
-    tbCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
+    controlBaseInit(result, parent, x, y, w, h, tbCount, text)
+    result.mCreateHwndProc = createTbHandle
+    
 
 proc setTBStyle(this: TextBox) =
     if this.mMultiLine: this.mStyle = this.mStyle or ES_MULTILINE or ES_WANTRETURN
@@ -90,16 +63,16 @@ proc setTBStyle(this: TextBox) =
     this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
 
 # Create TextBox's hwnd
-proc createHandle*(this: TextBox) =
+proc createTbHandle(ctl: Control) =
+    var this = cast[TextBox](ctl)
     this.setTBStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(tbWndProc)
-        this.setFontInternal()
         if this.mText.len > 0:  SetWindowTextW(this.mHandle, this.mText.toWcharPtr)
         if this.mCueBanner.len > 0: this.sendMsg(EM_SETCUEBANNER, 1, toWcharPtr(this.mCueBanner))
 
-method autoCreate(this: TextBox) = this.createHandle()
+# method autoCreate(this: TextBox) = this.createHandle()
 # Properties--------------------------------------------------------------------------
 
 proc `textAlign=`*(this: TextBox, value: TextAlignment) = this.mTextAlign = value
@@ -134,9 +107,9 @@ proc tbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, tbWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of MM_EDIT_COLOR:
         if this.mDrawMode > 0:

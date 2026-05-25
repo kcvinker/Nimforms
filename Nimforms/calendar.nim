@@ -2,7 +2,7 @@
 # calendar module Created on 29-Mar-2023 05:03 PM; Author kcvinker
 
 #[=========================================Calendar Docs=======================================
-    Constructor - newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar
+    Constructor - newCalendar*(parent: Control, x: int32 = 10, y: int32 = 10): Calendar
     Functions
         createHandle
     
@@ -59,7 +59,7 @@ let calClsName : array[14, uint16] = [0x53, 0x79, 0x73, 0x4D, 0x6F, 0x6E, 0x74, 
 
 # Forward declaration
 proc calWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: Calendar)
+proc createCalHandle(ctl: Control)
 
 proc newDateAndTime*(st: SYSTEMTIME): DateAndTime =
     result.year = int32(st.wYear)
@@ -84,21 +84,13 @@ proc makeSystemTime(dt: DateAndTime): SYSTEMTIME =
 
 
 # Calendar constructor
-proc newCalendar*(parent: Form, x: int32 = 10, y: int32 = 10): Calendar =
+proc newCalendar*(parent: Control, x: int32 = 10, y: int32 = 10): Calendar =
     new(result)
     result.mKind = ctCalendar
-    result.mClassName = cast[LPCWSTR](calClsName[0].addr)
-    result.mName = "Calendar_" & $calCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = 10
-    result.mHeight = 10
-    result.mStyle = WS_CHILD or WS_TABSTOP or WS_VISIBLE
+    controlBaseInit(result, parent, x, y, 10, 10, calCount)
     result.mViewMode = vmMonthView
-    calCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
+    result.mCreateHwndProc = createCalHandle
+    
 
 proc setCalStyle(this: Calendar) =
     if this.mShowWeekNum: this.mStyle = this.mStyle or MCS_WEEKNUMBERS
@@ -111,12 +103,13 @@ proc setValueInternal(this: Calendar, st: SYSTEMTIME) =
     this.mValue = newDateAndTime(st)
 
 # Create Calendar's hwnd
-proc createHandle*(this: Calendar) =
+proc createCalHandle(ctl: Control) =
+    var this = cast[Calendar](ctl)
     this.setCalStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(0, 0)
     if this.mHandle != nil:
         this.setSubclass(calWndProc)
-        # this.setFontInternal()
+        
         var rc: RECT
         this.sendMsg(MCM_GETMINREQRECT, 0, rc.unsafeAddr)
         SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, rc.right, rc.bottom, SWP_NOZORDER)
@@ -124,7 +117,7 @@ proc createHandle*(this: Calendar) =
         this.sendMsg(MCM_GETCURSEL, 0, st.unsafeAddr)
         this.setValueInternal(st)
 
-method autoCreate(this: Calendar) = this.createHandle()
+# method autoCreate(this: Calendar) = this.createHandle()
 
 # Set the value property
 proc `value=`*(this: Calendar, dateValue: DateAndTime) {.inline.} =
@@ -171,9 +164,9 @@ proc calWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, calWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of MM_NOTIFY_REFLECT:
         let nmh = cast[LPNMHDR](lpm)

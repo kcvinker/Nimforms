@@ -33,19 +33,7 @@
             onKeyPress
 ====================================================================================================]#
 
-const
-    BCM_FIRST = 0x1600
-    BCM_GETIDEALSIZE = BCM_FIRST+0x1
 
-    ES_NUMBER = 0x2000
-    ES_LEFT = 0
-    ES_CENTER = 1
-    ES_RIGHT = 2
-    EN_UPDATE = 0x0400
-    EM_SETSEL = 0x00B1
-    TME_HOVER = 0x00000001
-    TME_LEAVE = 0x00000002
-    HOVER_DEFAULT = 0xFFFFFFFF'i32
 
 # Control class names
 let BtnClass : array[7, uint16] = [0x42, 0x75, 0x74, 0x74, 0x6F, 0x6E, 0]
@@ -56,31 +44,118 @@ var globalSubClassID : UINT_PTR = 1000
 
 #===================Forward Declarations===================================
 proc getMappedRect(this: Control): RECT
+proc cloneParentFont*(this: Control)
 proc setFontInternal(this: Control) {.inline.}
 proc cmenuDtor(this: ContextMenu)
 proc ctlSetPos(this: Control) {.inline.}=
     SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOZORDER)
 
+
+
+
+proc controlBaseInit(this: Control, parent: Control, x, y, w, h: int32, 
+                            ctlCounter: var int, txt: string = "") =
+    this.mParent = parent
+    this.mXpos = x
+    this.mYpos = y
+    this.mWidth = w
+    this.mHeight = h
+    this.mCtlID = globalCtlID
+
+    let ctlMeta : ControlMeta = ControlData[this.mKind]
+    globalCtlID += 1
+    ctlCounter += 1
+    this.mName = ctlMeta.prefix & $ctlCounter
+    this.mStyle = ctlMeta.wstyle
+    this.mExStyle = ctlMeta.wexStyle
+
+    if ctlMeta.info.isTextable and len(txt) > 0: 
+        this.mText = txt
+        this.mWtext = newWideString(txt)
+        this.mHasText = true
+
+    this.mOwnerForm = if parent.mKind == ControlType.ctForm: cast[Form](parent) else: parent.mOwnerForm
+    if this.mOwnerForm != nil: 
+        if ctlMeta.info.hasFont: this.cloneParentFont()
+        if ctlMeta.info.backColorMode == bcmInherit:
+            this.mBackColor = parent.mBackColor
+        elif ctlMeta.info.backColorMode == bcmWhite:
+            this.mBackColor = newColor(0xFFFFFF) # Default white background for all controls
+
+        if ctlMeta.info.blackFGC:            
+            this.mForeColor = newColor(0x000000) # Default black foreground for all controls
+        else:
+            this.mForeColor = this.mOwnerForm.mForeColor
+        
+        this.mOwnerForm.mControls.add(this)
+
+
+proc controlBaseDtor(this: Control) =
+    if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
+    if this.mCemnuUsed: this.mContextMenu.cmenuDtor()
+    if this.mHasFont: 
+        this.mFont.finalize()
+
+    if this.mHasText: 
+        this.mWtext.finalize()
+
+
+proc createHandleInternal(this: Control, width, height: int32) =
+    if this.mHandle != nil: return
+    let ctlMeta : ControlMeta = ControlData[this.mKind]
+    let txtPtr : LPCWSTR = (if this.mHasText: &this.mWtext else: nil)  
+    let lpm: PVOID = if this.mKind == ControlType.ctPictureBox: cast[PVOID](this) else: nil
+    this.mHandle = CreateWindowExW( this.mExStyle,
+                                    ctlMeta.clsName,
+                                    txtPtr, this.mStyle, 
+                                    this.mXpos, this.mYpos,
+                                    width, height,
+                                    this.mParent.mHandle, cast[HMENU](this.mCtlID),
+                                    appData.hInstance, lpm)
+    if this.mHandle != nil:        
+        this.mIsCreated = true
+        if this.mHasFont: this.setFontInternal()
+            
+    else:
+        echo "Error while creating the hwnd of ", this.mName, ", Err.No - ", GetLastError()
+
+
 # Control class's methods====================================================
 proc cloneParentFont*(this: Control) =
     # this.mFont = copyNewFont(this.mParent.mFont)
-    this.mFont.mName = this.mParent.mFont.mName
-    this.mFont.mSize = this.mParent.mFont.mSize
-    this.mFont.mWeight = this.mParent.mFont.mWeight
-    this.mFont.mItalics = this.mParent.mFont.mItalics
-    this.mFont.mUnderLine = this.mParent.mFont.mUnderLine
-    this.mFont.mStrikeOut = this.mParent.mFont.mStrikeOut   
-    this.mFont.handle = this.mParent.mFont.handle
+    this.mFont = this.mOwnerForm.mFont    
     this.mFont.mOwnership = FontOwner.foUser
     this.mFont.tag = this.mName
+    this.mHasFont = true
 
+proc copyAppFont(this: Form) =
+    this.mFont = appData.defFont     
+    this.mFont.mOwnership = FontOwner.foUser
+    
 
+proc right*(this: Control, value: int32 = 10): int32 =
+    if this.mIsCreated:
+        this.getMappedRect().right + value
+    else:
+        this.mXpos + this.mWidth + value
 
-proc right*(this: Control, value: int32): int32 = this.getMappedRect().right + value
-proc bottom*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
+proc bottom*(this: Control, value: int32 = 10): int32 = 
+    if this.mIsCreated:
+        this.getMappedRect().bottom + value
+    else:
+        this.mYpos + this.mHeight + value
 
-proc `->`*(this: Control, value: int32) : int32 = this.getMappedRect().right + value
-proc `>>`*(this: Control, value: int32): int32 = this.getMappedRect().bottom + value
+proc `->`*(this: Control, value: int32 = 10) : int32 = 
+    if this.mIsCreated:
+        this.getMappedRect().right + value
+    else:
+        this.mXpos + this.mWidth + value
+
+proc `>>`*(this: Control, value: int32 = 10): int32 = 
+    if this.mIsCreated:
+        this.getMappedRect().bottom + value
+    else:
+        this.mYpos + this.mHeight + value
 
 # Control class's properties==========================================
 proc handle*(this: Control): HWND = this.mHandle
@@ -206,14 +281,6 @@ proc mapParentPoints(this: Control) : RECT =
     MapWindowPoints(firstHwnd, this.mParent.mHandle, cast[LPPOINT](rc.unsafeAddr), 2)
     result = rc
 
-proc destructor(this: Control) =
-    if this.mBkBrush != nil: DeleteObject(this.mBkBrush)
-    if this.mCemnuUsed: this.mContextMenu.cmenuDtor()
-    if this.mHasFont: 
-        this.mFont.finalize()
-
-    if this.mHasText: 
-        this.mWtext.finalize()
     
 
 proc sendMsg(this: Control, msg: UINT, wpm: auto, lpm: auto): LRESULT {.discardable, inline.} =
@@ -260,29 +327,7 @@ proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
 
 proc isMouseOnMe(this: Control, lpm: LPARAM) : bool {. inline .} =
     let pt = POINT(x: getXFromLp(lpm), y: getYFromLP(lpm))
-    return PtInRect(&this.mcRect, pt) != 0
-
-
-
-
-
-# ===========================Event handlers for Control======================================================
-# proc leftButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-#     if this.onMouseDown != nil: this.onMouseDown(this, newMouseEventArgs(msg, wp, lp))
-
-# proc leftButtonUpHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-#     if this.onMouseUp != nil: this.onMouseUp(this, newMouseEventArgs(msg, wp, lp))
-#     if this.onClick != nil: this.onClick(this, newEventArgs())
-
-# proc rightButtonDownHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-#     if this.onRightMouseDown != nil: this.onRightMouseDown(this, newMouseEventArgs(msg, wp, lp))
-
-# proc rightButtonUpHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-#     if this.onRightMouseUp != nil: this.onRightMouseUp(this, newMouseEventArgs(msg, wp, lp))
-#     if this.onRightClick != nil: this.onRightClick(this, newEventArgs())
-
-# proc mouseWheelHandler(this: Control, msg: UINT, wp: WPARAM, lp: LPARAM) =
-    
+    return PtInRect(&this.mcRect, pt) != 0    
 
 
 proc keyDownHandler(this: Control, wp: WPARAM) =
@@ -295,10 +340,11 @@ proc keyPressHandler(this: Control, wp: WPARAM) =
     if this.onKeyPress != nil: this.onKeyPress(this, newKeyPressEventArgs(wp))
 
 
+#======================================================================================================
 # Here we are including contextmenu module. Because, contextmenu should be available for all controls.
 include contextmenu
+#=====================================================================================================
 
-# proc setContextMenuInternal(this: Control)
 
 proc contextMenu*(this: Control): ContextMenu = this.mContextMenu
 
@@ -318,26 +364,7 @@ proc setControlRect(this: Control) =
     GetClientRect(this.mHandle, lprct);
     MapWindowPoints(this.mHandle, this.mParent.mHandle, cast[LPPOINT](lprct), 2);
 
-proc createHandleInternal(this: Control, specialCtl: bool = false) =
-    if not specialCtl:
-        this.mCtlID = globalCtlID
-        globalCtlID += 1
-
-    let txtPtr : LPCWSTR = (if this.mHasText: &this.mWtext else: nil)     
-    this.mHandle = CreateWindowExW( this.mExStyle,
-                                    this.mClassName,
-                                    txtPtr,
-                                    this.mStyle, this.mXpos, this.mYpos,
-                                    this.mWidth, this.mHeight,
-                                    this.mParent.mHandle, cast[HMENU](this.mCtlID),
-                                    this.mParent.hInstance, nil)
-    if this.mHandle != nil:        
-        this.mIsCreated = true
-        GetClientRect(this.mHandle, &this.mcRect)
-        if this.mHasFont:
-            this.mFont.pHwnd = this.mHandle
-    else:
-        echo "Error in creation of ", this.mKind, ", Err.No - ", GetLastError()
+        
 
 # Only used CheckBox & RadioButton
 proc setIdealSize(this: Control) =
@@ -347,8 +374,6 @@ proc setIdealSize(this: Control) =
     this.mHeight = ss.cy
     MoveWindow(this.mHandle, this.mXpos, this.mYpos, ss.cx, ss.cy, 1)
 
-method autoCreate(c: Control) {.base.} =
-    quit "Childs are responsible for this"
 
 proc trackMouseMove(hw: HWND, flags: set[TMEFlags] = {}) : bool =
     var tme: TRACKMOUSEEVENT

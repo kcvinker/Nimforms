@@ -18,34 +18,20 @@ var rbCount = 1
 # let rbClsName = toWcharPtr("Button")
 
 # Forward declaration
-proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: RadioButton)
+proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, 
+                scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
+proc createRbHandle(ctl: Control)
 # RadioButton constructor
-proc newRadioButton*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): RadioButton =
+proc newRadioButton*(parent: Control, text: string, x: int32 = 10, y: int32 = 10, 
+                        w: int32 = 0, h: int32 = 0): RadioButton =
     new(result)
     result.mKind = ctRadioButton
-    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
-    result.mName = "RadioButton_" & $rbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.mText = text
-    # result.mFont = parent.mFont
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mBackColor = parent.mBackColor
-    result.mWideText = text.toLPWSTR()
-    result.mForeColor = CLR_BLACK
+    controlBaseInit(result, parent, x, y, w, h, rbCount, text)
     result.mAutoSize = true
     result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
-    result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTORADIOBUTTON
-    result.mExStyle = WS_EX_LTRREADING or WS_EX_LEFT
-    # result.mTextStyle = DT_SINGLELINE or DT_VCENTER
-    rbCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
+    result.mCreateHwndProc = createRbHandle
+    
+
 
 proc setRBStyle(this: RadioButton) =
     if this.mRightAlign:
@@ -55,16 +41,16 @@ proc setRBStyle(this: RadioButton) =
 
 
 # Create RadioButton's hwnd
-proc createHandle*(this: RadioButton) =
+proc createRbHandle(ctl: Control) =
+    var this = cast[RadioButton](ctl)
     this.setRBStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(rbWndProc)
         this.setFontInternal()
         this.setIdealSize()
         if this.mChecked: this.sendMsg(BM_SETCHECK, 1, 0)
 
-method autoCreate(this: RadioButton) = this.createHandle()
 
 # # Set the checked property
 proc `checked=`*(this: RadioButton, value: bool) {.inline.} =
@@ -75,7 +61,9 @@ proc `checked=`*(this: RadioButton, value: bool) {.inline.} =
 proc checked*(this: RadioButton): bool {.inline.} = this.mChecked
 
 
-proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
+proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, 
+            scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
+
     var this = cast[RadioButton](refData)
     let res = this.commonMsgHandler(hw, msg, wpm, lpm)
     if res == MsgHandlerResult.mhrCallDefProc:
@@ -83,9 +71,9 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, rbWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of MM_LABEL_COLOR:
         let hdc = cast[HDC](wpm)
@@ -108,9 +96,10 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             else:
                 nmcd.rc.right -= 18
 
-            if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
+            # if (this.mDrawMode and 1) == 1: 
+            SetTextColor(nmcd.hdc, this.mForeColor.cref)
             # SetBkMode(nmcd.hdc, 1)
-            DrawTextW(nmcd.hdc, this.mWideText, -1, nmcd.rc.unsafeAddr, this.mTxtFlag)
+            DrawTextW(nmcd.hdc, this.mWtext, -1, nmcd.rc.unsafeAddr, this.mTxtFlag)
             return CDRF_SKIPDEFAULT
         else: discard
         return 0

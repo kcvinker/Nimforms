@@ -692,6 +692,11 @@ type
     PIDLIST_ABSOLUTE = ptr ITEMIDLIST_ABSOLUTE
     PCIDLIST_ABSOLUTE = ptr ITEMIDLIST_ABSOLUTE
 
+    NCCALC_SIZE_PARAMS {.pure.} = object
+        rgrc: array[4, RECT]
+        lppos: ptr WINDOWPOS
+
+    LPNCCALC_SIZE_PARAMS = ptr NCCALC_SIZE_PARAMS
 
     BROWSEINFOW {.pure.} = object
         hwndOwner: HWND
@@ -926,6 +931,8 @@ proc EndPaint(hwnd: HWND, lpPaint: LPPAINTSTRUCT): BOOL {.dll("user32", true).}
 proc IsWindow(hwnd: HWND): BOOL {.dll("user32", true).}
 proc SetRect(lprc: LPRECT, xLeft, yTop, xRight, yBottom: INT): BOOL {.dll("user32", true).}
 proc UnionRect(lprcDest, lprcSrc1, lprcSrc2: LPRECT): BOOL {.dll("user32", true).}
+proc OffsetRect(lprc: LPRECT, dx: int32, dy: int32): BOOL {.dll("user32", true).}
+proc GetDCEx(hWnd: HWND, hrgnClip: HRGN, flags: DWORD): HDC {.dll("user32", true).}
 # End of User32---------------------------------------------------------------------------------------------
 
 # Gdi32 functions {.dll("gdi32", true).}
@@ -954,6 +961,8 @@ proc TextOut(hdc: HDC, x: int32, y: int32, lpString: LPCWSTR, c: int32): BOOL
 proc Rectangle(hdc: HDC, left: int32, top: int32, right: int32, bottom: int32): BOOL {.dll("gdi32", true).}
 proc BitBlt(hdc: HDC, x, y, cx, cy: int32, hdcSrc: HDC, x1, y1: int32, rop: DWORD): BOOL {.dll("gdi32", true).}
 proc GetObjectW(h: HANDLE, c: int32, pv: LPVOID): int32 {.dll("gdi32", true).}
+proc Polyline(hdc: HDC, lppt: LPPOINT, cpt: int32): BOOL {.dll("gdi32", true).}
+
 # End of Gdi32-------------------------------------------------------------------------------------------
 
 # Misc dll functions {.dll("comctl32", false).}
@@ -1073,3 +1082,15 @@ template HIWORD(l: untyped): WORD = cast[WORD]((l shr 16))
 template GET_WHEEL_DELTA_WPARAM*(wParam: untyped): SHORT = cast[SHORT](HIWORD(wParam))
 proc `&`*[T](x: var T): ptr T {.inline.} = result = x.addr ## Use `&` like it in C/C++.
 proc `&`*(x: var wstring): ptr WCHAR {.inline.} = result = x[0].addr
+
+
+
+# Control Constants
+# Core Compile-Time Array Generator (Pure Nim, Backend Agnostic)
+# Force the input string to be evaluated at compile-time using 'static string'
+proc toStaticWide*(str: static string): array[str.len + 1, uint16] =
+    # The compiler can now perfectly compute the size: str.len + 1
+    for i, c in str:
+        result[i] = uint16(ord(c))
+    result[str.len] = 0 # Explicit Null-terminator
+

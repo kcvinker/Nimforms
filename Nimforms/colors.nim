@@ -34,6 +34,13 @@ proc clrRefFromRGB(red, green, blue: uint): COLORREF = cast[COLORREF]((blue shl 
 
 proc makeCREF(r, g, b: float): COLORREF = 
     cast[COLORREF]((uint(b) shl 16) or (uint(g) shl 8) or uint(r))
+
+proc makeCREF(hexValue: int): COLORREF = 
+    let red = hexValue shr 16
+    let green = (hexValue and 0x00ff00) shr 8
+    let blue = hexValue and 0x0000ff
+    result = cast[COLORREF]((blue shl 16) or (green shl 8) or red)
+    
     
 
 proc getHotBrush(this: Color, adj: float): HBRUSH =

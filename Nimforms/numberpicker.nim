@@ -22,32 +22,7 @@
             onValueChanged
 ============================================================================================================]#
 # Constants
-const
-    UDN_FIRST = cast[UINT](0-721)
-    UDS_WRAP = 0x0001
-    UDS_SETBUDDYINT = 0x0002
-    UDS_ALIGNRIGHT = 0x0004
-    UDS_ALIGNLEFT = 0x0008
-    UDS_AUTOBUDDY = 0x0010
-    UDS_ARROWKEYS = 0x0020
-    UDS_HORZ = 0x0040
-    UDS_NOTHOUSANDS = 0x0080
-    UDS_HOTTRACK = 0x0100
-    UDM_SETRANGE = (WM_USER+101)
-    UDM_GETRANGE = (WM_USER+102)
-    UDM_SETPOS = (WM_USER+103)
-    UDM_GETPOS = (WM_USER+104)
-    UDM_SETBUDDY = (WM_USER+105)
-    UDM_GETBUDDY = (WM_USER+106)
-    UDM_SETACCEL = (WM_USER+107)
-    UDM_GETACCEL = (WM_USER+108)
-    UDM_SETBASE = (WM_USER+109)
-    UDM_GETBASE = (WM_USER+110)
-    UDM_SETRANGE32 = (WM_USER+111)
-    UDM_GETRANGE32 = (WM_USER+112) #- wParam & lParam are LPINT
-    UDM_SETPOS32 = (WM_USER+113)
-    UDM_GETPOS32 = (WM_USER+114)
-    UDN_DELTAPOS = (UDN_FIRST - 1)
+
 
 var npCount = 1
 # let npClsName = toWcharPtr("msctls_updown32")
@@ -60,38 +35,25 @@ let SWP_FLAG: DWORD = SWP_SHOWWINDOW or SWP_NOACTIVATE or SWP_NOZORDER
 # Forward declaration
 proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: NumberPicker)
+proc createNumpHandle(ctl: Control)
 
 # NumberPicker constructor
-proc newNumberPicker*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27): NumberPicker =
+proc newNumberPicker*(parent: Control, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27): NumberPicker =
     new(result)
     result.mtid = 2
     result.mKind = ctNumberPicker
-    result.mClassName = cast[LPCWSTR](npClsName[0].addr)
-    result.mName = "NumberPicker_" & $npCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mBackColor = CLR_WHITE
-    result.mForeColor = CLR_BLACK
-    result.mStyle = NPSTYLE
-    result.mExStyle = 0
+    controlBaseInit(result, parent, x, y, w, h, npCount)
     result.mTopEdgeFlag = BF_TOPLEFT
     result.mBotEdgeFlag = BF_BOTTOM
     result.mMinRange = 0
     result.mMaxRange = 100
     result.mDeciPrec = 0
     result.mStep = 1
-    result.mBuddyStyle = WS_CHILD or WS_VISIBLE or ES_NUMBER or WS_TABSTOP or WS_BORDER
-    result.mBuddyExStyle = WS_EX_LTRREADING or WS_EX_LEFT
+    result.mBuddyStyle = WS_CHILD or WS_VISIBLE or ES_NUMBER or WS_TABSTOP
+    result.mBuddyExStyle = WS_EX_LEFT
     result.mTxtFlag = DT_SINGLELINE or DT_VCENTER
-    npCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
+    result.mCreateHwndProc = createNumpHandle
+    
 
 
 proc setNPStyle(this: NumberPicker) =
@@ -107,15 +69,29 @@ proc setNPStyle(this: NumberPicker) =
     of taCenter: this.mBuddyStyle = this.mBuddyStyle or ES_CENTER
     of taRight: this.mBuddyStyle = this.mBuddyStyle or ES_RIGHT
     this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
-    this.mPen = CreatePen(PS_SOLID, 1, this.backColor.cref)
+    this.mBorderPen = CreatePen(PS_SOLID, 2, makeCREF(0xABADB3))
     # prct(this.mMyRect, POINT(x:0, y:0), false)
+
+proc setBorderPoints(this: NumberPicker) =
+    GetWindowRect(this.mBuddyHandle, &this.mTbwrc)
+    OffsetRect(&this.mTbwrc, -this.mTbwrc.left, -this.mTbwrc.top)
+    if this.mButtonLeft:  # ⊐
+        this.mBorderPts[1].x = this.mTbwrc.right
+        this.mBorderPts[2].x = this.mTbwrc.right
+        this.mBorderPts[2].y = this.mTbwrc.bottom             
+        this.mBorderPts[3].y = this.mTbwrc.bottom
+    else:  # ⊏
+        this.mBorderPts[0].x = this.mTbwrc.right
+        this.mBorderPts[2].y = this.mTbwrc.bottom 
+        this.mBorderPts[3].x = this.mTbwrc.right
+        this.mBorderPts[3].y = this.mTbwrc.bottom
 
 
 proc createBuddy(this: NumberPicker) =
     if this.mButtonLeft: this.mWidth -= 2
-    this.mBuddyHandle = CreateWindowExW(this.mBuddyExStyle, toWcharPtr("Edit"), nil, this.mBuddyStyle,
+    this.mBuddyHandle = CreateWindowExW(this.mBuddyExStyle, WCNEDIT, nil, this.mBuddyStyle,
                                         this.mXpos, this.mYpos, this.mWidth, this.mHeight,
-                                        this.mParent.mHandle, cast[HMENU](this.mBuddyCID), this.mParent.hInstance, nil)
+                                        this.mParent.mHandle, cast[HMENU](this.mBuddyCID), appData.hInstance, nil)
     if this.mBuddyHandle != nil:
         SetWindowSubclass(this.mBuddyHandle, npEditWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
         globalSubClassID += 1
@@ -144,13 +120,11 @@ proc postCreationTasks(this: NumberPicker) =
     this.sendMsg(UDM_SETRANGE32, int32(this.mMinRange), int32(this.mMaxRange))
     GetClientRect(this.mBuddyHandle, this.mBuddyRect.unsafeAddr)
     GetClientRect(this.mHandle, this.mUpdRect.unsafeAddr)
-    this.resizeBuddy()
-    # this.mMyRect.right = this.mMyRect.left + this.mBuddyRect.right + this.mUpdRect.right
-    # this.mMyRect.bottom = this.mMyRect.top + this.mBuddyRect.bottom
     this.displayValue()
-    if oldBuddy != nil: SendMessageW(oldBuddy, MM_BUDDY_RESIZE, 0, 0) # This is a hack
+    # if oldBuddy != nil: SendMessageW(oldBuddy, MM_BUDDY_RESIZE, 0, 0) # This is a hack
     SetRect(&this.mMyRect, this.mXpos, this.mYpos, (this.mXpos + this.mWidth), (this.mYpos + this.mHeight))
     UnionRect(&this.mSpRect, &this.mUpdRect, &this.mBuddyRect)
+    this.setBorderPoints()
 
 
 proc setValueInternal(this: NumberPicker, delta: int32) =
@@ -217,17 +191,17 @@ method mouseLeaveHandler(this: NumberPicker): MsgHandlerResult =
     
 
 # Create NumberPicker's hwnd
-proc createHandle*(this: NumberPicker) =
+proc createNumpHandle(ctl: Control) =
+    var this = cast[NumberPicker](ctl)
     this.setNPStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(npWndProc)
-        this.setFontInternal()
         this.createBuddy()
         this.postCreationTasks()
         
 
-method autoCreate(this: NumberPicker) = this.createHandle()
+# method autoCreate(this: NumberPicker) = this.createHandle()
 
 
 # Properties---------------------------------------------------------------------------
@@ -289,10 +263,10 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             this.mOnMouseHover(this, newEventArgs())
         return 0
 
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, npWndProc, scID)
-        if this.mPen != nil: DeleteObject(this.mPen)
-        this.destructor()
+        if this.mBorderPen != nil: DeleteObject(this.mBorderPen)
+        this.controlBaseDtor()
 
     of MM_NOTIFY_REFLECT:
         let nm = cast[LPNMUPDOWN](lpm)
@@ -318,22 +292,22 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
         return cast[LRESULT](res)
     
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, npEditWndProc, scID)
 
-    of MM_BUDDY_RESIZE: 
-        this.resizeBuddy()
+    # of MM_BUDDY_RESIZE: 
+    #     this.resizeBuddy()
 
-    of WM_PAINT:
-        discard DefSubclassProc(hw, msg, wpm, lpm)
-        var hdc : HDC = GetDC(hw)
-        DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_SUNKENOUTER, this.mTopEdgeFlag)
-        DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_RAISEDINNER, this.mBotEdgeFlag)
-        MoveToEx(hdc, this.mLineX, this.mBuddyRect.top + 1, nil)
-        SelectObject(hdc, this.mPen)
-        LineTo(hdc, this.mLineX, this.mBuddyRect.bottom - 1)
-        ReleaseDC(hw, hdc)
-        return 1
+    # of WM_PAINT:
+    #     discard DefSubclassProc(hw, msg, wpm, lpm)
+    #     var hdc : HDC = GetDC(hw)
+    #     DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_SUNKENOUTER, this.mTopEdgeFlag)
+    #     DrawEdge(hdc, this.mBuddyRect.unsafeAddr, BDR_RAISEDINNER, this.mBotEdgeFlag)
+    #     MoveToEx(hdc, this.mLineX, this.mBuddyRect.top + 1, nil)
+    #     SelectObject(hdc, this.mBorderPen)
+    #     LineTo(hdc, this.mLineX, this.mBuddyRect.bottom - 1)
+    #     ReleaseDC(hw, hdc)
+    #     return 1
 
     of MM_EDIT_COLOR:
         var hdc = cast[HDC](wpm)
@@ -348,6 +322,45 @@ proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR
         let nCode = HIWORD(wpm)
         if nCode == EN_UPDATE:
             if this.mHideCaret: HideCaret(hw)
+
+    of WM_NCCALCSIZE:
+        # By default, arrow button has a border on 3 sides.
+        # If we use WS_BORDER style for buddy edit control, we need to...
+        # cover it with unnecessary drawings. So, it's better to make...
+        # room to draw a border and draw it on the 3 sides of buddy edit...
+        # in WM_NCPAINT. So we need to shrink the client area and make room.
+        # ................................................................ 
+        if wpm == 1: 
+            # wpm == 1 means the client area is being calculated for the first time. 
+            # So, we can modify the area.
+            var pncsp = cast[LPNCCALC_SIZE_PARAMS](lpm)
+            if not this.mButtonLeft:
+                pncsp.rgrc[0].left += 1
+                pncsp.rgrc[0].top += 1
+                pncsp.rgrc[0].right -= 2
+                pncsp.rgrc[0].bottom -= 1
+            else:
+                pncsp.rgrc[0].left += 2
+                pncsp.rgrc[0].top += 1
+                pncsp.rgrc[0].right -= 1
+                pncsp.rgrc[0].bottom -= 1 
+                              
+            return 0
+    
+    of WM_NCPAINT:
+        # We are drawing border on 3 sides of the edit control.
+        # Points are pre-calculated. 
+        var hrgn : HRGN = cast[HRGN](wpm)   
+        var flags : DWORD = DCX_WINDOW or DCX_CACHE or DCX_INTERSECTRGN
+        if wpm == 1: flags = DCX_WINDOW or DCX_CACHE
+        var hdc : HDC = GetDCEx(hw, hrgn, flags)   
+        if hdc != nil:       
+            let hOldPen: HGDIOBJ = SelectObject(hdc, cast[HGDIOBJ](this.mBorderPen))       
+            Polyline(hdc, &this.mBorderPts[0], 4)
+            SelectObject(hdc, hOldPen)
+        
+        ReleaseDC(hw, hdc)
+        return 0
 
     else: return DefSubclassProc(hw, msg, wpm, lpm)
     return DefSubclassProc(hw, msg, wpm, lpm)

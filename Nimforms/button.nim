@@ -16,98 +16,35 @@
 ======================================================================================================]#
 
 # Constants
-const
-    BS_PUSHBUTTON = 0x00000000
-    BS_DEFPUSHBUTTON = 0x00000001
-    BS_CHECKBOX = 0x00000002
-    BS_AUTOCHECKBOX = 0x00000003
-    BS_RADIOBUTTON = 0x00000004
-    BS_3STATE = 0x00000005
-    BS_AUTO3STATE = 0x00000006
-    BS_GROUPBOX = 0x00000007
-    BS_USERBUTTON = 0x00000008
-    BS_AUTORADIOBUTTON = 0x00000009
-    BS_PUSHBOX = 0x0000000A
-    BS_OWNERDRAW = 0x0000000B
-    BS_TYPEMASK = 0x0000000F
-    BS_LEFTTEXT = 0x00000020
-    BS_TEXT = 0x00000000
-    BS_ICON = 0x00000040
-    BS_BITMAP = 0x00000080
-    BS_LEFT = 0x00000100
-    BS_RIGHT = 0x00000200
-    BS_CENTER = 0x00000300
-    BS_TOP = 0x00000400
-    BS_BOTTOM = 0x00000800
-    BS_VCENTER = 0x00000C00
-    BS_PUSHLIKE = 0x00001000
-    BS_MULTILINE = 0x00002000
-    BS_NOTIFY = 0x00004000
-    BS_FLAT = 0x00008000
-    BS_RIGHTBUTTON = BS_LEFTTEXT
-    BN_CLICKED = 0
-    BN_PAINT = 1
-    BN_HILITE = 2
-    BN_UNHILITE = 3
-    BN_DISABLE = 4
-    BN_DOUBLECLICKED = 5
-    BN_PUSHED = BN_HILITE
-    BN_UNPUSHED = BN_UNHILITE
-    BN_DBLCLK = BN_DOUBLECLICKED
-    BN_SETFOCUS = 6
-    BN_KILLFOCUS = 7
-    BM_GETCHECK = 0x00F0
-    BM_SETCHECK = 0x00F1
-    BM_GETSTATE = 0x00F2
-    BM_SETSTATE = 0x00F3
-    BM_SETSTYLE = 0x00F4
-    BM_CLICK = 0x00F5
-    BM_GETIMAGE = 0x00F6
-    BM_SETIMAGE = 0x00F7
-    BM_SETDONTCLICK = 0x00f8
-    MOUSECLICKFLAG = 0b1
-    MOUSEOVERFLAG = 0b1000000
-    ROUND_CURVE = 5
+
 
 var btnCount = 1
 
 # Forward declaration
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: Button)
+proc createBtnHandle(ctl: Control)
 
 # Button constructor
-proc newButton*(parent: Form, txt: string = "", x: int32 = 10, y: int32 = 10, 
+proc newButton*(parent: Control, txt: string = "", x: int32 = 10, y: int32 = 10, 
                 w: int32 = 110, h: int32 = 34, evtFn: EventHandler = nil): Button =
     new(result)
     result.mKind = ctButton
-    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
-    result.mName = "Button_" & $btnCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h    
-    result.mHasFont = true
-    result.mHasText = true
-    result.mStyle = WS_CHILD or BS_NOTIFY or WS_TABSTOP or WS_VISIBLE or BS_PUSHBUTTON
     result.mText = (if txt == "": "Button_" & $btnCount else: txt)
-    result.cloneParentFont()
-    result.mWtext = newWideString(result.mText)
-    parent.mControls.add(result)
-    btnCount += 1
+    controlBaseInit(result, parent, x, y, w, h, btnCount, txt)
+    result.mCreateHwndProc = createBtnHandle
     if evtFn != nil: result.onClick = evtFn
-    if parent.mCreateChilds: result.createHandle()
+
 
 
 # Create button's hwnd
-proc createHandle*(this: Button) =
-    this.createHandleInternal()
+proc createBtnHandle(ctl: Control) =
+    var this = cast[Button](ctl)
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(btnWndProc)
-        # echo "button font handle ", cast[uint](this.mFont.handle)
-        this.setFontInternal()
+        
 
-method autoCreate(this: Button) = this.createHandle()
+# method autoCreate(this: Button) = this.createHandle()
 
 
 # Set necessery data for a flat colored button
@@ -229,6 +166,8 @@ proc btnDtor(this: Button) =
     if this.mGDraw.isActive:
         this.mGDraw.gradDrowFinalize() 
 
+    controlBaseDtor(this)
+
 
 
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, 
@@ -241,10 +180,9 @@ proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM,
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
-        this.btnDtor()
-        this.destructor()
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, btnWndProc, scID)
+        this.btnDtor()        
 
     of MM_NOTIFY_REFLECT:
         var ret : LRESULT= CDRF_DODEFAULT

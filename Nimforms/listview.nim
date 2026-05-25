@@ -86,58 +86,7 @@ ListViewItem type
 =====================================================================================================]#
 # Note: Improve some properties to respond at runtime
 # Constants
-const
 
-    LVN_FIRST = cast[UINT](0-100)
-    LVN_BEGINLABELEDIT = LVN_FIRST-75
-    LVS_ICON = 0x0000
-    LVS_REPORT = 0x0001
-    LVS_SMALLICON = 0x0002
-    LVS_LIST = 0x0003
-    LVS_SHOWSELALWAYS = 0x0008
-    LVS_EDITLABELS = 512 #0x0200
-    LVS_ALIGNLEFT = 0x0800
-    LVS_NOCOLUMNHEADER = 0x4000
-    LVS_SINGLESEL = 0x0004
-    LVS_EX_GRIDLINES = 0x00000001
-    LVS_EX_CHECKBOXES = 0x00000004
-    LVS_EX_TRACKSELECT = 0x00000008
-    LVS_EX_FULLROWSELECT = 0x00000020
-    LVS_EX_ONECLICKACTIVATE = 0x00000040
-    LV_VIEW_ICON = 0x0000
-    LV_VIEW_DETAILS  = 0x0001
-    LV_VIEW_SMALLICON = 0x0002
-    LV_VIEW_LIST = 0x0003
-    LV_VIEW_TILE = 0x0004
-    LV_VIEW_MAX = 0x0004
-    LVCF_FMT = 1
-    LVCF_WIDTH = 2
-    LVCF_TEXT = 4
-    LVCF_SUBITEM = 8
-    LVCF_IMAGE = 16
-    LVCF_ORDER = 32
-    LVCFMT_LEFT = 0
-    LVCFMT_RIGHT = 1
-    LVCFMT_CENTER = 2
-    LVCFMT_JUSTIFYMASK = 3
-    LVCFMT_IMAGE = 2048
-    LVCFMT_BITMAP_ON_RIGHT = 4096
-    LVCFMT_COL_HAS_IMAGES = 32768
-    LVIF_TEXT = 1
-    LVIF_IMAGE = 2
-    LVIF_PARAM = 4
-    LVIF_STATE = 8
-
-    LVM_GETHEADER = (LVM_FIRST + 31)
-    LVM_SETEXTENDEDLISTVIEWSTYLE = (LVM_FIRST + 54)
-    LVM_SETCOLUMNORDERARRAY = (LVM_FIRST + 58)
-    LVM_INSERTITEMW = (LVM_FIRST + 77)
-    LVM_INSERTCOLUMNW = (LVM_FIRST + 97)
-    LVM_SETITEMTEXTW = (LVM_FIRST + 116)
-    LVN_ITEMCHANGED = (LVN_FIRST-1)
-    LVN_ITEMACTIVATE = (LVN_FIRST-14)
-    LVIS_SELECTED = 2
-    LVIS_STATEIMAGEMASK = 61440
 
 var lvCount = 1
 # let lvClsName = toWcharPtr("SysListView32")
@@ -149,30 +98,18 @@ let LVSTYLE: DWORD = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or
 # Forward declaration
 proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: ListView)
+proc createLvHandle(ctl: Control)
 proc newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : ListViewColumn
 proc addColumns(this: ListView, colnames: varargs[string, `$`]) : seq[ListViewColumn] {.discardable.}
 proc addColumnInternal(this: ListView, lvCol: ListViewColumn)
+proc addItemInternal(this: ListView, pLvi: ListViewItem)
 
 
 # ListView constructor
-proc listViewCtor(parent: Form, x, y, w, h: int32): ListView =
+proc listViewCtor(parent: Control, x, y, w, h: int32): ListView =
     new(result)
     result.mKind = ctListView
-    result.mClassName = cast[LPCWSTR](lvClsName[0].addr)
-    result.mName = "ListView_" & $lvCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    # result.mFont = parent.mFont
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mBackColor = CLR_WHITE
-    result.mForeColor = CLR_BLACK
-    result.mStyle = LVSTYLE
-    result.mExStyle = 0
+    controlBaseInit(result, parent, x, y, w, h, lvCount)
     result.mViewStyle = lvsReport
     result.mShowGrid = true
     result.mFullRowSel = true
@@ -180,45 +117,53 @@ proc listViewCtor(parent: Form, x, y, w, h: int32): ListView =
     # result.mOneClickActivate = true
     result.mHdrClickable = true
     result.mHdrHeight = 35
-    result.mItemIndex = -1
+    result.mItemIndexCounter = -1
     result.mHotHdrIndex = cast[DWORD_PTR](-1)
     result.mHdrBackColor = newColor(0xdce1de)
     result.mHdrForeColor = CLR_BLACK
     result.mEditLabel = true
     result.mHdrFont = result.mFont
-    lvCount += 1
-    parent.mControls.add(result)
+    result.mCreateHwndProc = createLvHandle
+    
 
-proc newListView*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 250, h: int32 = 200): ListView =
+
+proc newListView*(parent: Control, x: int32 = 10, y: int32 = 10, w: int32 = 450, h: int32 = 200): ListView =
     result = listViewCtor(parent, x, y, w, h)
-    if parent.mCreateChilds: result.createHandle()
+    # if parent.mCreateChilds: result.createHandle()
 
-proc newListView*(parent: Form, x, y: int32, colnames: varargs[string, `$`] ): ListView =
-    result = listViewCtor(parent, x, y, 100, 150)
-    result.createHandle()
-    if colnames.len > 0: result.addColumns(colnames)
-    result.`width=`result.getAccumulatedColWidth()
+proc newListView*(parent: Control, x, y: int32, colnames: varargs[string, `$`] ): ListView =
+    result = listViewCtor(parent, x, y, 300, 150)
+    # result.createHandle()
+    if colnames.len > 0: 
+        for colName in colNames:
+            var col = newListViewColumn(colName, 100)
+            col.mIndex = result.mColIndexCounter
+            result.mColIndexCounter += 1
+            result.mColumns.add(col)
+            if result.mHandle != nil: result.addColumnInternal(col)
+            
+    # result.`width=`result.getAccumulatedColWidth()
 
-proc newListView*(parent: Form, x, y: int32, cols_widths: tuple or object): ListView =
-    result = listViewCtor(parent, x, y, 100, 150)
-    result.createHandle()
-    var colnames : seq[string]
-    var widths : seq[int32]
-    for f in fields(cols_widths):
-        when f is int:
-            widths.add(int32(f))
-        elif f is string:
-            colnames.add(f)
+# proc newListView*(parent: Control, x, y: int32, cols_widths: tuple or object): ListView =
+#     result = listViewCtor(parent, x, y, 100, 150)
+#     # result.createHandle()
+#     var colnames : seq[string]
+#     var widths : seq[int32]
+#     for f in fields(cols_widths):
+#         when f is int:
+#             widths.add(int32(f))
+#         elif f is string:
+#             colnames.add(f)
 
-    if colnames.len == widths.len:
-        for i in 0..<colnames.len:
-            var col = newListViewColumn(colnames[i], widths[i])
-            result.addColumnInternal(col)
+#     if colnames.len == widths.len:
+#         for i in 0..<colnames.len:
+#             var col = newListViewColumn(colnames[i], widths[i])
+#             result.addColumnInternal(col)
 
-        result.`width=`result.getAccumulatedColWidth()
+#         result.`width=`result.getAccumulatedColWidth()
 
 
-# proc newListView*(parent: Form, x, y, w, h: int32, colnames: varargs[string, `$`] ): ListView =
+# proc newListView*(parent: Control, x, y, w, h: int32, colnames: varargs[string, `$`] ): ListView =
 #     result = listViewCtor(parent, x, y, w, h)
 #     result.createHandle()
 #     if colnames.len > 0: result.addColumns(colnames)
@@ -279,6 +224,14 @@ proc setHeaderSubclass(this: ListView) {.inline.} =
     globalSubClassID += 1
 
 proc postCreationTasks(this: ListView) =
+    if this.mColumns.len > 0 :
+        for col in this.mColumns:
+            this.addColumnInternal(col)
+
+    if this.mItems.len > 0:
+        for item in this.mItems:
+            this.addItemInternal(item)
+
     if this.mBackColor.value != CLR_WHITE.value: this.sendMsg(LVM_SETBKCOLOR, 0, this.mBackColor.cref)
     if this.mCheckBoxLast:
         var iSeq: seq[int32] = newSeq[int32](this.mColumns.len)
@@ -287,8 +240,7 @@ proc postCreationTasks(this: ListView) =
         iSeq.add(0)
         this.sendMsg(LVM_SETCOLUMNORDERARRAY, int32(iSeq.len), iSeq[0].unsafeAddr)
 
-proc addColumnInternal(this: ListView, lvCol: ListViewColumn) =
-    lvCol.mIndex = this.mColIndex
+proc addColumnInternal(this: ListView, lvCol: ListViewColumn) =    
     var lvc: LVCOLUMNW
     lvc.mask = LVCF_FMT or LVCF_TEXT  or LVCF_WIDTH  or LVCF_SUBITEM #-or LVCF_ORDER
     lvc.fmt = int32(lvCol.mTextAlign)
@@ -301,32 +253,9 @@ proc addColumnInternal(this: ListView, lvCol: ListViewColumn) =
         if lvCol.mImgOnRight: lvc.fmt = lvc.fmt or LVCFMT_BITMAP_ON_RIGHT
 
     lvCol.mpLvc = lvc.unsafeAddr
-    if this.mIsCreated:
-        this.sendMsg(LVM_INSERTCOLUMNW, lvCol.mIndex, lvc.unsafeAddr)
+    this.sendMsg(LVM_INSERTCOLUMNW, lvCol.mIndex, lvc.unsafeAddr)
         # We need this to do the painting in wm notify.
         # if (!this.mDrawColumns && lvCol.mDrawNeeded) this.mDrawColumns = true
-    this.mColumns.add(lvCol)
-    this.mColIndex += 1
-
-proc addItemInternal(this: ListView, item: ListViewItem) =
-    item.mIndex = this.mRowIndex
-    item.mLvHandle = this.mHandle
-    item.mColCount = this.mColumns.len
-    appData.sendMsgBuffer.updateBuffer(item.mText)
-    var lvi: LVITEMW
-    lvi.mask = LVIF_TEXT or LVIF_PARAM or LVIF_STATE
-    if item.mImgIndex != -1: lvi.mask = lvi.mask or LVIF_IMAGE
-    lvi.state = 0
-    lvi.stateMask = 0
-    lvi.iItem = item.mIndex
-    lvi.iSubItem = 0
-    lvi.iImage = item.mImgIndex
-    lvi.pszText = &appData.sendMsgBuffer #item.mText.toLPWSTR()
-    lvi.cchTextMax = appData.sendMsgBuffer.mWcLen  #int32(item.mText.len)
-    lvi.lParam = cast[LPARAM](cast[PVOID](item))
-    this.sendMsg(LVM_INSERTITEMW, 0, lvi.unsafeAddr)
-    this.mItems.add(item)
-    this.mRowIndex += 1
 
 proc addSubItemInternal(this: ListView, subItmTxt: string, itemIndex: int32, subIndx: int32, imgIndex: int32 = -1) =
     appData.sendMsgBuffer.updateBuffer(subItmTxt)
@@ -335,7 +264,31 @@ proc addSubItemInternal(this: ListView, subItmTxt: string, itemIndex: int32, sub
     lw.pszText = &appData.sendMsgBuffer  #.toLPWSTR()
     lw.iImage = imgIndex
     this.sendMsg(LVM_SETITEMTEXTW, itemIndex, lw.unsafeAddr)
-    this.mItems[itemIndex].mSubItems.add(subItmTxt)
+    
+
+
+proc addItemInternal(this: ListView, pLvi: ListViewItem) =
+    pLvi.mLvHandle = this.mHandle
+    pLvi.mColCount = this.mColumns.len
+    appData.sendMsgBuffer.updateBuffer(pLvi.mText)
+    var lvi: LVITEMW
+    lvi.mask = LVIF_TEXT or LVIF_PARAM or LVIF_STATE
+    if pLvi.mImgIndex != -1: lvi.mask = lvi.mask or LVIF_IMAGE
+    lvi.state = 0
+    lvi.stateMask = 0
+    lvi.iItem = pLvi.mIndex
+    lvi.iSubItem = 0
+    lvi.iImage = pLvi.mImgIndex
+    lvi.pszText = &appData.sendMsgBuffer #pLvi.mText.toLPWSTR()
+    lvi.cchTextMax = 0 #appData.sendMsgBuffer.mWcLen  #int32(pLvi.mText.len)
+    lvi.lParam = cast[LPARAM](cast[PVOID](pLvi))
+    this.sendMsg(LVM_INSERTITEMW, 0, lvi.unsafeAddr)
+    if pLvi.mSubItems.len > 0:
+        for indx, subi in pLvi.mSubItems:
+            this.addSubItemInternal(subi, pLvi.mIndex, int32(indx + 1) )
+
+
+
 
 proc headerCustomDraw(this: ListView, nmcd: LPNMCUSTOMDRAW): LRESULT =
     # When Windows paints the listview header, it sends us a notification.
@@ -413,7 +366,7 @@ proc wmNotifyHandler(this: ListView, lpm: LPARAM): LRESULT =
                                                          isSelected: cast[bool](nowSelected))
                         this.onSelectionChanged(this, lsea)
 
-            # ✅ Check for checkbox state change
+            # Check for checkbox state change
             let state_index = (nmlv.uNewState and LVIS_STATEIMAGEMASK) shr 12
             let old_state_index = (nmlv.uOldState and LVIS_STATEIMAGEMASK) shr 12
             if state_index != old_state_index: # Item checkbox changed
@@ -455,32 +408,45 @@ proc destroyResources(this: ListView) =
     if this.mHdrBkBrush != nil: DeleteObject(this.mHdrBkBrush)
     if this.mHdrFont.handle != nil: DeleteObject(this.mHdrFont.handle)
     if this.mHdrPen != nil: DeleteObject(this.mHdrPen)
-    this.destructor()
+    this.controlBaseDtor()
 
 # Create ListView's hwnd
-proc createHandle*(this: ListView) =
+proc createLvHandle(ctl: Control) =
+    var this = cast[ListView](ctl)
     this.setLVStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setLVExStyles()
         this.setSubclass(lvWndProc)
         this.setHeaderSubclass()
-        this.setFontInternal()
         this.postCreationTasks()
+        
+    else:
+        echo "lv hwnd err"
 
-method autoCreate(this: ListView) = this.createHandle()
+# method autoCreate(this: ListView) = this.createHandle()
 #---------------------Add Column variants----------------------------------------------------
 
 proc addColumn*(this: ListView, text: string, width: int32, imgIndex: int32 = -1): ListViewColumn {.discardable.} =
     result = newListViewColumn(text, width, imgIndex)
-    this.addColumnInternal(result)
+    result.mIndex = this.mColIndexCounter
+    this.mColIndexCounter += 1
+    this.mColumns.add(result)
+    if this.mHandle != nil: this.addColumnInternal(result)
 
 proc addColumns*(this: ListView, colNames: seq[string], colWidths: seq[int]): seq[ListViewColumn] {.discardable.} =
     if colNames.len != colWidths.len: raise newException(Exception, "Column namse are not equal to widths")
+    var totColWidth : int
     for (name, width) in zip(colNames, colWidths):
         var col = newListViewColumn(name, int32(width))
-        this.addColumnInternal(col)
+        totColWidth += width
+        col.mIndex = this.mColIndexCounter
+        this.mColIndexCounter += 1
+        this.mColumns.add(col)
+        if this.mHandle != nil: this.addColumnInternal(col)
         result.add(col)
+        
+    this.mWidth = int32(totColWidth + 10)
 
 proc addColumns*(this: ListView, colCount: int, nameAndWidth: varargs[string, `$`]): seq[ListViewColumn] {.discardable.} =
     # Example usage - lv.addColumns(3, "Names", "Jobs", "Salaries", 100, 60, 110)
@@ -488,7 +454,10 @@ proc addColumns*(this: ListView, colCount: int, nameAndWidth: varargs[string, `$
     if nameAndWidth.len != (colCount * 2): raise newException(Exception, "Column namse are not equal to widths")
     for i in 0..<colCount:
         var col = newListViewColumn(nameAndWidth[i], int32(parseInt(nameAndWidth[i + colCount])))
-        this.addColumnInternal(col)
+        col.mIndex = this.mColIndexCounter
+        this.mColIndexCounter += 1
+        this.mColumns.add(col)
+        if this.mHandle != nil: this.addColumnInternal(col)
         result.add(col)
 
 proc addColumns*(this: ListView, colsAndWidths: tuple or object): seq[ListViewColumn] {.discardable.} =
@@ -504,46 +473,72 @@ proc addColumns*(this: ListView, colsAndWidths: tuple or object): seq[ListViewCo
     if colnames.len == widths.len:
         for i in 0..<colnames.len:
             var col = newListViewColumn(colnames[i], widths[i])
-            this.addColumnInternal(col)
+            col.mIndex = this.mColIndexCounter
+            this.mColIndexCounter += 1
+            this.mColumns.add(col)
+            if this.mHandle != nil: this.addColumnInternal(col)
             result.add(col)
 
 proc addColumns(this: ListView, colAndWidth: OrderedTable[string, int32]) : seq[ListViewColumn] {.discardable.} =
     for key, value in colAndWidth:
         var col = newListViewColumn(key, value)
-        this.addColumnInternal(col)
+        col.mIndex = this.mColIndexCounter
+        this.mColIndexCounter += 1
+        this.mColumns.add(col)
+        if this.mHandle != nil: this.addColumnInternal(col)
         result.add(col)
 
 proc addColumns(this: ListView, colnames: varargs[string, `$`]) : seq[ListViewColumn] {.discardable.} =
     # echo "line 416"
     let colAndWidth = this.getWidthOfColumnNames(colnames) # This will return a Table[string, int]
-    result = this.addColumns(colAndWidth)
+    if this.mHandle != nil: result = this.addColumns(colAndWidth)
 
 
 
 #-------------Add Item variants------------------------------------------------------
 
-proc addItem*(this: ListView, itemTxt: auto, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1) : ListViewItem {.discardable.} =
+proc addItem*(this: ListView, itemTxt: auto, bgColor: uint = 0xFFFFFF, 
+                fgColor: uint = 0x000000, imgIndex: int32 = -1) : ListViewItem {.discardable.} =
     let sitem : string = (if itemTxt is string: itemTxt else: $itemTxt)
     result = newListViewItem(sitem, bgColor, fgColor, imgIndex)
-    this.addItemInternal(result)
+    this.mItemIndexCounter += 1
+    result.mIndex = this.mItemIndexCounter
+    this.mItems.add(result)
+    if this.mIsCreated: this.addItemInternal(result)
 
-proc addItem*(this: ListView, item: ListViewItem) = this.addItemInternal(item)
+proc addItem*(this: ListView, item: ListViewItem) = 
+    this.mItemIndexCounter += 1
+    item.mIndex = this.mItemIndexCounter
+    this.mItems.add(item)
+    if this.mIsCreated: this.addItemInternal(item)
 
 proc addItems*(this: ListView, items: varargs[ListViewItem]) =
-    for item in items: this.addItemInternal(item)
+    for item in items: 
+        this.mItemIndexCounter += 1
+        item.mIndex = this.mItemIndexCounter
+        this.mItems.add(item)
+        if this.mIsCreated: this.addItemInternal(item)
 
 proc addItems*(this: ListView, itemTextList: varargs[string, `$`]) : seq[ListViewItem] {.discardable.} =
     for txt in itemTextList:
         var item = newListViewItem(txt)
-        this.addItemInternal(item)
+        this.mItemIndexCounter += 1
+        item.mIndex = this.mItemIndexCounter
+        this.mItems.add(item)
+        if this.mIsCreated: this.addItemInternal(item)
         result.add(item)
 
 proc addRow*(this: ListView, items: varargs[string, `$`]) : ListViewItem {.discardable.} =
     if this.mViewStyle != lvsReport: raise newException(Exception, "Only works for Report view style.")
     if items.len != this.mColumns.len: raise newException(Exception, "Item count is not matching to column count.")
     result = newListViewItem(items[0])
-    this.addItemInternal(result)
-    for i in 1..<items.len: this.addSubItemInternal(items[i], result.mIndex, int32(i))
+    this.mItemIndexCounter += 1
+    result.mIndex = this.mItemIndexCounter
+    for i in 1..<items.len: 
+        result.mSubItems.add(items[i])
+
+    this.mItems.add(result)
+    if this.mIsCreated: this.addItemInternal(result)
 
 #--------------Add SubItems variants---------------------------------------------------------------------
 
@@ -699,7 +694,7 @@ proc lvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, lvWndProc, scID)
         this.destroyResources()
 
@@ -725,7 +720,7 @@ proc hdrWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     var this = cast[ListView](refData)
     
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, hdrWndProc, scID)
 
     of WM_MOUSEMOVE:

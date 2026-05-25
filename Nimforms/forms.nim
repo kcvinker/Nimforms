@@ -189,7 +189,6 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mHeight = height
     result.mXpos = 100
     result.mYpos = 100
-    result.mFont = copyNewFont(appData.defFont)
     result.mHasFont = true
     result.mFormStyle = fsNormalWindow
     result.mFdMode = fdmNormal
@@ -197,16 +196,16 @@ proc newForm*(title: string = "", width: int32 = 550, height: int32 = 400): Form
     result.mMaximizeBox = true
     result.mMinimizeBox = true
     result.mText = (if title == "": "Form_" & $appData.formCount else: title)
+    result.copyAppFont()
     # echo "form font size ", result.mFont.mSize
 
 # proc setFormFont(this: Form) =
 #     this.mFont.createPrimaryHandle()
 
 
-proc createHandle*(this: Form, create_childs: bool = false) =
+proc createHandle*(this: Form) =
     this.setFormStyles()
     this.setFormPosition()
-    this.mCreateChilds = create_childs
     this.mHandle = CreateWindowExW( this.mExStyle,
                                     this.mClassName,
                                     toWcharPtr(this.mText),
@@ -272,7 +271,7 @@ proc tryReset(this: Timer) =
 proc createChildHandles(self: Form) =
     if self.mIsMenuUsed: self.mMenubar.createHandle()
     for ctl in self.mControls:
-        if ctl.mHandle == nil: ctl.autoCreate()
+        if ctl.mHandle == nil: ctl.mCreateHwndProc(ctl)
 
 proc mainLoop() =
     var uMsg : MSG
@@ -281,6 +280,7 @@ proc mainLoop() =
         DispatchMessageW(uMsg.unsafeAddr)
 
 proc display*(self: Form) =
+    if self.mHandle == nil: self.createHandle()
     self.createChildHandles()
     ShowWindow(self.mHandle, 5)
     UpdateWindow(self.mHandle)
@@ -346,12 +346,13 @@ proc `topMost=`*(this: Form, value: bool) {.inline.} =
 
 proc topMost*(this: Form): bool {.inline.} = return this.mTopMost
 
-proc `createChilds=`*(this: Form, value: bool) = this.mCreateChilds = value
 
 proc printPointProc(ctl: Control, e: MouseEventArgs) =
     echo "[X]: ", e.x, "  [Y]: ", e.y
 
-proc printPoint*(this: Form) = this.onMouseUp = printPointProc
+proc printPoint*(this: Form) = 
+    this.mEnablePrintPoint = true
+    this.onMouseUp = printPointProc
 
 
 proc form_timer_handler(this: Form, wpm: WPARAM) =
@@ -368,9 +369,9 @@ proc form_dtor(this: Form, hw: HWND) =
             tmr.timer_dtor()
             # echo "Timer freed"
 
-    this.destructor() # Call the base destructor.
     if this.mFont.handle != nil: DeleteObject(this.mFont.handle)
     if this.mMenubar != nil: this.mMenubar.menuBarDtor()
+    this.controlBaseDtor() # Call the base destructor.
     if hw == appData.mainHwnd: PostQuitMessage(0)
 
 

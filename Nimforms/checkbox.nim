@@ -21,34 +21,17 @@ var cbCount = 1
 
 # Forward declaration
 proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: CheckBox)
+proc createCbHandle(ctl: Control)
 
 # CheckBox constructor
-proc newCheckBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): CheckBox =
+proc newCheckBox*(parent: Control, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): CheckBox =
     new(result)
     result.mKind = ctCheckBox
-    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
-    result.mName = "CheckBox_" & $cbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.mText = text
-    result.mWtext = newWideString(result.mText)
-    # result.mFont = parent.mFont
-    result.mHasFont = true
-    result.mHasText = true
-    result.mBackColor = parent.mBackColor
-    result.cloneParentFont()
+    controlBaseInit(result, parent, x, y, w, h, cbCount, text)
     result.mAutoSize = true
-    result.mForeColor = CLR_BLACK
-    result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX
-    result.mExStyle = WS_EX_LTRREADING or WS_EX_LEFT
+    result.mCreateHwndProc = createCbHandle
     result.mTextStyle = DT_SINGLELINE or DT_VCENTER
-    cbCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
+    
 
 proc setCbStyle(this: CheckBox) =
     if this.mRightAlign:
@@ -58,16 +41,16 @@ proc setCbStyle(this: CheckBox) =
 
 
 # Create CheckBox's hwnd
-proc createHandle*(this: CheckBox) =
+proc createCbHandle(ctl: Control) =
+    var this = cast[CheckBox](ctl)
     this.setCbStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(cbWndProc)
-        this.setFontInternal()
         this.setIdealSize()
         if this.mChecked: this.sendMsg(BM_SETCHECK, 1, 0)
 
-method autoCreate(this: CheckBox) = this.createHandle()
+# method autoCreate(this: CheckBox) = this.createHandle()
 
 # # Set the checked property
 proc `checked=`*(this: CheckBox, value: bool) {.inline.} =
@@ -86,9 +69,9 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, cbWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of MM_LABEL_COLOR:
         let hdc = cast[HDC](wpm)
@@ -108,7 +91,10 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
                 nmcd.rc.left += 18
             else:
                 nmcd.rc.right -= 18
-            if (this.mDrawMode and 1) == 1: SetTextColor(nmcd.hdc, this.mForeColor.cref)
+
+            # echo "this.forecolor: ", this.mForeColor, " this.mOwner.mForeColor: ", this.mOwnerForm.mForeColor
+            # if (this.mDrawMode and 1) == 1: 
+            SetTextColor(nmcd.hdc, this.mForeColor.cref)
             DrawTextW(nmcd.hdc, &this.mWtext, this.mWtext.wcLen, nmcd.rc.addr, this.mTextStyle)
             return CDRF_SKIPDEFAULT
         else: discard

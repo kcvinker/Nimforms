@@ -15,11 +15,7 @@
         All events inherited from Control type 
 ================================================================================================]#
 # Constants
-const
-    SS_NOTIFY = 0x00000100
-    SS_SUNKEN = 0x00001000
-    SWP_NOMOVE = 0x0002
-    SIZE_FLAG = SWP_NOMOVE #or SWP_NOZORDER #or SWP_NOACTIVATE
+
 var lbCount = 1
 # let lbClsName = toWcharPtr("Static")
 let lbClsName : array[7, uint16] = [0x53, 0x74, 0x61, 0x74, 0x69, 0x63, 0]
@@ -27,32 +23,17 @@ let lbClsName : array[7, uint16] = [0x53, 0x74, 0x61, 0x74, 0x69, 0x63, 0]
 
 # Forward declaration
 proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: Label)
+proc createLblHandle(ctl: Control)
 # Label constructor
-proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): Label =
+proc newLabel*(parent: Control, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): Label =
     new(result)
     result.mKind = ctLabel
-    result.mClassName = cast[LPCWSTR](lbClsName[0].addr)
-    result.mName = "Label_" & $lbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.mText = text
-    result.mWtext = newWideString(text)
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mHasText = true
-    result.mBackColor = parent.mBackColor
-    result.mForeColor = CLR_BLACK
+    controlBaseInit(result, parent, x, y, w, h, lbCount, text)
     result.mAutoSize = true
     result.mMultiLine = false
-    result.mStyle = WS_VISIBLE or WS_CHILD or WS_CLIPCHILDREN or WS_CLIPSIBLINGS or SS_NOTIFY
-    result.mExStyle = 0
-    lbCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: createHandle(result)
+    result.mCreateHwndProc = createLblHandle
+
+    
 
 
 proc setLbStyle(this: Label) =
@@ -76,17 +57,17 @@ proc setAutoSize(this: Label, redraw: bool) =
     
 
 # Create Label's hwnd
-proc createHandle*(this: Label) =
+proc createLblHandle(ctl: Control) =
+    var this = cast[Label](ctl)
     this.setLbStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         # echo "lb mh"
         this.setSubclass(lbWndProc)
-        this.setFontInternal()
         if this.mAutoSize: this.setAutoSize(false)
         # echo "lbl hwnd ", cast[int](this.mHandle)
 
-method autoCreate(this: Label) = this.createHandle()
+# method autoCreate(this: Label) = this.createHandle()
 
 proc `autoSize=`*(this: Label, value: bool) {.inline.} = this.mAutoSize = value
 proc autoSize*(this: Label): bool {.inline.} = this.mAutoSize
@@ -111,9 +92,9 @@ proc lbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, lbWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of MM_LABEL_COLOR:
         # echo "MMLABEL Color"

@@ -21,7 +21,9 @@
         All events inherited from Control type              
 =========================================================================================================]#
 # Constants
-# const
+const
+    HTTRANSPARENT = -1
+    HTCLIENT = 1
 
 var gbCount = 1
 let penwidth : int32 = 4
@@ -30,35 +32,21 @@ let gbStyle: DWORD = WS_CHILD or WS_VISIBLE or BS_GROUPBOX or BS_NOTIFY or BS_TO
 
 # Forward declaration
 proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: GroupBox)
-proc newLabel*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): Label 
+proc createGbHandle(ctl: Control)
+proc newLabel*(parent: Control, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 0, h: int32 = 0): Label 
 # GroupBox constructor
-proc newGroupBox*(parent: Form, text: string, x: int32 = 10, y: int32 = 10, w: int32 = 150, 
-                    h: int32 = 150, style: GroupBoxStyle = GroupBoxStyle.gbsSystem ): GroupBox =
+proc newGroupBox*(parent: Control, text: string, x: int32 = 10, y: int32 = 10, 
+                    w: int32 = 150, h: int32 = 150 ): GroupBox =
     new(result)
     result.mKind = ctGroupBox
-    result.mClassName = cast[LPCWSTR](BtnClass[0].addr)
-    result.mName = "GroupBox_" & $gbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.mText = text
-    result.mWtext = newWideString(text)
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mHasText = true
+    controlBaseInit(result, parent, x, y, w, h, gbCount, text)
     result.mDBFill = true
     result.mGetWidth = true
-    result.mBackColor = parent.mBackColor
-    result.mForeColor = CLR_BLACK
-    result.mStyle = gbStyle
-    result.mGBStyle = style
-    result.mExStyle = WS_EX_CONTROLPARENT #or WS_EX_TRANSPARENT
-    gbCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
+    result.mGBStyle = GroupBoxStyle.gbsSystem       
+    result.mCreateHwndProc = createGbHandle
+    if result.mOwnerForm.mEnablePrintPoint:
+        result.onMouseUp = printPointProc
+    
 
 proc addControls*(this: GroupBox, args: varargs[Control]) =
     for item in args:
@@ -66,29 +54,23 @@ proc addControls*(this: GroupBox, args: varargs[Control]) =
         if item.mKind == ControlType.ctLabel:
             item.mBackColor = this.mBackColor
 
-# proc doubleBufferFill(this: GroupBox) =
-#     var hdc : HDC = GetDC(this.mHandle)
-#     var size : SIZE
-#     SelectObject(hdc, this.mFont.handle)
-#     GetTextExtentPoint32(hdc, &this.mWtext, this.mWtext.wcLen, size.unsafeAddr)
-#     ReleaseDC(this.mHandle, hdc)
-#     this.mTextWidth = size.cx + 10
 
 # Create GroupBox's hwnd
-proc createHandle*(this: GroupBox) =
+proc createGbHandle(ctl: Control) =
+    var this = cast[GroupBox](ctl)
     this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
     if this.mGBStyle == GroupBoxStyle.gbsOverride:
         this.mPen = CreatePen(PS_SOLID, penwidth, this.mBackColor.cref)
     #----------------------------------------------------------------
     this.mRect = RECT(left: 0, top: 0, right: this.mWidth, bottom: this.mHeight)
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         if this.mGBStyle == GroupBoxStyle.gbsClassic:
             SetWindowTheme(this.mHandle, emptyWStrPtr, emptyWStrPtr)
             this.mThemeOff = true
         #---------------------------
         this.setSubclass(gbWndProc)
-        this.setFontInternal()
+        
 
 
 proc resetGdiObjects(this: GroupBox, brpn: bool) =
@@ -176,7 +158,7 @@ proc changeFont*(this: GroupBox, fname: string, fsize: int32, fweight: FontWeigh
 
 
 
-method autoCreate(this: GroupBox) = this.createHandle()
+# method autoCreate(this: GroupBox) = this.createHandle()
 
 proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =
     # echo msg
@@ -187,18 +169,23 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, gbWndProc, scID)
         if this.mPen != nil: DeleteObject(this.mPen)
         if this.mHdc != nil:  DeleteDC(this.mHdc)
         if this.mBmp != nil: DeleteObject(this.mBmp)
-        this.destructor()
+        this.controlBaseDtor()
 
     of WM_GETTEXTLENGTH:
         if this.mGBStyle == GroupBoxStyle.gbsOverride:
             return 0
-        # else:
-        #     return DefSubclassProc(hw, msg, wpm, lpm)
+       
+    of WM_NCHITTEST:
+        let hit : LRESULT = DefSubclassProc(hw, msg, wpm, lpm);
+        if hit == HTTRANSPARENT:
+             return HTCLIENT
+
+        return hit
 
     of WM_ERASEBKGND:
         let hdc = cast[HDC](wpm)
@@ -228,6 +215,20 @@ proc gbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             SetTextColor(hdc, this.mForeColor.cref)        
         
         return cast[LRESULT](this.mBkBrush)
+
+    of WM_NOTIFY:
+        let nmh = cast[LPNMHDR](lpm)
+        return SendMessageW(nmh.hwndFrom, MM_NOTIFY_REFLECT, wpm, lpm)
+
+    of WM_CTLCOLOREDIT:
+        let ctHwnd = cast[HWND](lpm)
+        return SendMessageW(ctHwnd, MM_EDIT_COLOR, wpm, lpm)
+
+    of WM_CTLCOLORSTATIC:
+        let ctHwnd = cast[HWND](lpm)
+        return SendMessageW(ctHwnd, MM_LABEL_COLOR, wpm, lpm)
+
+
 
 
     of WM_PAINT:

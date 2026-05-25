@@ -66,82 +66,7 @@
             foreColor                 Color, For setter, uint is also acceptable
 ======================================================================================================]#
 # Constants
-const
-    TVS_HASBUTTONS = 0x0001
-    TVS_HASLINES = 0x0002
-    TVS_LINESATROOT = 0x0004
-    TVS_EDITLABELS = 0x0008
-    TVS_DISABLEDRAGDROP = 0x0010
-    TVS_SHOWSELALWAYS = 0x0020
-    TVS_RTLREADING = 0x0040
-    TVS_NOTOOLTIPS = 0x0080
-    TVS_CHECKBOXES = 0x0100
-    TVS_TRACKSELECT = 0x0200
-    TVS_SINGLEEXPAND = 0x0400
-    TVS_INFOTIP = 0x0800
-    TVS_FULLROWSELECT = 0x1000
-    TVS_NOSCROLL = 0x2000
-    TVS_NONEVENHEIGHT = 0x4000
-    TVS_NOHSCROLL = 0x8000 # TVS_NOSCROLL overrides this
-    TVS_EX_NOSINGLECOLLAPSE = 0x0001
-    TVS_EX_MULTISELECT = 0x0002
-    TVS_EX_DOUBLEBUFFER = 0x0004
-    TVS_EX_NOINDENTSTATE = 0x0008
-    TVS_EX_RICHTOOLTIP = 0x0010
-    TVS_EX_AUTOHSCROLL = 0x0020
-    TVS_EX_FADEINOUTEXPANDOS = 0x0040
-    TVS_EX_PARTIALCHECKBOXES = 0x0080
-    TVS_EX_EXCLUSIONCHECKBOXES = 0x0100
-    TVS_EX_DIMMEDCHECKBOXES = 0x0200
-    TVS_EX_DRAWIMAGEASYNC = 0x0400
-    TVIF_TEXT = 0x0001
-    TVIF_IMAGE = 0x0002
-    TVIF_PARAM = 0x0004
-    TVIF_STATE = 0x0008
-    TVIF_SELECTEDIMAGE = 0x0020
-    TVIF_STATEEX = 0x100
 
-    TVIS_SELECTED = 0x0002
-    TVIS_CUT = 0x0004
-    TVIS_DROPHILITED = 0x0008
-    TVIS_BOLD = 0x0010
-    TVIS_EXPANDED = 0x0020
-    TVIS_EXPANDEDONCE = 0x0040
-    TVIS_EXPANDPARTIAL = 0x0080
-    TVIS_OVERLAYMASK = 0x0F00
-    TVIS_STATEIMAGEMASK = 0xF000
-    TVIS_USERMASK = 0xF000
-    TVIS_EX_FLAT = 0x0001
-    TVIS_EX_DISABLED = 0x0002
-    TVIS_EX_ALL = 0x0002
-    TVIS_EX_TEXTCOLOR = 0x00000004
-
-    TVGN_ROOT = 0x0
-    TVGN_CARET = 0x9
-
-    TVE_EXPAND = 0x2
-    TVE_EXPANDPARTIAL = 0x4000
-
-    TVI_ROOT = cast[HTREEITEM](-0x10000) #(ULONG_MAX-0x10000)
-    TVI_FIRST = cast[HTREEITEM](-0x0FFFF)  #(ULONG_MAX-0x0FFFF)
-    TVI_LAST = cast[HTREEITEM](-0x0FFFE)
-    TVI_SORT = cast[HTREEITEM](-0x0FFFD)
-
-    TV_FIRST = 0x1100
-    TVM_DELETEITEM = (TV_FIRST + 1)
-
-    TVM_EXPAND = TV_FIRST+2
-    TVM_SETIMAGELIST = (TV_FIRST + 9)
-    TVM_GETNEXTITEM = (TV_FIRST + 10)
-    TVM_SETBKCOLOR = (TV_FIRST + 29)
-    TVM_SETTEXTCOLOR = (TV_FIRST + 30)
-    TVM_SETLINECOLOR = (TV_FIRST + 40)
-    TVM_INSERTITEMW = (TV_FIRST + 50)
-    TVM_GETITEMW = TV_FIRST + 62
-
-    NM_TVSTATEIMAGECHANGING_NM = (NM_FIRST - 24)
-    TVN_ITEMCHANGINGW = TVN_FIRST-17
-    TVN_ITEMCHANGEDW = TVN_FIRST-19
 
 
 var tvCount = 1
@@ -152,38 +77,26 @@ let tvClsName : array[14, uint16] = [0x53, 0x79, 0x73, 0x54, 0x72, 0x65, 0x65, 0
 let TVSTYLE : DWORD = WS_BORDER or WS_CHILD or WS_VISIBLE or TVS_HASLINES or TVS_HASBUTTONS or TVS_LINESATROOT or TVS_DISABLEDRAGDROP
 # Forward declaration
 proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: TreeView)
+proc createTvHandle(ctl: Control)
 proc addNode*(this: TreeView, nodeText: string) : TreeNode {.discardable.}
 proc addNode*(this: TreeView, node: TreeNode)
 proc addChildNode*(this: TreeView, nodeText: string, parent: TreeNode) : TreeNode {.discardable.}
+proc addNodeInternal(this: TreeView, node: TreeNode, pnode: TreeNode = nil)
 
 # TreeView constructor
-proc treeViewCtor(parent: Form, x, y, w, h: int32): TreeView =
+proc treeViewCtor(parent: Control, x, y, w, h: int32): TreeView =
     new(result)
     result.mKind = ctTreeView
-    result.mClassName = cast[LPCWSTR](tvClsName[0].addr)
-    result.mName = "TreeView_" & $tvCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    # result.mFont = parent.mFont
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mStyle = TVSTYLE
-    result.mExStyle = 0
-    result.mBackColor = CLR_WHITE
-    result.mForeColor = CLR_BLACK
+    controlBaseInit(result, parent, x, y, w, h, tvCount)
     result.mLineColor = CLR_BLACK
     result.mUniqNodeID = 100
-    tvCount += 1
-    parent.mControls.add(result)
+    result.mCreateHwndProc = createTvHandle
+    
 
 
-proc newTreeView*(parent: Form, x, y: int32, w: int32 = 200, h: int32 = 150): TreeView =
+proc newTreeView*(parent: Control, x, y: int32, w: int32 = 200, h: int32 = 150): TreeView =
     result = treeViewCtor(parent, x, y, w, h)
-    if parent.mCreateChilds: result.createHandle()
+
 
 proc newTreeNode*(text: string, img: int32 = -1, selImg: int32 = -1): TreeNode =
     new(result)
@@ -201,6 +114,37 @@ proc addTreeNodeWithChilds*(this: TreeView, nodeTxt: string, args: varargs[strin
         this.addChildNode(txt, node)
 
 
+proc tryAddNode(this: TreeView, node: TreeNode) =
+    node.mNodeOp = NodeOps.noAddNode
+    node.mInsertAfter = TVI_LAST 
+    node.mIndex = this.mNodeCount
+    node.mIsRoot = true
+    this.mNodeCount += 1
+    this.mNodes.add(node)
+    node.mInList = true
+    if (this.mIsCreated):
+        this.addNodeInternal(node)
+
+proc tryAddChildNode(this: TreeView, parent: TreeNode, child: TreeNode ) =
+    if not parent.mInList:
+        # We don't allow new nodes here.
+        echo "Error: %s node is not added already!", parent.mText
+        return
+ 
+    child.mNodeOp = NodeOps.noAddChild
+    child.mInsertAfter = TVI_LAST
+    child.mIndex = parent.mChildCount
+    parent.mChildCount += 1
+    parent.mNodes.add(child)
+    child.mInList = true     
+    if this.mIsCreated: this.addNodeInternal(child, parent)
+
+
+proc insertAllNodes(this: TreeView, node: TreeNode, pnode: TreeNode = nil) =
+    this.addNodeInternal(node, pnode)
+    if node.mNodes.len > 0:
+        for tn in node.mNodes:
+            this.insertAllNodes(tn, node)
 
 
 proc setTVStyle(this: TreeView) =
@@ -219,8 +163,7 @@ proc sendInitialMessages(this: TreeView) =
     if this.mForeColor.value != 0x000000: this.sendMsg(TVM_SETTEXTCOLOR, 0, this.mForeColor.cref)
     if this.mLineColor.value != 0x000000: this.sendMsg(TVM_SETLINECOLOR, 0, this.mLineColor.cref)
 
-proc addNodeInternal(this: TreeView, node: TreeNode, nop: NodeOps, pnode: TreeNode = nil, pos: int32 = -1) =
-    if not this.mIsCreated: raise newException(Exception, "Treeview handle is invalid")
+proc addNodeInternal(this: TreeView, node: TreeNode, pnode: TreeNode = nil) =
     node.mIsCreated = true
     node.mTreeHandle = this.mHandle
     node.mNodeID = this.mUniqNodeID # We can identify any node
@@ -238,32 +181,25 @@ proc addNodeInternal(this: TreeView, node: TreeNode, nop: NodeOps, pnode: TreeNo
     var tis: TVINSERTSTRUCTW
     tis.itemex = tvi
     tis.itemex.lParam = cast[LPARAM](cast[PVOID](node))
-
+    tis.hInsertAfter = node.mInsertAfter
     var isRootNode = false
     var errMsg = "Can't Add"
 
-    case nop
+    case node.mNodeOp:
     of noAddNode:
-        node.mIndex = this.mNodeCount
         tis.hParent = TVI_ROOT
-        tis.hInsertAfter = (if this.mNodeCount > 0: this.mNodes[this.mNodeCount - 1].mHandle else: TVI_FIRST)
-        isRootNode = true
+        
     of noInsertNode:
-        node.mIndex = this.mNodeCount
         tis.hParent = TVI_ROOT
-        tis.hInsertAfter = (if pos == 0: TVI_FIRST else: this.mNodes[pos - 1].mHandle)
-        isRootNode = true
         errMsg = "Can't Insert"
+
     of noAddChild:
-        node.mIndex = pnode.mNodeCount
-        tis.hInsertAfter = TVI_LAST
         tis.hParent = pnode.mHandle
         node.mParentNode = pnode
         errMsg = "Can't Add Child"
+
     of noInsertChild:
-        node.mIndex = pnode.mNodeCount
         tis.hParent = pnode.mHandle
-        tis.hInsertAfter = (if pos == 0: TVI_FIRST else: pnode.mNodes[pos - 1].mHandle)
         node.mParentNode = pnode
         errMsg = "Can't Insert Child"
 
@@ -271,15 +207,41 @@ proc addNodeInternal(this: TreeView, node: TreeNode, nop: NodeOps, pnode: TreeNo
     if hItem != nil:
         node.mHandle = hItem
         this.mUniqNodeID += 1
-        if isRootNode:
-            this.mNodes.add(node)
-            this.mNodeCount += 1
-        else:
-            pnode.mNodes.add(node)
-            pnode.mNodeCount += 1
     else:
         let errNo = GetLastError()
         echo(errMsg & " node!, Error - " & $errNo )
+
+
+proc insertNodeGeneric[T: TreeView | TreeNode](this: TreeView, container: T, 
+                                                node: TreeNode, 
+                                                position: int32, op: NodeOps) =
+    if position < 0 or position >= container.mNodes.len: 
+            raise newException(IndexDefect, "Index is out of range!")
+
+    when T is TreeView:
+        node.mIndex = this.mNodeCount
+        this.mNodeCount += 1
+    else: # T is TreeNode
+        node.mIndex = container.mChildCount
+        container.mChildCount += 1
+
+    node.mInsertPos = position        
+    node.mNodeOp = op
+    node.mInsertAfter = if position == 0: TVI_FIRST 
+                        else: container.mNodes[position - 1].mHandle
+
+    # Update counts and append to the specific container
+    
+    container.mNodes.add(node)
+    node.mInList = true
+
+    # Finalize the underlying Win32/internal tree structure
+    if this.mIsCreated:
+        when T is TreeView:
+            this.addNodeInternal(node)
+        else:
+            this.addNodeInternal(node, container)
+
 
 proc setNodeText(this: TreeView, node: TreeNode) = # Implement this
     echo node.mText
@@ -290,47 +252,60 @@ proc sendMsg(this: TreeNode, uMsg: UINT, wpm, lpm: auto) : LRESULT {.discardable
 # We need this function to recurseively traverse all the nodes and expand them.
 proc expandNode(this: TreeNode) =
     this.sendMsg(TVM_EXPAND, TVE_EXPAND, this.mHandle)
-    if this.mNodeCount > 0:
+    if this.mChildCount > 0:
         for node in this.mNodes: node.expandNode()
 
 
 # Create TreeView's hwnd
-proc createHandle*(this: TreeView) =
+proc createTvHandle(ctl: Control) =
+    var this = cast[TreeView](ctl)
     this.setTVStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(tvWndProc)
-        this.setFontInternal()
         this.sendInitialMessages()
+        if this.mNodes.len > 0:
+            for node in this.mNodes:
+                this.insertAllNodes(node)
 
-method autoCreate(this: TreeView) = this.createHandle()
+# method autoCreate(this: TreeView) = this.createHandle()
 
 
 proc addNode*(this: TreeView, nodeText: string) : TreeNode {.discardable.} =
     result = newTreeNode(nodeText)
-    this.addNodeInternal(result, noAddNode )
+    this.tryAddNode(result)
 
-proc addNode*(this: TreeView, node: TreeNode) = this.addNodeInternal(node, noAddNode )
+
+proc addNode*(this: TreeView, node: TreeNode) = this.tryAddNode(node)
+
 
 proc addChildNode*(this: TreeView, nodeText: string, parent: TreeNode) : TreeNode {.discardable.} =
     result = newTreeNode(nodeText)
-    this.addNodeInternal(result, noAddChild, parent )
+    this.tryAddChildNode(parent, result)
 
-proc addChildNode*(this: TreeView, node: TreeNode, parent: TreeNode) = this.addNodeInternal(node, noAddChild, parent )
 
-proc insertNode*(this: TreeView, nodeText: string, position: int32) : TreeNode {.discardable.} =
-    result = newTreeNode(nodeText)
-    this.addNodeInternal(result, noInsertNode, pos = position  )
+proc addChildNode*(this: TreeView, node: TreeNode, parent: TreeNode) = 
+    this.tryAddChildNode(parent, node)
 
 proc insertNode*(this: TreeView, node: TreeNode, position: int32) =
-    this.addNodeInternal(node, noInsertNode, pos = position  )
+    # Uses the exact mNodes field from your TreeView definition
+    node.mIsRoot = true
+    this.insertNodeGeneric(this, node, position, NodeOps.noInsertNode)
+
+
+proc insertNode*(this: TreeView, nodeText: string, position: int32) : TreeNode {.discardable.} =
+    result = newTreeNode(nodeText)    
+    this.insertNode(result, position)
+    
+
+proc insertChildNode*(this: TreeView, node: TreeNode, parent: TreeNode, position: int32) =
+    this.insertNodeGeneric(parent, node, position, NodeOps.noInsertChild)
+
 
 proc insertChildNode*(this: TreeView, nodeText: string, parent: TreeNode, position: int32) : TreeNode {.discardable.} =
     result = newTreeNode(nodeText)
-    this.addNodeInternal(result, noInsertChild, parent, position  )
+    this.insertChildNode(result, parent, position)
 
-proc insertChildNode*(this: TreeView, node: TreeNode, parent: TreeNode, position: int32) =
-    this.addNodeInternal(node, noInsertChild, parent, position  )
 
 proc deleteSelNode*(this: TreeView, index: int32): bool =
     let selItem = cast[HTREEITEM](this.sendMsg(TVM_GETNEXTITEM, TVGN_CARET, 0))
@@ -477,18 +452,18 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, tvWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
-    of MM_NODE_NOTIFY: # Received when a node wants to add a child node
-        var action = cast[NodeAction](wpm)
-        case action
-        of naAddNode:
-            var nnd = cast[NodeNotify](cast[PVOID](lpm))
-            this.addNodeInternal(nnd.node, nnd.nops, nnd.parent)
-        of naSetText: this.setNodeText(cast[TreeNode]([cast[PVOID](lpm)]))
-        else: discard
+    # of MM_NODE_NOTIFY: # Received when a node wants to add a child node
+    #     var action = cast[NodeAction](wpm)
+    #     case action
+    #     of naAddNode:
+    #         var nnd = cast[NodeNotify](cast[PVOID](lpm))
+    #         this.addNodeInternal(nnd.node, nnd.nops, nnd.parent)
+    #     of naSetText: this.setNodeText(cast[TreeNode]([cast[PVOID](lpm)]))
+    #     else: discard
 
     of MM_NOTIFY_REFLECT:
         let nmh = cast[LPNMHDR](lpm)

@@ -75,36 +75,23 @@ let dtpClsName : array[18, uint16] = [0x53, 0x79, 0x73, 0x44, 0x61, 0x74, 0x65, 
 
 # Forward declaration
 proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: DateTimePicker)
+proc createDtpHandle(ctl: Control)
+
 # DateTimePicker constructor
-proc newDateTimePicker*(parent: Form, x: int32 = 10, y: int32 = 10,
+proc newDateTimePicker*(parent: Control, x: int32 = 10, y: int32 = 10,
                             w: int32 = 0, h: int32 = 10): DateTimePicker =
     new(result)
     result.mKind = ctDateTimePicker
-    result.mClassName = cast[LPCWSTR](dtpClsName[0].addr)
-    result.mName = "DateTimePicker_" & $dtpCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.cloneParentFont()
-    result.mHasFont = true
-    result.mBackColor = CLR_WHITE
-    result.mForeColor = CLR_BLACK
+    controlBaseInit(result, parent, x, y, w, h, dtpCount)
     result.mFormat = dfCustom
     result.mFmtStr = "dd-MM-yyyy"
     result.mAutoSize = true
-    result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP
-    result.mExStyle = 0
+    result.mCreateHwndProc = createDtpHandle
     if appData.isDateInit:
         appData.isDateInit = true
         appData.iccEx.dwICC = ICC_DATE_CLASSES
         InitCommonControlsFunc(appData.iccEx.unsafeAddr)
 
-    dtpCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
 
 proc setDTPStyles(this: DateTimePicker) =
     case this.mFormat
@@ -139,10 +126,11 @@ proc setAutoSize(this: DateTimePicker) =
 
 
 # Create DateTimePicker's hwnd
-proc createHandle*(this: DateTimePicker) =
+proc createDtpHandle(ctl: Control) =
+    var this = cast[DateTimePicker](ctl)
     # this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
     this.setDTPStyles()
-    this.createHandleInternal()
+    this.createHandleInternal(0, 0)
     if this.mHandle != nil:
         # SetWindowTheme(this.mHandle, emptyWStrPtr, emptyWStrPtr)
         this.setSubclass(dtpWndProc)
@@ -152,7 +140,7 @@ proc createHandle*(this: DateTimePicker) =
         let res = this.sendMsg(DTM_GETSYSTEMTIME, 0, st.unsafeAddr)
         if res == 0: this.mValue = newDateAndTime(st)
 
-method autoCreate(this: DateTimePicker) = this.createHandle()
+# method autoCreate(this: DateTimePicker) = this.createHandle()
 
 # Property section
 proc `value=`*(this: DateTimePicker, dateValue: DateAndTime) = # TODO
@@ -216,9 +204,9 @@ proc dtpWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, dtpWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of MM_NOTIFY_REFLECT:
         let nm = cast[LPNMHDR](lpm)

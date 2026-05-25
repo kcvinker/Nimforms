@@ -1,4 +1,4 @@
-# combobox module Created on 30-Mar-2023 03:23 AM; Author kcvinker
+    # combobox module Created on 30-Mar-2023 03:23 AM; Author kcvinker
 #[======================================= ComboBox Docs==================================================
     Constructor - newComboBox
     Functions:
@@ -29,65 +29,8 @@
 ========================================================================================================]#
 
 
-# Constants
-const
-    CB_ERR = -1
-    CBN_SELCHANGE = 1
-    CBN_SETFOCUS = 3
-    CBN_KILLFOCUS = 4
-    CBN_EDITCHANGE = 5
-    CBN_EDITUPDATE = 6
-    CBN_DROPDOWN = 7
-    CBN_CLOSEUP = 8
-    CBN_SELENDOK = 9
-    CBN_SELENDCANCEL = 10
-    CBS_SIMPLE = 0x0001
-    CBS_DROPDOWN = 0x0002
-    CBS_DROPDOWNLIST = 0x0003
-    CBS_AUTOHSCROLL = 0x0040
-    CBS_OEMCONVERT = 0x0080
-    CBS_SORT = 0x0100
-    CBS_HASSTRINGS = 0x0200
-    CBS_NOINTEGRALHEIGHT = 0x0400
-    CBS_DISABLENOSCROLL = 0x0800
-    CBS_UPPERCASE = 0x2000
-    CBS_LOWERCASE = 0x4000
-    CB_GETEDITSEL = 0x0140
-    CB_LIMITTEXT = 0x0141
-    CB_SETEDITSEL = 0x0142
-    CB_ADDSTRING = 0x0143
-    CB_DELETESTRING = 0x0144
-    CB_DIR = 0x0145
-    CB_GETCOUNT = 0x0146
-    CB_GETCURSEL = 0x0147
-    CB_GETLBTEXT = 0x0148
-    CB_GETLBTEXTLEN = 0x0149
-    CB_INSERTSTRING = 0x014A
-    CB_RESETCONTENT = 0x014B
-    CB_FINDSTRING = 0x014C
-    CB_SELECTSTRING = 0x014D
-    CB_SETCURSEL = 0x014E
-    CB_SHOWDROPDOWN = 0x014F
-    CB_GETITEMDATA = 0x0150
-    CB_SETITEMDATA = 0x0151
-    CB_GETDROPPEDCONTROLRECT = 0x0152
-    CB_SETITEMHEIGHT = 0x0153
-    CB_GETITEMHEIGHT = 0x0154
-    CB_SETEXTENDEDUI = 0x0155
-    CB_GETEXTENDEDUI = 0x0156
-    CB_GETDROPPEDSTATE = 0x0157
-    CB_FINDSTRINGEXACT = 0x0158
-    CB_SETLOCALE = 0x0159
-    CB_GETLOCALE = 0x015A
-    CB_GETTOPINDEX = 0x015b
-    CB_SETTOPINDEX = 0x015c
-    CB_GETHORIZONTALEXTENT = 0x015d
-    CB_SETHORIZONTALEXTENT = 0x015e
-    CB_GETDROPPEDWIDTH = 0x015f
-    CB_SETDROPPEDWIDTH = 0x0160
-    CB_INITSTORAGE = 0x0161
-    CB_MULTIPLEADDSTRING = 0x0163
-    CB_GETCOMBOBOXINFO = 0x0164
+
+
 
 var cmbCount = 1
 let cmbClsName : array[9, uint16] = [0x43, 0x6F, 0x6D, 0x62, 0x6F, 0x42, 0x6F, 0x78, 0]
@@ -95,32 +38,18 @@ let cmbClsName : array[9, uint16] = [0x43, 0x6F, 0x6D, 0x62, 0x6F, 0x42, 0x6F, 0
 # Forward declaration
 proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: ComboBox)
+proc createCmbHandle(ctl: Control)
 
 # ComboBox constructor
-proc newComboBox*(parent: Form, x: int32 = 10, y: int32 = 10, 
+proc newComboBox*(parent: Control, x: int32 = 10, y: int32 = 10, 
                     w: int32 = 140, h: int32 = 27, enableInput: bool = false): ComboBox =
     new(result)
     result.mKind = ctComboBox
-    result.mClassName = cast[LPCWSTR](cmbClsName[0].addr)
-    result.mName = "ComboBox_" & $cmbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    # result.mFont = parent.mFont
-    result.cloneParentFont()
-    result.mHasFont = true
+    controlBaseInit(result, parent, x, y, w, h, cmbCount)
     result.mHasInput = enableInput
     result.mSelIndex = -1
-    result.mBackColor = CLR_WHITE
-    result.mForeColor = CLR_BLACK
-    result.mStyle = WS_CHILD or WS_VISIBLE or WS_TABSTOP
-    result.mExStyle = WS_EX_CLIENTEDGE
-    cmbCount += 1
-    parent.mControls.add(result)
-    if parent.mCreateChilds: result.createHandle()
+    result.mCreateHwndProc = createCmbHandle
+    
 
 proc setCmbStyle(this: ComboBox) =
     if this.mReEnabled:
@@ -140,7 +69,7 @@ proc getComboInfo(this: ComboBox) =
         var cmbInfo : COMBOBOXINFO
         cmbInfo.cbSize = DWORD(cmbInfo.sizeof)
         this.sendMsg(CB_GETCOMBOBOXINFO, 0, cmbInfo.unsafeAddr)
-        this.mParent.mComboData[cmbInfo.hwndList] = cmbInfo.hwndCombo # Put the handle in parent's dic
+        this.mOwnerForm.mComboData[cmbInfo.hwndList] = cmbInfo.hwndCombo # Put the handle in parent's dic
         SetWindowSubclass(cmbInfo.hwndItem, cmbEditWndProc, globalSubClassID, cast[DWORD_PTR](cast[PVOID](this)))
         globalSubClassID += 1
         SetRect(&this.mSpRect, 0, 0, this.mWidth, this.mHeight)
@@ -167,17 +96,17 @@ proc insertItemsInternal(this: ComboBox) =
     if this.mSelIndex > -1: this.sendMsg(CB_SETCURSEL, this.mSelIndex, 0)
 
 # Create ComboBox's hwnd
-proc createHandle*(this: ComboBox) =
+proc createCmbHandle(ctl: Control) =
+    var this = cast[ComboBox](ctl)
     this.setCmbStyle()
-    this.createHandleInternal(this.mReEnabled)
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(cmbWndProc)
-        this.setFontInternal()
         this.getComboInfo()
         this.insertItemsInternal()
         this.mReEnabled = false
 
-method autoCreate(this: ComboBox) = this.createHandle()
+# method autoCreate(this: ComboBox) = this.createHandle()
 
 proc addItem*(this: ComboBox, item: auto) =
     let sitem : string = (if item is string: item else: $item)    
@@ -222,7 +151,7 @@ proc `hasInput=`*(this: ComboBox, value: bool) {.inline.} =
             this.mSelIndex = int32(this.sendMsg(CB_GETCURSEL, 0, 0 ))
             this.mReEnabled = true
             DestroyWindow(this.mHandle)
-            this.createHandle()
+            this.mCreateHwndProc(this)
 
 # Get the checked property
 proc hasInput*(this: ComboBox): bool {.inline.} = this.mHasInput
@@ -265,7 +194,7 @@ proc getComboMousePoints(): POINT =
 
 method `onMouseHover=`*(this: ComboBox, evtProc: EventHandler) =
     procCall `onMouseHover=`(cast[Control](this), evtProc)
-    this.mHoverTimer = newTimer(400, nil, this.mHandle)
+    this.mHoverTimer = newTimer(400, nil, this.mHandle) 
 
 method mouseMoveHandler(this: ComboBox, hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM) : MsgHandlerResult =
     result = MsgHandlerResult.mhrCallDefProc
@@ -317,9 +246,9 @@ proc cmbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, cmbWndProc, scID)
-        this.destructor()
+        this.controlBaseDtor()
 
     of MM_CTL_COMMAND: 
         case HIWORD(wpm)
@@ -378,7 +307,7 @@ proc cmbEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PT
         return cast[LRESULT](res)
 
     case msg
-    of WM_DESTROY:
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, cmbEditWndProc, scID)
 
     of MM_EDIT_COLOR:

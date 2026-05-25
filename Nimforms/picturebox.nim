@@ -9,8 +9,8 @@ let pboxClsName : array[20, uint16] = [78, 105, 109, 102, 111, 114, 109, 115, 95
  
 # forward declarations
 proc pBoxWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} 
-proc createHandle*(this: PictureBox) 
-proc registerPboxClass(pbxClass: LPCWSTR, hinst: HINSTANCE)
+proc createPbxHandle(ctl: Control) 
+proc registerPboxClass(pbxClass: LPCWSTR)
 proc setImageInternal(this: PictureBox, filePath: string, setPath: bool = true) 
 proc updateClientRect(this: PictureBox)
 proc adjustSizeToImage(this: PictureBox)
@@ -18,37 +18,29 @@ proc computeDestRect(this: PictureBox)
 
 
 
-proc newPictureBox*(parent: Form, x, y, w, h: int32, imgPath: string = "", 
+proc newPictureBox*(parent: Control, x, y, w, h: int32, imgPath: string = "", 
                     sizeMode: PictureSizeMode = PictureSizeMode.psmStretch) : PictureBox =
-    new(result)
-    result.mClassName = cast[LPCWSTR](pboxClsName[0].addr)     
+    new(result)   
     result.mKind = ctPictureBox
-    result.mName = "PictureBox_" & $pboxCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h    
-    result.mStyle = WS_CHILD or WS_TABSTOP or WS_VISIBLE
+    controlBaseInit(result, parent, x, y, w, h, pboxCount)
     result.mSizeMode = sizeMode
-    if not isPboxReg: registerPboxClass(result.mClassName, result.mParent.hInstance)
+    if not isPboxReg: registerPboxClass(result.mClassName)
     if len(imgPath) > 0: result.mImgPath = imgPath
-    parent.mControls.add(result)
-    pboxCount += 1
-    # if evtFn != nil: result.onClick = evtFn
-    if parent.mCreateChilds: result.createHandle()
+    result.mCreateHwndProc = createPbxHandle
+    
 
 
-proc createHandle*(this: PictureBox) =
+proc createPbxHandle(ctl: Control) =
+    var this = cast[PictureBox](ctl)
     this.mSize = SIZE(cx: this.mWidth.int32, cy: this.mHeight.int32)
     if this.mImgPath.len > 0: this.setImageInternal(this.mImgPath, false)
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         GetClientRect(this.mHandle, &this.mRect)
-        SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
+        # SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
         
 
-method autoCreate(this: PictureBox) = this.createHandle()
+# method autoCreate(this: PictureBox) = this.createHandle()
 
 proc setImage*(this: PictureBox, filePath: string) =
     this.mImage.finalize() 
@@ -101,14 +93,14 @@ proc `height=`*(this: PictureBox, value: int32) =
 
 
 # Private functions
-proc registerPboxClass(pbxClass: LPCWSTR, hinst: HINSTANCE) =
+proc registerPboxClass(pbxClass: LPCWSTR) =
     var wcex : WNDCLASSEXW
     wcex.cbSize = cast[UINT](sizeof(wcex))
     wcex.style = CS_HREDRAW or CS_VREDRAW
     wcex.lpfnWndProc = pBoxWndProc
     wcex.cbClsExtra = 0
     wcex.cbWndExtra = 0
-    wcex.hInstance = hInst
+    wcex.hInstance = appData.hInstance
     wcex.hIcon = nil
     wcex.hCursor = LoadCursorW(ZERO_HINST, cast[LPCWSTR](IDC_ARROW))
     wcex.hbrBackground = nil         #
@@ -194,7 +186,7 @@ proc pBoxWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
         return cast[LRESULT](res)
     
     case msg
-    of WM_DESTROY: 
+    of WM_NCDESTROY: 
         if this.mImage != nil: this.mImage.finalize()        
 
     of WM_PAINT:

@@ -37,80 +37,7 @@
             onDragged
 ==========================================================================================================]#
 # Constants
-const
-    TRBN_FIRST = cast[UINT](0-1501)
-    TBS_AUTOTICKS = 0x1
-    TBS_VERT = 0x2
-    TBS_HORZ = 0x0
-    TBS_TOP = 0x4
-    TBS_BOTTOM = 0x0
-    TBS_LEFT = 0x4
-    TBS_RIGHT = 0x0
-    TBS_BOTH = 0x8
-    TBS_NOTICKS = 0x10
-    TBS_ENABLESELRANGE = 0x20
-    TBS_FIXEDLENGTH = 0x40
-    TBS_NOTHUMB = 0x80
-    TBS_TOOLTIPS = 0x100
-    TBS_REVERSED = 0x200
-    TBS_DOWNISLEFT = 0x400
-    TBS_NOTIFYBEFOREMOVE = 0x800
-    TBS_TRANSPARENTBKGND = 0x1000
-    TBM_GETPOS = WM_USER
-    TBM_GETRANGEMIN = WM_USER+1
-    TBM_GETRANGEMAX = WM_USER+2
-    TBM_GETTIC = WM_USER+3
-    TBM_SETTIC = WM_USER+4
-    TBM_SETPOS = WM_USER+5
-    TBM_SETRANGE = WM_USER+6
-    TBM_SETRANGEMIN = WM_USER+7
-    TBM_SETRANGEMAX = WM_USER+8
-    TBM_CLEARTICS = WM_USER+9
-    TBM_SETSEL = WM_USER+10
-    TBM_SETSELSTART = WM_USER+11
-    TBM_SETSELEND = WM_USER+12
-    TBM_GETPTICS = WM_USER+14
-    TBM_GETTICPOS = WM_USER+15
-    TBM_GETNUMTICS = WM_USER+16
-    TBM_GETSELSTART = WM_USER+17
-    TBM_GETSELEND = WM_USER+18
-    TBM_CLEARSEL = WM_USER+19
-    TBM_SETTICFREQ = WM_USER+20
-    TBM_SETPAGESIZE = WM_USER+21
-    TBM_GETPAGESIZE = WM_USER+22
-    TBM_SETLINESIZE = WM_USER+23
-    TBM_GETLINESIZE = WM_USER+24
-    TBM_GETTHUMBRECT = WM_USER+25
-    TBM_GETCHANNELRECT = WM_USER+26
-    TBM_SETTHUMBLENGTH = WM_USER+27
-    TBM_GETTHUMBLENGTH = WM_USER+28
-    TBM_SETTOOLTIPS = WM_USER+29
-    TBM_GETTOOLTIPS = WM_USER+30
-    TBM_SETTIPSIDE = WM_USER+31
-    TBTS_TOP = 0
-    TBTS_LEFT = 1
-    TBTS_BOTTOM = 2
-    TBTS_RIGHT = 3
-    TBM_SETBUDDY = WM_USER+32
-    TBM_GETBUDDY = WM_USER+33
-    TB_LINEUP = 0
-    TB_LINEDOWN = 1
-    TB_PAGEUP = 2
-    TB_PAGEDOWN = 3
-    TB_THUMBPOSITION = 4
-    TB_THUMBTRACK = 5
-    TB_TOP = 6
-    TB_BOTTOM = 7
-    TB_ENDTRACK = 8
-    TBCD_TICS = 0x1
-    TBCD_THUMB = 0x2
-    TBCD_CHANNEL = 0x3
-    TRBN_THUMBPOSCHANGING = TRBN_FIRST-1
-    THUMB_LINE_LOW = 0
-    THUMB_LINE_HIGH = 1
-    THUMB_PAGE_LOW = 2
-    THUMB_PAGE_HIGH = 3
-    U16_MAX = 1 shl 16
+
 
 var tkbCount = 1
 # let trkClsName = toWcharPtr("msctls_trackbar32")
@@ -121,24 +48,14 @@ const UNKNOWN_MSG = cast[UINT](4294967280)
 
 # Forward declaration
 proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
-proc createHandle*(this: TrackBar)
+proc createTkbHandle(ctl: Control)
 
 
 # TrackBar constructor
-proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
+proc trackBarCtor(parent: Control, x, y, w, h: int32): TrackBar =
     new(result)
     result.mKind = ctTrackBar
-    result.mClassName = cast[LPCWSTR](trkClsName[0].addr)
-    result.mName = "TrackBar_" & $tkbCount
-    result.mParent = parent
-    result.mXpos = x
-    result.mYpos = y
-    result.mWidth = w
-    result.mHeight = h
-    result.mBackColor = parent.mBackColor
-    result.mForeColor = CLR_BLACK
-    result.mStyle = WS_CHILD or WS_VISIBLE or TBS_AUTOTICKS
-    result.mExStyle = WS_EX_RIGHTSCROLLBAR or WS_EX_LTRREADING or WS_EX_LEFT
+    controlBaseInit(result, parent, x, y, w, h, tkbCount)
     result.mChanFlag = BF_RECT or BF_ADJUST
     result.mTicWidth = 1
     result.mTicLen = 4
@@ -153,12 +70,11 @@ proc trackBarCtor(parent: Form, x, y, w, h: int32): TrackBar =
     result.mTicColor = newColor(0x3385ff)
     result.mChanColor = newColor(0xc2c2a3)
     result.mSelColor = newColor(0x99ff33)
-    tkbCount += 1
-    parent.mControls.add(result)
+    result.mCreateHwndProc = createTkbHandle
 
 
 
-proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180, 
+proc newTrackBar*(parent: Control, x: int32 = 10, y: int32 = 10, w: int32 = 180, 
                     h: int32 = 45, cdraw: bool = false, evtFn: EventHandler = nil, 
                     vertical: bool = false): TrackBar =
 
@@ -166,7 +82,7 @@ proc newTrackBar*(parent: Form, x: int32 = 10, y: int32 = 10, w: int32 = 180,
     result.mCustDraw = cdraw
     result.mVertical = vertical
     if evtFn != nil: result.onValueChanged = evtFn
-    if parent.mCreateChilds: result.createHandle()
+    
 
 
 proc setTKBStyle(this: TrackBar) =
@@ -333,7 +249,7 @@ proc destroyResources(this: TrackBar) =
     if this.mChanPen != nil: DeleteObject(this.mChanPen)
     if this.mTicPen != nil: DeleteObject(this.mTicPen)
     if this.mSelBrush != nil: DeleteObject(this.mSelBrush)
-    this.destructor()
+    this.controlBaseDtor()
 
 
 proc prepareCustomDraw(this: TrackBar) =
@@ -342,16 +258,17 @@ proc prepareCustomDraw(this: TrackBar) =
     this.calculateTics()
 
 # Create TrackBar's hwnd
-proc createHandle*(this: TrackBar) =
+proc createTkbHandle(ctl: Control) =
+    var this = cast[TrackBar](ctl)
     this.setTKBStyle()
-    this.createHandleInternal()
+    this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
         this.setSubclass(tkbWndProc)
         this.sendInitialMessages()
         if this.mCustDraw: this.prepareCustomDraw()            
         if this.mSelRange: this.mSelBrush = CreateSolidBrush(this.mSelColor.cref)
 
-method autoCreate(this: TrackBar) = this.createHandle()
+# method autoCreate(this: TrackBar) = this.createHandle()
 
 # Properties--------------------------------------------------------------------------
 
@@ -367,8 +284,9 @@ proc `ticColor=`*(this: TrackBar, value: Color) {.inline.} = this.mTicColor = va
 proc `ticColor=`*(this: TrackBar, value: uint) = 
     this.mTicColor = newColor(value)
     this.mCustDraw = true
-    this.prepareCustomDraw()
+    if this.mIsCreated: this.prepareCustomDraw()
     this.checkRedraw() # Calling base class function.
+    
 proc ticColor*(this: TrackBar): Color {.inline.} = this.mTicColor
 
 proc `channelColor=`*(this: TrackBar, value: Color) {.inline.} = this.mChanColor = value
@@ -462,9 +380,10 @@ proc tkbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, r
     elif res == MsgHandlerResult.mhrReturnZero or res == MsgHandlerResult.mhrReturnOne:
         return cast[LRESULT](res)
     case msg
-    of WM_DESTROY:
-        this.destroyResources()
+    of WM_NCDESTROY:
         RemoveWindowSubclass(hw, tkbWndProc, scID)
+        this.destroyResources()
+        
 
     of MM_HSCROLL, MM_VSCROLL:
         let lwp = LOWORD(wpm)
