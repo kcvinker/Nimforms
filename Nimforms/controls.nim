@@ -64,10 +64,10 @@ proc controlBaseInit(this: Control, parent: Control, x, y, w, h: int32,
 
     let ctlMeta : ControlMeta = ControlData[this.mKind]
     globalCtlID += 1
-    ctlCounter += 1
     this.mName = ctlMeta.prefix & $ctlCounter
     this.mStyle = ctlMeta.wstyle
     this.mExStyle = ctlMeta.wexStyle
+    ctlCounter += 1
 
     if ctlMeta.info.isTextable and len(txt) > 0: 
         this.mText = txt
@@ -112,7 +112,8 @@ proc createHandleInternal(this: Control, width, height: int32) =
                                     width, height,
                                     this.mParent.mHandle, cast[HMENU](this.mCtlID),
                                     appData.hInstance, lpm)
-    if this.mHandle != nil:        
+    if this.mHandle != nil:   
+        # echo "Handle created for ", this.mName, ", Handle value - ", cast[int](this.mHandle)
         this.mIsCreated = true
         if this.mHasFont: this.setFontInternal()
             

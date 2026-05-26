@@ -1,5 +1,9 @@
 Nimforms changelog
 
+Version 1.1.127 (26-May-2026)
+    Minor bug fixed in PictureBox
+    Move instance pointer setup to WM_NCCREATE for Form & PictureBox
+
 Version 1.1.126 (25-May-2026)
     Lazy control handle creation has been implemented:
         Previously, users needed to call the createHandle function for Forms and controls. We have removed this redundancy, which solved many design issues and brought more convenience. We can now reduce the number of parameters for constructors. We can now use struct members like properties. So createHandle function just 

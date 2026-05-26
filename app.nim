@@ -2,7 +2,7 @@
 import Nimforms/nimforms
 
 # Create a Form
-var frm = newForm("Nimforms GUI Library", 980, 600)
+var frm = newForm("Nimforms GUI Library", 1090, 600)
 frm.printPoint() # It's handy in design time, we can get the coordinates by clicking on the form.
 
 
@@ -89,7 +89,7 @@ gb2.setForeColor(0xd90429)
 gb2.changeFont("Trebuchet MS", 14)
 
 # Now create a PictureBox and set an image.
-var pbx = newPictureBox(frm, 640, 233, 285, 200, "nvidia-com.png", PictureSizeMode.psmStretch)
+var pbx = newPictureBox(frm, 780, 5, 236, 150, "nvidia-com.png", PictureSizeMode.psmStretch)
 
 # Add some CheckBoxes and RadioButtons.
 var cb = newCheckBox(gb2, "Stack Traced On", 10, 40)
@@ -120,7 +120,7 @@ tv.addTreeNodeWithChilds("Windows", "Win7", "Win8", "Win10", "Win11")
 tv.addTreeNodeWithChilds("Linux", "openSUSE Leap 15.3", "Debian 11", "Fedora 35", "Ubuntu 22.04 LTS")
 tv.addTreeNodeWithChilds("MacOS", "Mojave (10.14)", "Catalina (10.15)", " Big Sur (11.0)", "Monterey (12.0)")
 # tv.createHandle()
-proc onTrackChange(c: RootRef, e: EventArgs) {.handles:tkb.onValueChanged.} =
+proc onTrackChange(c: RootRef, e: EventArgs) {.handles: tkb.onValueChanged.} =
     var t11 = cast[TrackBar](c) 
     pgb.value = t11.value
 

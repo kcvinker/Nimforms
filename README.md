@@ -25,7 +25,7 @@ This is the code that created the window in the above screenshot.
 import Nimforms/nimforms
 
 # Create a Form
-var frm = newForm("Nimforms GUI Library", 980, 600)
+var frm = newForm("Nimforms GUI Library", 1090, 600)
 frm.printPoint() # It's handy in design time, we can get the coordinates by clicking on the form.
 
 
@@ -112,7 +112,7 @@ gb2.setForeColor(0xd90429)
 gb2.changeFont("Trebuchet MS", 14)
 
 # Now create a PictureBox and set an image.
-var pbx = newPictureBox(frm, 640, 233, 285, 200, "nvidia-com.png", PictureSizeMode.psmStretch)
+var pbx = newPictureBox(frm, 640, 233, 236, 150, "nvidia-com.png", PictureSizeMode.psmStretch)
 
 # Add some CheckBoxes and RadioButtons.
 var cb = newCheckBox(gb2, "Stack Traced On", 10, 40)

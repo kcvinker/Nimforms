@@ -321,6 +321,22 @@ type
         lPrivate: DWORD
     LPMSG = ptr MSG
 
+    CREATESTRUCTW {.pure.} = object
+        lpCreateParams*: pointer
+        hInstance*: HINSTANCE
+        hMenu*: HMENU
+        hwndParent*: HWND
+        cy*: int32
+        cx*: int32
+        y*: int32
+        x*: int32
+        style*: int32
+        lpszName*: LPCWSTR
+        lpszClass*: LPCWSTR
+        dwExStyle*: DWORD
+
+    LPCREATESTRUCTW = ptr CREATESTRUCTW
+
     RECT {.pure.} = object
         left: LONG
         top: LONG

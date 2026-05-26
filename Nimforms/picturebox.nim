@@ -22,10 +22,11 @@ proc newPictureBox*(parent: Control, x, y, w, h: int32, imgPath: string = "",
                     sizeMode: PictureSizeMode = PictureSizeMode.psmStretch) : PictureBox =
     new(result)   
     result.mKind = ctPictureBox
+    let pbxMeta : ControlMeta = ControlData[ctPictureBox]
+    if not isPboxReg: registerPboxClass(pbxMeta.clsName)
     controlBaseInit(result, parent, x, y, w, h, pboxCount)
-    result.mSizeMode = sizeMode
-    if not isPboxReg: registerPboxClass(result.mClassName)
-    if len(imgPath) > 0: result.mImgPath = imgPath
+    result.mSizeMode = sizeMode    
+    if len(imgPath) > 1: result.mImgPath = imgPath
     result.mCreateHwndProc = createPbxHandle
     
 
@@ -36,11 +37,10 @@ proc createPbxHandle(ctl: Control) =
     if this.mImgPath.len > 0: this.setImageInternal(this.mImgPath, false)
     this.createHandleInternal(this.mWidth, this.mHeight)
     if this.mHandle != nil:
+        this.mIsCreated = true
+        if this.mImage != nil: this.updateClientRect()
         GetClientRect(this.mHandle, &this.mRect)
-        # SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
         
-
-# method autoCreate(this: PictureBox) = this.createHandle()
 
 proc setImage*(this: PictureBox, filePath: string) =
     this.mImage.finalize() 
@@ -117,6 +117,7 @@ proc setImageInternal(this: PictureBox, filePath: string, setPath: bool = true) 
     
     if this.mHandle != nil: this.updateClientRect()
 
+
 proc updateClientRect(this: PictureBox) =
     this.computeDestRect()
     if this.mHandle != nil: InvalidateRect(this.mHandle, nil, 1)
@@ -179,6 +180,16 @@ proc pBoxWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     # echo "[", cnt, "] pbx msg: ", msg
     # cnt += 1
     var this  = cast[PictureBox](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    if this == nil:
+        if msg == WM_NCCREATE:
+            let createStruct = cast[LPCREATESTRUCTW](lpm)
+            this = cast[PictureBox](createStruct.lpCreateParams)
+            this.mHandle = hw
+            SetWindowLongPtrW(hw, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
+            return 1
+        else:
+            return DefWindowProcW(hw, msg, wpm, lpm)
+
     let res = this.commonMsgHandler(hw, msg, wpm, lpm)
     if res == MsgHandlerResult.mhrCallDefProc:
         return DefSubclassProc(hw, msg, wpm, lpm)
@@ -192,8 +203,8 @@ proc pBoxWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
     of WM_PAINT:
         var ps : PAINTSTRUCT
         var hdc = BeginPaint(hw, ps.addr) 
-        try:
-            if this.mImage != nil:                
+        try:            
+            if this.mImage != nil:     
                 this.mImage.draw(hdc, this.mRect.left, this.mRect.top, 
                                     this.mRect.right - this.mRect.left, 
                                     this.mRect.bottom - this.mRect.top)

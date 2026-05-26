@@ -6,6 +6,7 @@ proc newImage*(filePath: string): Image =
     initGdiPlus(appData)
     new(result)
     let st = GdipLoadImageFromFile(filePath.toWcharPtr, &result.mImage);
+    # echo "GdipLoadImageFromFile status: ", st
     if st != Status.okay: 
         raise newException(OSError, "GDI+ Error:Can't load Image fromF file, status: " & $st)
 
@@ -31,6 +32,7 @@ proc handle*(this: Image): ptr GpImage = this.mImage
 proc size*(this: Image): SIZE =
     result.cx = this.width.int32
     result.cy = this.height.int32
+    
 
 proc draw(this: Image, hdc: HDC, x, y, w, h: LONG) =
     if this.mImage == nil: return # No image loaded, nothing to draw.            

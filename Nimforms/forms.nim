@@ -211,12 +211,12 @@ proc createHandle*(this: Form) =
                                     toWcharPtr(this.mText),
                                     this.mStyle, this.mXpos, this.mYpos,
                                     this.mWidth, this.mHeight,
-                                    nil, nil, this.hInstance, nil)
+                                    nil, nil, this.hInstance, cast[PVOID](this))
     if this.mHandle != nil:
         
         # appData.forms.add(FormMap(key: this.mHandle, value: this))
         this.mIsCreated = true
-        SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
+        # SetWindowLongPtrW(this.mHandle, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
         this.setFontInternal()
         
         # echo "ex : ", this.mExStyle, ", style : ", this.mStyle
@@ -378,6 +378,16 @@ proc form_dtor(this: Form, hw: HWND) =
 
 proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdcall.} =
     var this  = cast[Form](GetWindowLongPtrW(hw, GWLP_USERDATA))
+    if this == nil:
+        if msg == WM_NCCREATE:
+            let createStruct = cast[LPCREATESTRUCTW](lpm)
+            this = cast[Form](createStruct.lpCreateParams)
+            this.mHandle = hw
+            SetWindowLongPtrW(hw, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
+            return 1
+        else:
+            return DefWindowProcW(hw, msg, wpm, lpm)
+
     let res = this.commonMsgHandler(hw, msg, wpm, lpm)
     if res == MsgHandlerResult.mhrCallDefProc:
         return DefWindowProcW(hw, msg, wpm, lpm)
