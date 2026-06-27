@@ -90,7 +90,7 @@ proc paintFlatBtnRoundRect(dc: HDC, rc: RECT, hbr: HBRUSH, pen: HPEN): LRESULT =
     SelectObject(dc, pen);
     SelectObject(dc, hbr);
     RoundRect(dc, rc.left, rc.top, rc.right, rc.bottom, ROUND_CURVE, ROUND_CURVE);
-    FillPath(dc);
+    #FillPath(dc);
     result = CDRF_NOTIFYPOSTPAINT
 
 # Helper function for drawing text on a button.
@@ -103,8 +103,8 @@ proc drawTextColor(this: Button, ncd: LPNMCUSTOMDRAW): LRESULT =
 # Helper function dealing wm_notify message in a button's wndproc.
 proc drawBackColor(this: Button, ncd: LPNMCUSTOMDRAW): LRESULT =
     case ncd.dwDrawStage
-    of CDDS_PREERASE: # This happens when the paint starts
-        return CDRF_NOTIFYPOSTERASE # Telling the program to inform us after erase
+    # of CDDS_PREERASE: # This happens when the paint starts
+    #     return CDRF_NOTIFYPOSTERASE # Telling the program to inform us after erase
     of CDDS_PREPAINT: # We get the notification after erase happened.
         if (ncd.uItemState and MOUSECLICKFLAG) == MOUSECLICKFLAG:
             return paintFlatBtnRoundRect(ncd.hdc, ncd.rc, this.mFDraw.defBrush, this.mFDraw.hotPen)
@@ -121,14 +121,14 @@ proc paintGradientRound(nm: LPNMCUSTOMDRAW, gBrush: HBRUSH, pen: HPEN): LRESULT 
     SelectObject(nm.hdc, pen)
     SelectObject(nm.hdc, gBrush)
     RoundRect(nm.hdc, nm.rc.left, nm.rc.top, nm.rc.right, nm.rc.bottom, 5, 5)
-    FillPath(nm.hdc)
+    # FillPath(nm.hdc)
     # DeleteObject(gBrush)
     result = CDRF_DODEFAULT
 
 # Helper function dealing wm_notify message in a button's wndproc.
 proc drawGradientBackColor(this: Button, ncd: LPNMCUSTOMDRAW): LRESULT =
     case ncd.dwDrawStage
-    of CDDS_PREERASE: return  CDRF_NOTIFYPOSTERASE
+    # of CDDS_PREERASE: return  CDRF_NOTIFYPOSTERASE
     of CDDS_PREPAINT:
         if (ncd.uItemState and MOUSECLICKFLAG) == MOUSECLICKFLAG:
             if this.mGDraw.defBrush == nil:

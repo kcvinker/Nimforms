@@ -384,9 +384,9 @@ proc mainWndProc( hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM): LRESULT {.stdc
             this = cast[Form](createStruct.lpCreateParams)
             this.mHandle = hw
             SetWindowLongPtrW(hw, GWLP_USERDATA, cast[LONG_PTR](cast[PVOID](this)))
-            return 1
-        else:
-            return DefWindowProcW(hw, msg, wpm, lpm)
+            
+        
+        return DefWindowProcW(hw, msg, wpm, lpm)
 
     let res = this.commonMsgHandler(hw, msg, wpm, lpm)
     if res == MsgHandlerResult.mhrCallDefProc:

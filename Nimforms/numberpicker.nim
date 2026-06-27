@@ -37,7 +37,7 @@ proc npWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
 proc npEditWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.}
 proc createNumpHandle(ctl: Control)
 
-# NumberPicker constructor
+# NumberPicker constructor 
 proc newNumberPicker*(parent: Control, x: int32 = 10, y: int32 = 10, w: int32 = 75, h: int32 = 27): NumberPicker =
     new(result)
     result.mtid = 2

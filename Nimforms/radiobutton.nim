@@ -89,7 +89,7 @@ proc rbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM,
         # We use this message only to change the fore color.
         let nmcd = cast[LPNMCUSTOMDRAW](lpm)
         case nmcd.dwDrawStage
-        of CDDS_PREERASE: return CDRF_NOTIFYPOSTERASE
+        # of CDDS_PREERASE: return CDRF_NOTIFYPOSTERASE
         of CDDS_PREPAINT:
             if not this.mRightAlign:
                 nmcd.rc.left += 18

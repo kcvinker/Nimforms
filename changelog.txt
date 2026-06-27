@@ -1,5 +1,9 @@
 Nimforms changelog
 
+Version 1.1.128 (27-Jun-2026)
+    Fixed bug when handling the WM_NCCREATE message in Form & PictureBox.
+    Improved custom draw code for Button, CheckBox and RadioButton.
+
 Version 1.1.127 (26-May-2026)
     Minor bug fixed in PictureBox
     Move instance pointer setup to WM_NCCREATE for Form & PictureBox

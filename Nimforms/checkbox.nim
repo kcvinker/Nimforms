@@ -85,7 +85,7 @@ proc cbWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
     of MM_NOTIFY_REFLECT:
         let nmcd = cast[LPNMCUSTOMDRAW](lpm)
         case nmcd.dwDrawStage
-        of CDDS_PREERASE: return CDRF_NOTIFYPOSTERASE
+        # of CDDS_PREERASE: return CDRF_NOTIFYPOSTERASE
         of CDDS_PREPAINT:
             if not this.mRightAlign:
                 nmcd.rc.left += 18
