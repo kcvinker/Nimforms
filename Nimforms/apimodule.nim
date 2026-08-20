@@ -615,6 +615,12 @@ type
         iNewStateImageIndex: int32
     LPNMTVSTATEIMAGECHANGING = ptr NMTVSTATEIMAGECHANGING
 
+    NMTVDISPINFO {.pure.} = object 
+        hdr: NMHDR
+        item: TVITEMW
+
+    LPNMTVDISPINFO = ptr NMTVDISPINFO
+
     MENUITEMINFOW {.pure.} = object
         cbSize: UINT
         fMask: UINT
@@ -978,6 +984,8 @@ proc Rectangle(hdc: HDC, left: int32, top: int32, right: int32, bottom: int32): 
 proc BitBlt(hdc: HDC, x, y, cx, cy: int32, hdcSrc: HDC, x1, y1: int32, rop: DWORD): BOOL {.dll("gdi32", true).}
 proc GetObjectW(h: HANDLE, c: int32, pv: LPVOID): int32 {.dll("gdi32", true).}
 proc Polyline(hdc: HDC, lppt: LPPOINT, cpt: int32): BOOL {.dll("gdi32", true).}
+proc SaveDC(hdc: HDC): int32 {.dll("gdi32", false).}
+proc RestoreDC(hDC: HDC, ndc: int32): BOOL {.dll("gdi32", true).}
 
 # End of Gdi32-------------------------------------------------------------------------------------------
 

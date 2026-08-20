@@ -43,7 +43,13 @@ cmb.selectedIndex = 0 # First item is selected
 
 # Let's create a GroupBox. `>>` macro will get btn.right + 20
 var gb = newGroupBox(frm, "Compiler Options", 10, btn.bottom(20), 270, 150)
-gb.backColor = 0xa8dadc
+gb.style=GroupBoxStyle.gbsOverride
+# gb.backColor = 0xa8dadc
+
+btn2.onClick = proc(c: RootRef, e: EventArgs) =
+                    echo "gb style "
+                    gb.lineColor = 0xff0000 #, GroupBoxStyle.gbsOverride)
+
 
 # Now, a Label.
 var lb = newLabel(gb, "Thread Count", 10, 40)
@@ -85,8 +91,9 @@ cmb2.selectedIndex = 1
 
 # We are changing the drawing style of this GroupBox.
 var gb2 = newGroupBox(frm, "Program Options", 10, gb.bottom(20), 200, 170)
+gb2.style=GroupBoxStyle.gbsOverride
 gb2.setForeColor(0xd90429)
-gb2.changeFont("Trebuchet MS", 14)
+gb2.setFont("Trebuchet MS", 14)
 
 # Now create a PictureBox and set an image.
 var pbx = newPictureBox(frm, 780, 5, 236, 150, "nvidia-com.png", PictureSizeMode.psmStretch)
@@ -132,21 +139,21 @@ proc flatBtnClick(c: RootRef, e: EventArgs) =
         for f in fod.fileNames:
             echo f
         
-btn2.onClick = flatBtnClick
+# btn2.onClick = flatBtnClick
 
 var cmenu = lv.setContextMenu("Add Work", "Give Work", "Finish Work")
 let aw = cmenu["Add Work"]
 
 proc addWork(m: RootRef, e: EventArgs) {.handles: aw.onClick} = echo "Add Work menu clicked"
 
-proc menter(c: RootRef, e: EventArgs) {.handles:np.onMouseEnter.} =
-    echo "mouse entered" 
+# proc menter(c: RootRef, e: EventArgs) {.handles:np.onMouseEnter.} =
+#     echo "mouse entered" 
 
-proc mleave(c: RootRef, e: EventArgs) {.handles:np.onMouseLeave.} =
-    echo "mouse left" 
+# proc mleave(c: RootRef, e: EventArgs) {.handles:np.onMouseLeave.} =
+#     echo "mouse left" 
 
-proc mhover(c: RootRef, e: EventArgs) {.handles:pbx.onMouseHover.} =
-    echo "pbx mouse hovered..." 
+# proc mhover(c: RootRef, e: EventArgs) {.handles:pbx.onMouseHover.} =
+    # echo "pbx mouse hovered..." 
 
 # Finally, display the form.
 frm.display()

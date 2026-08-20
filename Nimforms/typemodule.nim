@@ -33,10 +33,17 @@ type
         wstyle: DWORD
         wexStyle: DWORD
 
+    DCFreeMode {.pure.} = enum   
+        dfmNone, dfmRelease, dfmPaint
+
     Graphics = object 
-        mHdc: HDC
+        mHdc*: HDC
         mHwnd: HWND
         mFree: bool
+        mFreeMode: DCFreeMode
+        mPS: PAINTSTRUCT
+        mDcNum: int32
+
 
 
     Color* = object
@@ -66,7 +73,7 @@ type
 
     EventArgs* = ref object of RootObj
         handled*: bool
-        cancelled*: bool
+        cancel*: bool
 
     EventHandler* = proc(c: RootRef, e: EventArgs)
 
@@ -126,6 +133,10 @@ type
         mAction: TreeViewAction
         mNode, mOldNode: TreeNode
         mNewState, mOldState: UINT
+        mNodeText: string
+        mIsCBChanged: bool
+        mOldChecked: bool
+        mNewChecked: bool
 
     TreeEventHandler* = proc(c: Control, e: TreeEventArgs)
     CreateFnHandler = proc(c: Control) {.nimcall.}
@@ -183,7 +194,7 @@ type
         mFont: Font
         mParent: Control   
         mOwnerForm: Form
-        mcRect: RECT
+        mRect: RECT
         mWtext: WideString
         mCreateHwndProc: CreateHandleHandler
         #Events
@@ -327,18 +338,21 @@ type
         onTextChanged*: DateTimeEventHandler
 
     GroupBoxStyle* {.pure.} = enum 
-        gbsSystem, gbsClassic, gbsOverride
+        gbsNone, gbsSystem, gbsClassic, gbsOverride
 
     GroupBox* = ref object of Control
         mTextWidth: int32
-        mDBFill: bool
-        mGetWidth: bool
         mThemeOff: bool
+        mCreateDC: bool
+        mInheritStyle: bool
+        mDflag: uint8
+        mLineColor: Color
+        mTxtSize: SIZE
         mPen: HPEN
-        mRect: RECT
         mHdc: HDC
         mBmp: HBITMAP
         mGBStyle: GroupBoxStyle
+        mBorderPts: array[6, POINT]
         mControls: seq[Control]
 
     
@@ -498,7 +512,6 @@ type
     PictureBox* = ref object of Control
         mImage : Image
         mSizeMode : PictureSizeMode
-        mRect : RECT 
         mDestRect: RECT
         mSize : SIZE 
         mImgPath : string 
@@ -633,15 +646,16 @@ type
     TreeView* = ref object of Control
         mNoLine, mNoButton, mHasCheckBox, mFullRowSel: bool
         mEditable, mShowSel, mHotTrack, mNodeChecked: bool
+        mSuppressNotify: bool
         mNodeCount, mUniqNodeID: int32
         mLineColor: Color
         mSelNode: TreeNode
         mNodes: seq[TreeNode]
         # Events
-        onBeginEdit, onEndEdit, onNodeDeleted : EventHandler
-        onBeforeChecked, onAfterChecked, onBeforeSelected: TreeEventHandler
-        onAfterSelected, onBeforeExpanded, onAfterExpanded: TreeEventHandler
-        onBeforeCollapsed, onAfterCollapsed: TreeEventHandler
+        onBeginEdit, onEndEdit, onNodeDeleted : TreeEventHandler
+        onBeforeCheck, onAfterChecked, onBeforeSelection: TreeEventHandler
+        onAfterSelected, onBeforeExpand, onAfterExpanded: TreeEventHandler
+        onBeforeCollapse, onAfterCollapsed: TreeEventHandler
 
 
 

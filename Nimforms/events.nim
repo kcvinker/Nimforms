@@ -77,16 +77,29 @@ proc newTreeEventArgs(ntv: LPNMTREEVIEWW): TreeEventArgs =
         of 1 : result.mAction = tvaCollapse
         of 2 : result.mAction = tvaExpand
         else: discard
-        # echo "mAction in expand " & $result.mAction
+        # echo "mAction in expand " & $result.mAction 
+    
     result.mNode = cast[TreeNode](cast[PVOID](ntv.itemNew.lParam))
     if ntv.itemOld.lParam > 0:
         result.mOldNode = cast[TreeNode](cast[PVOID](ntv.itemOld.lParam))
 
-proc newTreeEventArgs(ntv: LPNMTVITEMCHANGE): TreeEventArgs =
+
+proc newTreeEventArgs(tic: LPNMTVITEMCHANGE): TreeEventArgs =
     new(result)
-    result.mNewState = ntv.uStateNew
-    result.mOldState = ntv.uStateOld
-    result.mNode = cast[TreeNode](cast[PVOID](ntv.lParam))
+    let oldCheck = (tic.uStateOld and TVIS_STATEIMAGEMASK) shr 12
+    let newCheck = (tic.uStateNew and TVIS_STATEIMAGEMASK) shr 12
+    result.mIsCBChanged = oldCheck != newCheck
+    result.mNode = cast[TreeNode](cast[PVOID](tic.lParam))    
+    result.mOldChecked = oldCheck == 2
+    result.mNewChecked = newCheck == 2
+    
+
+
+proc newTreeEventArgs(ntv: LPNMTVDISPINFO): TreeEventArgs =
+    new(result)
+    result.mNode = cast[TreeNode](cast[PVOID](ntv.item.lParam))
+    if ntv.item.pszText != nil:
+        result.mNodeText = $cast[WideCString](ntv.item.pszText)
 
 
 # Event properties

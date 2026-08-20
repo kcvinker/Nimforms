@@ -470,7 +470,7 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
         case nmh.code
         of NM_DBLCLK:echo "MM_NOTIFY_REFLECT TREEVIEW"
         of NM_CUSTOMDRAW_NM:
-            var nmtv = cast[LPNMTVCUSTOMDRAW](lpm)
+            let nmtv = cast[LPNMTVCUSTOMDRAW](lpm)
             case nmtv.nmcd.dwDrawStage:
             of CDDS_PREPAINT: return CDRF_NOTIFYITEMDRAW
             of CDDS_ITEMPREPAINT:
@@ -481,29 +481,33 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
             else: discard
 
         of TVN_DELETEITEMW:
-            if this.onNodeDeleted != nil: this.onNodeDeleted(this, newEventArgs())
+            if this.onNodeDeleted != nil: 
+                this.onNodeDeleted(this, newTreeEventArgs(cast[LPNMTREEVIEWW](lpm)))
 
         of TVN_SELCHANGINGW:
-            if this.onBeforeSelected != nil:
-                var nmtv = cast[LPNMTREEVIEWW](lpm)
-                this.onBeforeSelected(this, newTreeEventArgs(nmtv))
+            if this.onBeforeSelection != nil:
+                var tea = newTreeEventArgs(cast[LPNMTREEVIEWW](lpm))
+                this.onBeforeSelection(this, tea)
+                if tea.cancel: return 1
 
-        of TVN_SELCHANGEDW:
-            let nmtv = cast[LPNMTREEVIEWW](lpm)
-            var tea = newTreeEventArgs(nmtv)
+        of TVN_SELCHANGEDW: 
+            var tea = newTreeEventArgs(cast[LPNMTREEVIEWW](lpm))
             this.mSelNode = tea.mNode
             if this.onAfterSelected != nil: this.onAfterSelected(this, tea)
 
         of TVN_ITEMEXPANDINGW :
             let nmtv = cast[LPNMTREEVIEWW](lpm)
             if nmtv.action == 1:
-                if this.onBeforeCollapsed != nil:
+                if this.onBeforeCollapse != nil:
                     var tea = newTreeEventArgs(nmtv)
-                    this.onBeforeCollapsed(this, tea)
+                    this.onBeforeCollapse(this, tea)
+                    if tea.cancel: return 1
+
             elif nmtv.action == 2:
-                if this.onBeforeExpanded != nil:
+                if this.onBeforeExpand != nil:
                     var tea = newTreeEventArgs(nmtv)
-                    this.onBeforeExpanded(this, tea)
+                    this.onBeforeExpand(this, tea)
+                    if tea.cancel: return 1
 
         of TVN_ITEMEXPANDEDW:
             let nmtv = cast[LPNMTREEVIEWW](lpm)
@@ -516,26 +520,26 @@ proc tvWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, scID: UINT_PTR, re
                     var tea = newTreeEventArgs(nmtv)
                     this.onAfterExpanded(this, tea)
 
-        of NM_TVSTATEIMAGECHANGING_NM:
-            let tvsic = cast[LPNMTVSTATEIMAGECHANGING](lpm)
-            if tvsic.iOldStateImageIndex == 1:
-                this.mNodeChecked = true
-            elif tvsic.iOldStateImageIndex == 2:
-                this.mNodeChecked = false
+        # of NM_TVSTATEIMAGECHANGING_NM:
+        #     let tvsic = cast[LPNMTVSTATEIMAGECHANGING](lpm)
+        #     if tvsic.iOldStateImageIndex == 1:
+        #         this.mNodeChecked = true
+        #     elif tvsic.iOldStateImageIndex == 2:
+        #         this.mNodeChecked = false
 
         of TVN_ITEMCHANGINGW:
-            if this.onBeforeChecked != nil:
-                let tvic = cast[LPNMTVITEMCHANGE](lpm)
-                var tea = newTreeEventArgs(tvic)
-                tea.mNode.mChecked = this.mNodeChecked
-                this.onBeforeChecked(this, tea)
+            if this.onBeforeCheck != nil:
+                var tea = newTreeEventArgs(cast[LPNMTVITEMCHANGE](lpm))
+                if tea.mIsCBChanged:
+                    this.onBeforeCheck(this, tea)
+                    if tea.cancel: return 1
 
         of TVN_ITEMCHANGEDW:
-            if this.onAfterChecked != nil:
-                let tvic = cast[LPNMTVITEMCHANGE](lpm)
-                var tea = newTreeEventArgs(tvic)
-                tea.mNode.mChecked = this.mNodeChecked
-                this.onAfterChecked(this, tea)
+            if this.mSuppressNotify: return 0
+            if this.onAfterChecked != nil: 
+                var tea = newTreeEventArgs(cast[LPNMTVITEMCHANGE](lpm))
+                if tea.mOldChecked != tea.mNewChecked:
+                    this.onAfterChecked(this, tea)
 
         else: discard
         return 0

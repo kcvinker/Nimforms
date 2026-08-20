@@ -172,7 +172,7 @@ proc btnDtor(this: Button) =
 
 proc btnWndProc(hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPARAM, 
                         scID: UINT_PTR, refData: DWORD_PTR): LRESULT {.stdcall.} =  
-
+                        
     var this = cast[Button](refData)
     let res = this.commonMsgHandler(hw, msg, wpm, lpm)
     if res == MsgHandlerResult.mhrCallDefProc:

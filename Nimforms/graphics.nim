@@ -5,9 +5,15 @@ const
     BP_GROUPBOX = 0x4
     GBS_NORMAL = 0x1
 
-proc newGraphics(hw: HWND): Graphics =
+proc newGraphics(hw: HWND, dcMode: DCFreeMode): Graphics =
     result.mHwnd = hw 
-    result.mHdc = GetDC(hw)
+    result.mFreeMode = dcMode
+    if dcMode == DCFreeMode.dfmRelease:
+        result.mHdc = GetDC(hw)
+    elif dcMode == DCFreeMode.dfmPaint:
+        result.mHdc = BeginPaint(hw, result.mPS.addr)
+        result.mDcNum = SaveDC(result.mHdc)
+
     result.mFree = true 
 
 proc newGraphics(wp: WPARAM): Graphics = 
@@ -15,9 +21,11 @@ proc newGraphics(wp: WPARAM): Graphics =
     result.mFree = false 
 
 proc `=destroy`(this: var Graphics)=
-    if this.mFree:
+    if this.mFreeMode == DCFreeMode.dfmRelease:
         ReleaseDC(this.mHwnd, this.mHdc)
-        # echo "HDC Released"
+    elif this.mFreeMode == DCFreeMode.dfmPaint:
+        RestoreDC(this.mHwnd, this.mDcNum)
+        EndPaint(this.mHwnd, this.mPS.addr)
 
 proc getTextSize(g: typedesc[Graphics], pc: Control): SIZE =
     var dc = GetDC(pc.mHandle)    
@@ -25,6 +33,11 @@ proc getTextSize(g: typedesc[Graphics], pc: Control): SIZE =
     GetTextExtentPoint32(dc, &pc.mWtext, pc.mWtext.mInputLen, result.unsafeAddr)
     let x = ReleaseDC(pc.mHandle, dc)
     # print "HDC released for "; pc.name
+
+proc getTextSize2(this: Graphics, pc: Control, sz: var SIZE) =   
+    SelectObject(this.mHdc, pc.mFont.handle)
+    GetTextExtentPoint32(this.mHdc, &pc.mWtext, pc.mWtext.mInputLen, addr sz)
+    
 
 proc drawHLine(this: Graphics, mPen: HPEN, sx, y, ex : int32) =
     SelectObject(this.mHdc, mPen)
@@ -56,3 +69,4 @@ proc drawThemeText(this: Graphics, pc: Control) =
             pc.mWtext.wcLen, DT_LEFT or DT_SINGLELINE, rc.unsafeAddr, opts.unsafeAddr
         )
         CloseThemeData(hTheme)
+        echo "draw theme text"

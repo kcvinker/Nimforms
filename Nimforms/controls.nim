@@ -44,11 +44,13 @@ var globalSubClassID : UINT_PTR = 1000
 
 #===================Forward Declarations===================================
 proc getMappedRect(this: Control): RECT
-proc cloneParentFont*(this: Control)
+proc cloneParentFont*(this: Control, src: Font)
 proc setFontInternal(this: Control) {.inline.}
 proc cmenuDtor(this: ContextMenu)
-proc ctlSetPos(this: Control) {.inline.}=
-    SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, this.mWidth, this.mHeight, SWP_NOZORDER)
+proc ctlSetPos(this: Control) {.inline.} =
+    let x = SetWindowPos(this.mHandle, nil, this.mXpos, this.mYpos, 
+                    this.mWidth, this.mHeight, SWP_NOZORDER)
+    echo "ctl set pos ", x
 
 
 
@@ -75,19 +77,30 @@ proc controlBaseInit(this: Control, parent: Control, x, y, w, h: int32,
         this.mHasText = true
 
     this.mOwnerForm = if parent.mKind == ControlType.ctForm: cast[Form](parent) else: parent.mOwnerForm
-    if this.mOwnerForm != nil: 
-        if ctlMeta.info.hasFont: this.cloneParentFont()
-        if ctlMeta.info.backColorMode == bcmInherit:
-            this.mBackColor = parent.mBackColor
-        elif ctlMeta.info.backColorMode == bcmWhite:
-            this.mBackColor = newColor(0xFFFFFF) # Default white background for all controls
+    var inheritStyle : bool = false
+    if parent.mKind == ControlType.ctGroupBox:
+        inheritStyle = (cast[GroupBox](parent)).mInheritStyle
 
-        if ctlMeta.info.blackFGC:            
-            this.mForeColor = newColor(0x000000) # Default black foreground for all controls
-        else:
-            this.mForeColor = this.mOwnerForm.mForeColor
+    var pbclr = this.mOwnerForm.mBackColor
+    var pfclr = this.mOwnerForm.mForeColor
+    var pfont = this.mOwnerForm.mFont
+    if inheritStyle : 
+        pbclr = parent.mBackColor
+        pfclr = parent.mForeColor
+        pfont = parent.mFont
+
+    if ctlMeta.info.hasFont: this.cloneParentFont(pfont)
+    if ctlMeta.info.backColorMode == bcmInherit:
+        this.mBackColor = pbclr
+    elif ctlMeta.info.backColorMode == bcmWhite:
+        this.mBackColor = newColor(0xFFFFFF) # Default white background for all controls
+
+    if ctlMeta.info.blackFGC:            
+        this.mForeColor = newColor(0x000000) # Default black foreground for all controls
+    else:
+        this.mForeColor = pfclr        
         
-        this.mOwnerForm.mControls.add(this)
+    this.mOwnerForm.mControls.add(this)
 
 
 proc controlBaseDtor(this: Control) =
@@ -116,15 +129,16 @@ proc createHandleInternal(this: Control, width, height: int32) =
         # echo "Handle created for ", this.mName, ", Handle value - ", cast[int](this.mHandle)
         this.mIsCreated = true
         if this.mHasFont: this.setFontInternal()
+        GetClientRect(this.mHandle, &this.mRect)
             
     else:
         echo "Error while creating the hwnd of ", this.mName, ", Err.No - ", GetLastError()
 
 
 # Control class's methods====================================================
-proc cloneParentFont*(this: Control) =
+proc cloneParentFont*(this: Control, src: Font) =
     # this.mFont = copyNewFont(this.mParent.mFont)
-    this.mFont = this.mOwnerForm.mFont    
+    this.mFont = src    
     this.mFont.mOwnership = FontOwner.foUser
     this.mFont.tag = this.mName
     this.mHasFont = true
@@ -244,8 +258,8 @@ method `onMouseHover=`*(this: Control, evtProc: EventHandler) {. base .} =
 
 
 
-# proc left*(this: Control): int32 = int32(this.mcRect.left)
-# proc top*(this: Control): int32 = int32(this.mcRect.top)
+# proc left*(this: Control): int32 = int32(this.mRect.left)
+# proc top*(this: Control): int32 = int32(this.mRect.top)
 
 # ============================================Private functions====================================
 
@@ -328,7 +342,7 @@ proc setSubclass(this: Control, ctlWndProc: SUBCLASSPROC) =
 
 proc isMouseOnMe(this: Control, lpm: LPARAM) : bool {. inline .} =
     let pt = POINT(x: getXFromLp(lpm), y: getYFromLP(lpm))
-    return PtInRect(&this.mcRect, pt) != 0    
+    return PtInRect(&this.mRect, pt) != 0    
 
 
 proc keyDownHandler(this: Control, wp: WPARAM) =
@@ -361,7 +375,7 @@ proc setContextMenu*(parent: Control, menuNames: varargs[string, `$`]) : Context
 
 # Package level functions====================================================
 proc setControlRect(this: Control) =
-    var lprct = this.mcRect.unsafeAddr
+    var lprct = this.mRect.unsafeAddr
     GetClientRect(this.mHandle, lprct);
     MapWindowPoints(this.mHandle, this.mParent.mHandle, cast[LPPOINT](lprct), 2);
 
@@ -427,7 +441,7 @@ proc commonMsgHandler(this: Control, hw: HWND, msg: UINT, wpm: WPARAM, lpm: LPAR
         if this.onMouseUp != nil: 
             this.onMouseUp(this, newMouseEventArgs(msg, wpm, lpm))
     
-        if this.onClick != nil and this.mLbDown: 
+        if this.onClick != nil and this.mLbDown:
             if this.isMouseOnMe(lpm):
                 this.onClick(this, newEventArgs())
 

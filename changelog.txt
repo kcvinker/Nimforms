@@ -1,5 +1,10 @@
 Nimforms changelog
 
+Version 1.2.128 (21-Aug-2026)
+    TreeView events fixed
+    GroupBox drawing improved
+    Added lineColor property for GroupBox
+
 Version 1.1.128 (27-Jun-2026)
     Fixed bug when handling the WM_NCCREATE message in Form & PictureBox.
     Improved custom draw code for Button, CheckBox and RadioButton.
