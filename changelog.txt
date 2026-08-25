@@ -1,4 +1,6 @@
 Nimforms changelog
+Version 1.2.129 (25-Aug-2026)
+    Button drawing improved
 
 Version 1.2.128 (21-Aug-2026)
     TreeView events fixed

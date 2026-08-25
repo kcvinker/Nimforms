@@ -8,9 +8,9 @@
         All props inherited from Control type 
         channelStyle      : Color, For setter, uint is also acceptable
         ticPosition       : int32
-        ticColor          : Color, For setter, uint is also acceptable
-        channelColor      : Color, For setter, uint is also acceptable
-        selectionColor    : Color, For setter, uint is also acceptable
+        ticColor          : Color, For setter, uint32 is also acceptable
+        channelColor      : Color, For setter, uint32 is also acceptable
+        selectionColor    : Color, For setter, uint32 is also acceptable
         vertical          : bool
         reversed          : bool
         noTics            : bool
@@ -281,7 +281,7 @@ proc `ticPosition=`*(this: TrackBar, value: TicPosition) {.inline.} = this.mTicP
 proc ticPosition*(this: TrackBar): TicPosition {.inline.} = this.mTicPos
 
 proc `ticColor=`*(this: TrackBar, value: Color) {.inline.} = this.mTicColor = value
-proc `ticColor=`*(this: TrackBar, value: uint) = 
+proc `ticColor=`*(this: TrackBar, value: uint32) = 
     this.mTicColor = newColor(value)
     this.mCustDraw = true
     if this.mIsCreated: this.prepareCustomDraw()
@@ -290,11 +290,11 @@ proc `ticColor=`*(this: TrackBar, value: uint) =
 proc ticColor*(this: TrackBar): Color {.inline.} = this.mTicColor
 
 proc `channelColor=`*(this: TrackBar, value: Color) {.inline.} = this.mChanColor = value
-proc `channelColor=`*(this: TrackBar, value: uint) {.inline.} = this.mChanColor = newColor(value)
+proc `channelColor=`*(this: TrackBar, value: uint32) {.inline.} = this.mChanColor = newColor(value)
 proc channelColor*(this: TrackBar): Color {.inline.} = this.mChanColor
 
 proc `selectionColor=`*(this: TrackBar, value: Color) {.inline.} = this.mSelColor = value
-proc `selectionColor=`*(this: TrackBar, value: uint) {.inline.} = this.mSelColor = newColor(value)
+proc `selectionColor=`*(this: TrackBar, value: uint32) {.inline.} = this.mSelColor = newColor(value)
 proc selectionColor*(this: TrackBar): Color {.inline.} = this.mSelColor
 
 proc `vertical=`*(this: TrackBar, value: bool) {.inline.} =
@@ -351,7 +351,7 @@ proc `value=`*(this: TrackBar, value: int32) {.inline.} =
 
 proc value*(this: TrackBar): int32 {.inline.} = this.mValue
 
-proc `backColor=`*(this: TrackBar, value: uint) {.inline.} =
+proc `backColor=`*(this: TrackBar, value: uint32) {.inline.} =
     this.mBackColor = newColor(value)
     if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
     if this.mIsCreated:

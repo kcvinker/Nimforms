@@ -47,7 +47,8 @@ type
 
 
     Color* = object
-        red*, green*, blue*, value*: uint
+        red*, green*, blue*: uint8
+        value*: uint32
         cref*: COLORREF
 
     FontWeight* {.pure.} = enum
@@ -254,14 +255,14 @@ type
         # onKeyDown*, onKeyUp*: KeyEventHandler
         # onKeyPress*: KeyPressEventHandler
 
-    FlatDraw = object
+    FlatDraw = ref object
+        color: Color
+        hoverIntensity: float
+        tintOnHover: bool
         defBrush : HBRUSH
         hotBrush : HBRUSH
-        defFrmBrush : HBRUSH
-        hotFrmBrush : HBRUSH
         defPen: HPEN
         hotPen: HPEN
-        isActive: bool
 
     GradColor = object
         c1: Color
@@ -270,20 +271,32 @@ type
     GdrawMode = enum
         gmDefault, gmFocused, gmClicked
 
-    GradDraw = object
-        gcDef: GradColor
-        gcHot: GradColor
-        defPen: HPEN
-        hotPen: HPEN
-        defBrush : HBRUSH
-        hotBrush : HBRUSH
-        rtl, isActive: bool
+    GradDraw = ref object
+        stColor: Color
+        enColor: Color
+        hoverStColor: Color
+        hoverEnColor: Color
+        hoverIntensity: float
+        tintOnHover: bool
+        dirty: bool
+        defBmp: HBITMAP
+        hotBmp: HBITMAP
+        bPen: HPEN
+        hPen: HPEN
+        clipRgn: HRGN
+        memDC: HDC
+
+    BtnDrawMode = enum
+        bdmDefault, bdmFlat, bdmGradient
 
 
     Button* = ref object of Control
         mTxtFlag: UINT
-        mFDraw: FlatDraw
-        mGDraw: GradDraw
+        mSetDrawData: bool
+        mDmode: BtnDrawMode
+        mFdraw: FlatDraw
+        mGdraw: GradDraw
+        
 
     WeekDays* {.pure.} = enum
         wdSunday, wdMonday, wdTuesday, wdWednesday, wdThursday, wdFriday, wdSaturday

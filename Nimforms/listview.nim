@@ -35,8 +35,8 @@
         hotTrackSelection bool
         headerClickable   bool
         checkBoxLast      bool
-        headerBackColor   Getter - Color, Setter - [Color, uint]
-        headerForeColor   Getter - Color, Setter - [Color, uint]
+        headerBackColor   Getter - Color, Setter - [Color, uint32]
+        headerForeColor   Getter - Color, Setter - [Color, uint32]
         headerFont        Font
         selectedItem      ListViewItem
         viewStyle         ListViewStyle {lvsLargeIcon, lvsReport, lvsSmallIcon, lvsList, lvsTile}
@@ -69,8 +69,8 @@ ListViewColumn type
         hasImage              bool
         textAlign             TextAlignment - {taLeft, taCenter, taRight}
         headerTextAlign       TextAlignment
-        backColor             Color (Use uint also for setter)
-        foreColor             Color (Use uint also for setter)
+        backColor             Color (Use uint32 also for setter)
+        foreColor             Color (Use uint32 also for setter)
 #-------------------------------------------------------------------------------------------
 
 ListViewItem type
@@ -80,8 +80,8 @@ ListViewItem type
         subItems          seq[string (Getter only)
         text              string
         imageIndex        int32
-        backColor         Color (Use uint also for setter)
-        foreColor         Color (Use uint also for setter)
+        backColor         Color (Use uint32 also for setter)
+        foreColor         Color (Use uint32 also for setter)
         font              Font
 =====================================================================================================]#
 # Note: Improve some properties to respond at runtime
@@ -181,7 +181,7 @@ proc newListViewColumn*(text: string, width: int32, imgIndex: int32 = -1) : List
     result.mHdrTextFlag = DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_NOPREFIX
     result.mWideText = toLPWSTR(text)
 
-proc newListViewItem*(text: string, bgColor: uint = 0xFFFFFF, fgColor: uint = 0x000000, imgIndex: int32 = -1): ListViewItem =
+proc newListViewItem*(text: string, bgColor: uint32 = 0xFFFFFF, fgColor: uint32 = 0x000000, imgIndex: int32 = -1): ListViewItem =
     new(result)
     result.mText = text
     result.mBackColor = newColor(bgColor)
@@ -497,8 +497,8 @@ proc addColumns(this: ListView, colnames: varargs[string, `$`]) : seq[ListViewCo
 
 #-------------Add Item variants------------------------------------------------------
 
-proc addItem*(this: ListView, itemTxt: auto, bgColor: uint = 0xFFFFFF, 
-                fgColor: uint = 0x000000, imgIndex: int32 = -1) : ListViewItem {.discardable.} =
+proc addItem*(this: ListView, itemTxt: auto, bgColor: uint32 = 0xFFFFFF, 
+                fgColor: uint32 = 0x000000, imgIndex: int32 = -1) : ListViewItem {.discardable.} =
     let sitem : string = (if itemTxt is string: itemTxt else: $itemTxt)
     result = newListViewItem(sitem, bgColor, fgColor, imgIndex)
     this.mItemIndexCounter += 1
@@ -605,11 +605,11 @@ proc headerClickable*(this: ListView): bool {.inline.} = this.mHdrClickable
 proc `checkBoxLast=`*(this: ListView, value: bool) {.inline.} = this.mCheckBoxLast = value
 proc checkBoxLast*(this: ListView): bool {.inline.} = this.mCheckBoxLast
 
-proc `headerBackColor=`*(this: ListView, value: uint) {.inline.} = this.mHdrBackColor = newColor(value)
+proc `headerBackColor=`*(this: ListView, value: uint32) {.inline.} = this.mHdrBackColor = newColor(value)
 proc `headerBackColor=`*(this: ListView, value: Color) {.inline.} = this.mHdrBackColor = value
 proc headerBackColor*(this: ListView): Color {.inline.} = this.mHdrBackColor
 
-proc `headerForeColor=`*(this: ListView, value: uint) {.inline.} = this.mHdrForeColor = newColor(value)
+proc `headerForeColor=`*(this: ListView, value: uint32) {.inline.} = this.mHdrForeColor = newColor(value)
 proc `headerForeColor=`*(this: ListView, value: Color) {.inline.} = this.mHdrForeColor = value
 proc headerForeColor*(this: ListView): Color {.inline.} = this.mHdrForeColor
 
@@ -647,11 +647,11 @@ proc textAlign*(this: ListViewColumn): TextAlignment {.inline.} = this.mTextAlig
 proc `headerTextAlign=`*(this: ListViewColumn, value: TextAlignment) {.inline.} = this.mHdrTextAlign = value
 proc headerTextAlign*(this: ListViewColumn): TextAlignment {.inline.} = this.mHdrTextAlign
 
-proc `backColor=`*(this: ListViewColumn, value: uint) {.inline.} = this.mBackColor = newColor(value)
+proc `backColor=`*(this: ListViewColumn, value: uint32) {.inline.} = this.mBackColor = newColor(value)
 proc `backColor=`*(this: ListViewColumn, value: Color) {.inline.} = this.mBackColor = value
 proc backColor*(this: ListViewColumn): Color {.inline.} = this.mBackColor
 
-proc `foreColor=`*(this: ListViewColumn, value: uint) {.inline.} = this.mForeColor = newColor(value)
+proc `foreColor=`*(this: ListViewColumn, value: uint32) {.inline.} = this.mForeColor = newColor(value)
 proc `foreColor=`*(this: ListViewColumn, value: Color) {.inline.} = this.mForeColor = value
 proc foreColor*(this: ListViewColumn): Color {.inline.} = this.mForeColor
 
@@ -666,11 +666,11 @@ proc text*(this: ListViewItem): string {.inline.} = this.mText
 proc `imageIndex=`*(this: ListViewItem, value: int32) {.inline.} = this.mImgIndex = value
 proc imageIndex*(this: ListViewItem): int32 {.inline.} = this.mImgIndex
 
-proc `backColor=`*(this: ListViewItem, value: uint) {.inline.} = this.mBackColor = newColor(value)
+proc `backColor=`*(this: ListViewItem, value: uint32) {.inline.} = this.mBackColor = newColor(value)
 proc `backColor=`*(this: ListViewItem, value: Color) {.inline.} = this.mBackColor = value
 proc backColor*(this: ListViewItem): Color {.inline.} = this.mBackColor
 
-proc `foreColor=`*(this: ListViewItem, value: uint) {.inline.} = this.mForeColor = newColor(value)
+proc `foreColor=`*(this: ListViewItem, value: uint32) {.inline.} = this.mForeColor = newColor(value)
 proc `foreColor=`*(this: ListViewItem, value: Color) {.inline.} = this.mForeColor = value
 proc foreColor*(this: ListViewItem): Color {.inline.} = this.mForeColor
 

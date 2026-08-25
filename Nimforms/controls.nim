@@ -216,7 +216,7 @@ proc `ypos=`*(this: Control, value: int32) {.inline.} =
 
 proc ypos*(this: Control): int32 {.inline.} = return this.mYpos
 
-proc `backColor=`*(this: Control, value: uint) {.inline.} =
+proc `backColor=`*(this: Control, value: uint32) {.inline.} =
     this.mBackColor = newColor(value)
     if (this.mDrawMode and 2) != 2 : this.mDrawMode += 2
     if this.mIsCreated:
@@ -232,7 +232,7 @@ proc `backColor=`*(this: Control, value: Color) {.inline.} =
 
 proc backColor*(this: Control): Color {.inline.} = return this.mBackColor
 
-proc `foreColor=`*(this: Control, value: uint) {.inline.} =
+proc `foreColor=`*(this: Control, value: uint32) {.inline.} =
     this.mForeColor = newColor(value)
     if (this.mDrawMode and 1) != 1 : this.mDrawMode += 1
     # this.mBkBrush = this.mForeColor.makeHBRUSH ------Delete later

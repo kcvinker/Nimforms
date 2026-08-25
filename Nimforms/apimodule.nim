@@ -354,6 +354,29 @@ type
 
     LPPAINTSTRUCT = ptr PAINTSTRUCT
 
+    BITMAPINFO_HEADER {.pure, packed.} = object
+        biSize*: DWORD
+        biWidth*: LONG
+        biHeight*: LONG
+        biPlanes*: WORD
+        biBitCount*: WORD
+        biCompression*: DWORD
+        biSizeImage*: DWORD
+        biXPelsPerMeter*: LONG
+        biYPelsPerMeter*: LONG
+        biClrUsed*: DWORD
+        biClrImportant*: DWORD
+
+    RGBQUAD = object
+        rgbBlue*: BYTE
+        rgbGreen*: BYTE
+        rgbRed*: BYTE
+        rgbReserved*: BYTE
+
+    BITMAPINFO = object
+        bmiHeader*: BITMAPINFO_HEADER
+        bmiColors*: array[1, RGBQUAD]
+
 
     LOGFONTW {.pure.} = object
         lfHeight: LONG
@@ -955,6 +978,7 @@ proc SetRect(lprc: LPRECT, xLeft, yTop, xRight, yBottom: INT): BOOL {.dll("user3
 proc UnionRect(lprcDest, lprcSrc1, lprcSrc2: LPRECT): BOOL {.dll("user32", true).}
 proc OffsetRect(lprc: LPRECT, dx: int32, dy: int32): BOOL {.dll("user32", true).}
 proc GetDCEx(hWnd: HWND, hrgnClip: HRGN, flags: DWORD): HDC {.dll("user32", true).}
+proc InflateRect(lprc: ptr RECT, cx, cy: int32): BOOL {.dll("user32", true).}
 # End of User32---------------------------------------------------------------------------------------------
 
 # Gdi32 functions {.dll("gdi32", true).}
@@ -986,6 +1010,10 @@ proc GetObjectW(h: HANDLE, c: int32, pv: LPVOID): int32 {.dll("gdi32", true).}
 proc Polyline(hdc: HDC, lppt: LPPOINT, cpt: int32): BOOL {.dll("gdi32", true).}
 proc SaveDC(hdc: HDC): int32 {.dll("gdi32", false).}
 proc RestoreDC(hDC: HDC, ndc: int32): BOOL {.dll("gdi32", true).}
+proc CreateDIBSection(hDC: HDC, bmi: ptr BITMAPINFO, a: UINT, b: ptr pointer, c: HANDLE, d: DWORD): HBITMAP {.dll("gdi32", true).}
+proc CreateRoundRectRgn(p1, p2, p3, p4, p5, p6: int32): HRGN {.dll("gdi32", true).}
+proc SelectClipRgn(p1: HDC, p2: HRGN): int32 {.dll("gdi32", true).}
+proc GetStockObject(p1: int32): HGDIOBJ {.dll("gdi32", true).}
 
 # End of Gdi32-------------------------------------------------------------------------------------------
 

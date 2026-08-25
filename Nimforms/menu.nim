@@ -176,7 +176,7 @@ proc create(this: MenuItem, drawFlag: uint32) =
     else: discard
 
 
-proc addItem*(this: MenuBar, txt: string, txtColor: uint = 0x000000): MenuItem {.discardable.} =
+proc addItem*(this: MenuBar, txt: string, txtColor: uint32 = 0x000000): MenuItem {.discardable.} =
     result = newMenuItem(txt, mtBaseMenu, this.mHandle, this.mMenuCount)
     result.mFormHwnd = this.mFormPtr.mHandle
     result.mFgColor = newColor(txtColor)
@@ -201,7 +201,7 @@ proc addItems*(this: MenuBar, args: varargs[string, `$`]) =
         # echo "Name: ", mi.mText, ", type: ", mi.mType
 
 
-proc addItem*(this: MenuItem, txt: string, txtColor: uint = 0x000000) : MenuItem {.discardable.} =
+proc addItem*(this: MenuItem, txt: string, txtColor: uint32 = 0x000000) : MenuItem {.discardable.} =
     if this.mType == mtMenuItem:
         this.mHandle = CreatePopupMenu()
         this.mPopup = true
@@ -280,7 +280,7 @@ proc `[]`*(this: Table[string, MenuItem], key: string): MenuItem = tables.`[]`(t
 
 proc foreColor*(this : MenuItem): Color = this.mFgColor
 
-proc `foreColor=`*(this: MenuItem, value: uint) =
+proc `foreColor=`*(this: MenuItem, value: uint32) =
     this.mFgColor = newColor(value)
     if this.mType == mtBaseMenu: InvalidateRect(this.mHandle, nil, 0)
 

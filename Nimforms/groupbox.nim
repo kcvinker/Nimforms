@@ -57,7 +57,7 @@ proc setBorderPoints(this: GroupBox) =
     this.mBorderPts[3] = POINT(x:this.mRect.left, y: this.mRect.bottom - 1)
     this.mBorderPts[4] = POINT(x:this.mRect.left, y: startY)
     this.mBorderPts[5] = POINT(x:startX - 1, y: startY)
-    echo "brd pt ", this.mBorderPts[0]
+    # echo "brd pt ", this.mBorderPts[0]
 
 
 # GroupBox constructor
@@ -109,14 +109,14 @@ proc prepareCustomDraw(this: GroupBox) {.inline.} =
 
        
 # Overriding Control's property because, groupBox needs a different treatment
-proc `backColor=`*(this: GroupBox, clr: uint) =
+proc `backColor=`*(this: GroupBox, clr: uint32) =
     this.mBackColor = newColor(clr)
     if this.mGBStyle == GroupBoxStyle.gbsOverride:
         this.mDFlag.setBits(GB_FILL_BKG, GB_DR_BORDER, GB_DRAW_TXT)
 
     this.checkRedraw()
 
-proc setBackColor*(this: GroupBox, clr: uint, style: GroupBoxStyle) =
+proc setBackColor*(this: GroupBox, clr: uint32, style: GroupBoxStyle) =
     this.mBackColor = newColor(clr)
     this.mBkBrush = CreateSolidBrush(this.mBackColor.cref)
     if style == GroupBoxStyle.gbsOverride:
@@ -128,7 +128,7 @@ proc setBackColor*(this: GroupBox, clr: uint, style: GroupBoxStyle) =
     this.mGBStyle = style
     this.checkRedraw()
 
-proc setforeColor*(this: GroupBox, value: uint, style: GroupBoxStyle = GroupBoxStyle.gbsNone) =
+proc setforeColor*(this: GroupBox, value: uint32, style: GroupBoxStyle = GroupBoxStyle.gbsNone) =
     this.mForeColor = newColor(value)
     if style == GroupBoxStyle.gbsNone: this.mGBStyle = GroupBoxStyle.gbsOverride
     if this.mGBStyle == GroupBoxStyle.gbsClassic:
@@ -186,7 +186,7 @@ proc `height=`*(this: GroupBox, value: int32) =
         this.mRect.bottom = this.mHeight
         this.ctlSetPos()
 
-proc `lineColor=`*(this: GroupBox, clr: uint) =
+proc `lineColor=`*(this: GroupBox, clr: uint32) =
     this.mLineColor = newColor(clr)
     if this.mPen != nil: DeleteObject(this.mPen)
     if this.mGBStyle != GroupBoxStyle.gbsOverride:

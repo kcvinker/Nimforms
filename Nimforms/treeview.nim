@@ -17,7 +17,7 @@
     Properties:
         All props inherited from Control type
         selectedNode      : TreeNode
-        foreColor         : Color, For setter, uint is also acceptable
+        foreColor         : Color, For setter, uint32 is also acceptable
         noLine            : bool
         noButton          : bool
         hasCheckBox       : bool
@@ -27,7 +27,7 @@
         hotTrack          : bool
         nodeCount         : int32
         uniqNodeID        : int32
-        lineColor         : Color, For setter, uint is also acceptable
+        lineColor         : Color, For setter, uint32 is also acceptable
         nodes             : seq[TreeNode]
 
     Events:
@@ -63,7 +63,7 @@
             childCount                int32
             nodeID                    int32
             checked                   bool
-            foreColor                 Color, For setter, uint is also acceptable
+            foreColor                 Color, For setter, uint32 is also acceptable
 ======================================================================================================]#
 # Constants
 
@@ -360,7 +360,7 @@ proc nodes*(this: TreeView) : seq[TreeNode] = this.mNodes
 proc selectedNode*(this: TreeView): TreeNode = this.mSelNode
 
 proc foreColor*(this: TreeView): Color = this.mForeColor
-proc `foreColor=`*(this: TreeView, value: uint) =
+proc `foreColor=`*(this: TreeView, value: uint32) =
     this.mForeColor = newColor(value)
     this.sendMsg(TVM_SETTEXTCOLOR, 0, this.mForeColor.cref)
     this.checkRedraw()
@@ -393,7 +393,7 @@ proc uniqNodeID*(this: TreeView): int32 = this.mUniqNodeID
 proc `uniqNodeID=`*(this: TreeView, value: int32) = this.mUniqNodeID = value
 
 proc lineColor*(this: TreeView): Color = this.mLineColor
-proc `lineColor=`*(this: TreeView, value: uint) = this.mLineColor =  newColor(value)
+proc `lineColor=`*(this: TreeView, value: uint32) = this.mLineColor =  newColor(value)
 
 
 
@@ -414,13 +414,13 @@ proc childCount*(this: TreeNode): int32 = this.mChildCount
 proc nodeID*(this: TreeNode): int32 = this.mNodeID
 proc checked*(this: TreeNode): bool = this.mChecked
 proc foreColor*(this: TreeNode): Color = this.mForeColor
-proc `foreColor=`*(this: TreeNode, value: uint) =
+proc `foreColor=`*(this: TreeNode, value: uint32) =
     this.mForeColor = newColor(value)
     if this.mIsCreated: InvalidateRect(this.mTreeHandle, nil, 0)
 
 
 # proc baackColor*(this: TreeNode): Color = this.mBackColor
-# proc `baackColor=`*(this: TreeNode, value: uint) =
+# proc `baackColor=`*(this: TreeNode, value: uint32) =
 #     this.mBackColor = newColor(value)
 #     if this.mIsCreated: InvalidateRect(this.mTreeHandle, nil, 0)
 

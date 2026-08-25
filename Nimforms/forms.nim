@@ -172,7 +172,7 @@ proc setBkClrInternal(this: Form, hdc: HDC) : int32 =
     let ret = FillRect(hdc, rct.unsafeAddr, this.mBkBrush)
     return 1
 
-proc setGradientInfo(this: Form, c1, c2: uint, rtl: bool) =
+proc setGradientInfo(this: Form, c1, c2: uint32, rtl: bool) =
     this.mGrad.c1 = newColor(c1)
     this.mGrad.c2 = newColor(c2)
     this.mGrad.rtl = rtl
@@ -292,7 +292,7 @@ proc display*(self: Form) =
 
 proc close*(this: Form) = DestroyWindow(this.mHandle)
 
-proc setGradientBackColor*(this: Form, clr1, clr2 : uint, rtl: bool = false) =
+proc setGradientBackColor*(this: Form, clr1, clr2 : uint32, rtl: bool = false) =
     this.mFdMode = fdmGradient
     this.setGradientInfo(clr1, clr2, rtl )
     if this.mIsCreated: InvalidateRect(this.mHandle, nil, 1)
@@ -305,7 +305,7 @@ proc setGradientBackColor*(this: Form, clr1, clr2 : uint, rtl: bool = false) =
 #     this.setUserFont()
 
 
-proc `backColor=`*(this: Form, value: uint) =
+proc `backColor=`*(this: Form, value: uint32) =
     this.mFdMode = fdmFlat
     this.mBackColor = newColor(value)
     if this.mIsCreated: InvalidateRect(this.mHandle, nil, 1)
